@@ -673,182 +673,352 @@ __declspec( dllexport ) float __cdecl GetMaxLocalAmmo(int,int) asm("?GetMaxLocal
 __declspec( dllexport ) void __cdecl SetCurLocalAmmo(int,float,int) asm("?SetCurLocalAmmo@@YAXHMH@Z");
 ]]
 
--- Message Buffer
+--==============================================================================================================================================================
+-- Utility Functions
+--==============================================================================================================================================================
+
+--- Message Buffer
+-- Used to avoid extra allocation time when possible.
+-- This API will avoid using this variable twice without first converting to lua strings.
 local msgBuffer = ffi.new("char[1025]");
-function StringToCString(input)
-  if string.len(input) > 1024 then
-    local longString = ffi.new("char[?]",string.len(input) + 1);
-    ffi.copy(longString,input);
-    return longString;
-  end
-  ffi.fill(msgBuffer,1025);
-  ffi.copy(msgBuffer,input);
-  return msgBuffer;
+
+--- Convert input to CString char[]
+-- This utility function is used in bindings to handle cstring reference passes.
+-- This function will use the preallocated msgBuffer if possible
+-- @param input The string for conversion.
+-- @param doNotUseBuffer Do not use existing buffer, even if possible, defaults to false. (You may need this if an exported function has 2 cstring paramaters.)
+function tocstring(input, doNotUseBuffer)
+    if doNotUseBuffer or string.len(input) > 1024 then
+        local longString = ffi.new("char[?]",string.len(input) + 1);
+        ffi.copy(longString,input);
+        return longString;
+    end
+    ffi.fill(msgBuffer,1025);
+    ffi.copy(msgBuffer,input);
+    return msgBuffer;
 end
-  
--- Clamps a number to within a certain range, with optional rounding
+
+--- Clamps a number to within a certain range.
+-- @param n Input number.
+-- @param low Minimum of range.
+-- @param high Maximum of range.
 function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
 
--- GameObject
-local GameObject = {} -- the table representing the class, which will double as the metatable for the instances
-GameObject.__index = GameObject -- failed table lookups on the instances should fallback to the class table, to get methods
-function GameObject.new(h)
-  local self = setmetatable({}, GameObject)
-  self.handle = h
-  return self
-end
-function GameObject.GetHandle(self)
-  return self.handle;
+--- Is this oject an instance of GameObject?
+-- Checks that the object is a GameObject or similar enough to one
+-- @param object Object in question
+function isgameobject(object)
+    return (type(object) == "table" and object.GetHandle ~= nil and type(object.GetHandle) == "function");
 end
 
+--- Is this oject a string?
+-- @param object Object in question
+function isstring(object)
+    return (type(object) == "string");
+end
+
+--- Is this oject a Vector?
+-- @param object Object in question
+function isvector(object)
+    return (type(object) == "cdata" and ffi.istype("Vector", object));
+end
+
+--- Is this oject a Matrix?
+-- @param object Object in question
+function ismatrix(object)
+    return (type(object) == "cdata" and ffi.istype("Matrix", object));
+end
+
+--==============================================================================================================================================================
+-- AiPathObject
+--==============================================================================================================================================================
+
+--FindAiPath
+--FreeAiPath
+--GetAiPaths
+--SetPathType
+--[[
+__declspec( dllexport ) class AiPath * __cdecl FindAiPath(struct Vector const &,struct Vector const &) asm("?FindAiPath@@YAPAVAiPath@@ABUVector@@0@Z");
+__declspec( dllexport ) void __cdecl FreeAiPath(class AiPath *) asm("?FreeAiPath@@YAXPAVAiPath@@@Z");
+__declspec( dllexport ) void __cdecl GetAiPaths(int &,char * * &) asm("?GetAiPaths@@YAXAAHAAPAPAD@Z"); ??
+__declspec( dllexport ) void __cdecl SetPathType(char *,enum PathType) asm("?SetPathType@@YAXPADW4PathType@@@Z"); ??
+
+--- AiPathObject
+-- An object containing all functions and data related to an AiPath
+local AiPathObject = {}; -- the table representing the class, which will double as the metatable for the instances
+AiPathObject.__index = AiPathObject; -- failed table lookups on the instances should fallback to the class table, to get methods
+AiPathObject.__gc = function(self) ffi.C.FreeAiPath(self.GetAiPath()); end;
+
+--- Create new GameObject Intance
+-- @param id Handle from BZ2.
+function AiPathObject.new(object)
+  local self = setmetatable({}, AiPathObject);
+  self.object = object;
+  return self;
+end
+
+--- Get AiPath used by BZ2.
+-- @param self AiPathObject instance.
+function AiPathObject.GetAiPath(self)
+  return self.object;
+end
+]]
+
+--==============================================================================================================================================================
+-- GameObject
+--==============================================================================================================================================================
+
+--- GameObject
+-- An object containing all functions and data related to a game object.
+-- [future] GameObject will survive postload.
+-- [future] GameObject will preserve extra data added by serving existing instance for given id.
+local GameObject = {}; -- the table representing the class, which will double as the metatable for the instances
+GameObject.__index = GameObject; -- failed table lookups on the instances should fallback to the class table, to get methods
+
+--- Create new GameObject Intance
+-- @param id Handle from BZ2.
+function GameObject.new(id)
+  local self = setmetatable({}, GameObject);
+  self.id = id;
+  return self;
+end
+
+--- Get Handle used by BZ2.
+-- @param self GameObject instance.
+function GameObject.GetHandle(self)
+  return self.id;
+end
+
+--- Remove GameObject from world
+-- @param self GameObject instance.
+function GameObject.RemoveObject(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.RemoveObject(self:GetHandle());
+end
+
+--- Set group of GameObject in interface
+-- @param self GameObject instance.
+-- @param group Group number.
+function GameObject.SetGroup(self, group)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SetGroup(self:GetHandle(), group);
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Orders
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Order GameObject to Attack target GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Attack(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Attack(self:GetHandle(), target:GetHandle(), priority);
+end
+
+--- Order GameObject to Service target GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Service(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Service(self:GetHandle(), target:GetHandle(), priority);
+end
+
+--- Order GameObject to Goto target GameObject / Path
+-- @param self GameObject instance.
+-- @param target Target GameObject or Path name.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Goto(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    if isgameobject(target) then
+        ffi.C.GotoH(self:GetHandle(), target:GetHandle(), priority);
+    elseif isstring(target) then
+        ffi.C.GotoP(self:GetHandle(), tocstring(target), priority)
+    else
+        error("Paramater self must be GameObject instance or string");
+    end
+end
+
+--- Order GameObject to Mine target Path
+-- @param self GameObject instance.
+-- @param target Target Path name.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Mine(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(target) then error("Paramater target must be string."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Mine(self:GetHandle(), tocstring(target), priority)
+end
+
+--- Order GameObject to Follow target GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject instance.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Follow(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Follow(self:GetHandle(), target:GetHandle(), priority);
+end
+
+--- Order GameObject to Defend area
+-- @param self GameObject instance.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Defend(self, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Defend(self:GetHandle(), priority);
+end
+
+--- Order GameObject to Defend2 target GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject instance.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Defend2(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Defend2(self:GetHandle(), target:GetHandle(), priority);
+end
+
+--- Order GameObject to Stop
+-- @param self GameObject instance.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Stop(self, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Stop(self:GetHandle(), priority);
+end
+
+--- Order GameObject to Patrol target path
+-- @param self GameObject instance.
+-- @param target Target Path name.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Patrol(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(target) then error("Paramater target must be string."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Patrol(self:GetHandle(), tocstring(target), priority);
+end
+
+--- Order GameObject to Retreat
+-- @param self GameObject instance.
+-- @param target Target GameObject or Path name.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Retreat(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    if isgameobject(target) then
+        ffi.C.RetreatH(self:GetHandle(), target:GetHandle(), priority);
+    elseif isstring(target) then
+        ffi.C.RetreatP(self:GetHandle(), tocstring(target), priority)
+    else
+        error("Paramater self must be GameObject instance or string");
+    end
+end
+
+--- Order GameObject to GetIn target GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.GetIn(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.GetIn(self:GetHandle(), target:GetHandle(), priority);
+end
+
+--- Order GameObject to Pickup target GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Pickup(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Pickup(self:GetHandle(), target:GetHandle(), priority);
+end
+
+--- Order GameObject to Pickup target path name
+-- @param self GameObject instance.
+-- @param target Target path name.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Dropoff(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(target) then error("Paramater target must be string."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Dropoff(self:GetHandle(), tocstring(target), priority)
+end
+
+--- Order GameObject to Build target config
+-- Oddly this function does not include a location for the action, might want to use the far more powerful orders system.
+-- @param self GameObject instance.
+-- @param target Target path name.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.Build(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(target) then error("Paramater target must be string."); end
+    if priority == nil then priority = 1; end
+    ffi.C.Build(self:GetHandle(), tocstring(target), priority);
+end
+
+--- Order GameObject to LookAt target GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject instance.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.LookAt(self, target, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    if priority == nil then priority = 1; end
+    ffi.C.LookAt(self:GetHandle(), target:GetHandle(), priority);
+end
+
+
+
+
+
+
+
+
+
+
+
+
+--- Build Object
+-- @param odf Object Definition File (without ".odf")
+-- @param team Team number for the object, 0 to 15
+-- @param pos Position as GameObject, Pathpoint Name, AiPath, Vector, or Matrix
 function BuildObject(odf, team, pos)
-  local msg = StringToCString(odf); -- convert lua string to cstring
+  local msg = tocstring(odf); -- convert lua string to cstring
   local handle = 0;
-  
-  if type(pos) == "table" and pos.GetHandle ~= nil and type(pos.GetHandle) == "function" then
+  if isgameobject(pos) then
     handle = ffi.C.BuildObject(msg, team, pos:GetHandle());
-  elseif type(pos) == "string" then
-    local path = StringToCString(pos);
-    handle = ffi.C.BuildObjectP(msg, team, path);
+  elseif isstring(pos) then
+    handle = ffi.C.BuildObjectP(msg, team, tocstring(pos));
   --elseif type(pos) == "AiPath" then
   --  handle = ffi.C.BuildObject(msg, team, pos)
-  elseif type(pos) == "cdata" and ffi.istype("Vector", pos) then
+  elseif isvector(pos) then
     handle = ffi.C.BuildObjectV(msg, team, pos);
-  elseif type(pos) == "cdata" and ffi.istype("Matrix", pos) then
+  elseif ismatrix(pos) then
     handle = ffi.C.BuildObjectM(msg, team, pos);
+  else
+    error("BuildObject pos paramater is invalid, received " .. type(pos) .. ", expected GameObject, Path Name (string), AiPath, Vector, or Matrix");
   end
   
   if handle == 0 then return nil end;
   return GameObject.new(handle);
 end
-function GameObject.RemoveObject(self)
-    ffi.C.RemoveObject(self.handle);
-end
-function GameObject.SetGroup(self, group)
-    ffi.C.SetGroup(self.handle, group);
-end
-function GameObject.Attack(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.Attack(self.handle, target:GetHandle(), priority);
-  else
-    error("GameObject:Service target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
-function GameObject.Service(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.Service(self.handle, target:GetHandle(), priority);
-  else
-    error("GameObject:Service target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
-function GameObject.Goto(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.GotoH(self.handle, target:GetHandle(), priority);
-  elseif type(target) == "string" then
-    local path = StringToCString(target);
-    ffi.C.GotoP(self.handle, path, priority)
-  else
-    error("GameObject:Goto target type invalid, received " .. type(target) .. ", expected GameObject or string");
-  end
-end
-function GameObject.Mine(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "string" then
-    local path = StringToCString(target);
-    ffi.C.Mine(self.handle, path, priority)
-  else
-    error("GameObject:Mine target type invalid, received " .. type(target) .. ", expected string");
-  end
-end
-function GameObject.Follow(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.Follow(self.handle, target:GetHandle(), priority);
-  else
-    error("GameObject:Follow target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
-function GameObject.Defend(self, target, priority)
-  if priority == nil then priority = 1; end
-  ffi.C.Defend(self.handle, priority);
-end
-function GameObject.Defend2(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.Defend2(self.handle, target:GetHandle(), priority);
-  else
-    error("GameObject:Defend2 target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
-function GameObject.Stop(self, target, priority)
-  if priority == nil then priority = 1; end
-  ffi.C.Stop(self.handle, priority);
-end
-function GameObject.Patrol(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "string" then
-    local path = StringToCString(target);
-    ffi.C.Patrol(self.handle, path, priority)
-  else
-    error("GameObject:Patrol target type invalid, received " .. type(target) .. ", expected string");
-  end
-end
-function GameObject.Retreat(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.RetreatH(self.handle, target:GetHandle(), priority);
-  elseif type(target) == "string" then
-    local path = StringToCString(target);
-    ffi.C.RetreatP(self.handle, path, priority)
-  else
-    error("GameObject:Retreat target type invalid, received " .. type(target) .. ", expected GameObject or string");
-  end
-end
-function GameObject.GetIn(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.GetIn(self.handle, target:GetHandle(), priority);
-  else
-    error("GameObject:GetIn target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
-function GameObject.Pickup(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.Pickup(self.handle, target:GetHandle(), priority);
-  else
-    error("GameObject:Pickup target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
-function GameObject.Dropoff(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "string" then
-    local path = StringToCString(target);
-    ffi.C.Dropoff(self.handle, path, priority)
-  else
-    error("GameObject:Dropoff target type invalid, received " .. type(target) .. ", expected string");
-  end
-end
-function GameObject.Build(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "string" then
-    local path = StringToCString(target);
-    ffi.C.Build(self.handle, path, priority);
-  else
-    error("GameObject:Build target type invalid, received " .. type(target) .. ", expected string");
-  end
-end
-function GameObject.LookAt(self, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.LookAt(self.handle, target:GetHandle(), priority);
-  else
-    error("GameObject:LookAt target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
+
+
+
 function AllLookAt(team, target, priority)
   if priority == nil then priority = 1; end
   if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
@@ -859,27 +1029,27 @@ function AllLookAt(team, target, priority)
 end
 function GameObject.IsOdf(self, odf)
   if type(odf) == "string" then
-    local odfClean = StringToCString(odf);
-    return ffi.C.IsOdf(self.handle, odfClean);
+    local odfClean = tocstring(odf);
+    return ffi.C.IsOdf(self:GetHandle(), odfClean);
   else
     error("IsOdf paramater type invalid, received " .. type(odf) .. ", expected string");
   end
 end
 function GameObject.GetRace(self)
-  return ffi.C.GetRace(self.handle);
+  return ffi.C.GetRace(self:GetHandle());
 end
 function GameObject.IsAround(self)
-  return ffi.C.IsAround(self.handle);
+  return ffi.C.IsAround(self:GetHandle());
 end
 function GameObject.InBuilding(self)
-  return Handle.new(ffi.C.InBuilding(self.handle));
+  return Handle.new(ffi.C.InBuilding(self:GetHandle()));
 end
 function GameObject.AtTerminal(self)
-  return Handle.new(ffi.C.AtTerminal(self.handle));
+  return Handle.new(ffi.C.AtTerminal(self:GetHandle()));
 end
 function GetHandle(name)
   if type(name) == "string" then
-    local cName = StringToCString(name);
+    local cName = tocstring(name);
     return Handle.new(ffi.C.GetHandle(cName));
   elseif type(name) == "number" then
     return Handle.new(ffi.C.GetHandleSeq(name));
@@ -889,84 +1059,84 @@ function GetHandle(name)
 end
 function GameObject.GetPositionV(self)
   local Vector retVal = Vector();
-  ffi.C.GetPositionV(self.handle, retVal);
+  ffi.C.GetPositionV(self:GetHandle(), retVal);
   return retVal;
 end
 function GameObject.GetPosition2(self)
   local Vector retVal = Vector();
-  ffi.C.GetPosition2(self.handle, retVal);
+  ffi.C.GetPosition2(self:GetHandle(), retVal);
   return retVal;
 end
 function GameObject.GetFront(self)
   local Vector retVal = Vector();
-  ffi.C.GetFront(self.handle, retVal);
+  ffi.C.GetFront(self:GetHandle(), retVal);
   return retVal;
 end
 function GameObject.GetPositionM(self)
   local Matrix retVal = Matrix();
-  ffi.C.GetPositionM(self.handle, retVal);
+  ffi.C.GetPositionM(self:GetHandle(), retVal);
   return retVal;
 end
 function GameObject.SetPositionM(self, loc)
-  ffi.C.GetPositionM(self.handle, loc);
+  ffi.C.GetPositionM(self:GetHandle(), loc);
 end
 function GameObject.Damage(self, amt)
-  ffi.C.Damage(self.handle, amt);
+  ffi.C.Damage(self:GetHandle(), amt);
 end
 function GameObject.GetHealth(self)
-  return ffi.C.GetHealth(self.handle);
+  return ffi.C.GetHealth(self:GetHandle());
 end
 function GameObject.GetCurHealth(self)
-  return ffi.C.GetCurHealth(self.handle);
+  return ffi.C.GetCurHealth(self:GetHandle());
 end
 function GameObject.GetMaxHealth(self)
-  return ffi.C.GetMaxHealth(self.handle);
+  return ffi.C.GetMaxHealth(self:GetHandle());
 end
 function GameObject.SetCurHealth(self, NewHealth)
-  ffi.C.SetCurHealth(self.handle, NewHealth);
+  ffi.C.SetCurHealth(self:GetHandle(), NewHealth);
 end
 function GameObject.SetMaxHealth(self, NewHealth)
-  ffi.C.SetMaxHealth(self.handle, NewHealth);
+  ffi.C.SetMaxHealth(self:GetHandle(), NewHealth);
 end
 function GameObject.AddHealth(self, health)
-  ffi.C.AddHealth(self.handle, health)
+  ffi.C.AddHealth(self:GetHandle(), health)
 end
 function GameObject.GetAmmo(self)
-  return ffi.C.GetAmmo(self.handle);
+  return ffi.C.GetAmmo(self:GetHandle());
 end
 function GameObject.AddAmmo(self, ammo)
-  ffi.C.AddAmmo(self.handle, ammo);
+  ffi.C.AddAmmo(self:GetHandle(), ammo);
 end
 function GameObject.GetCurAmmo(self)
-  return ffi.C.GetCurAmmo(self.handle);
+  return ffi.C.GetCurAmmo(self:GetHandle());
 end
 function GameObject.GetMaxAmmo(self)
-  return ffi.C.GetMaxAmmo(self.handle);
+  return ffi.C.GetMaxAmmo(self:GetHandle());
 end
 function GameObject.SetCurAmmo(self, NewAmmo)
-  ffi.C.SetCurAmmo(self.handle, NewAmmo);
+  ffi.C.SetCurAmmo(self:GetHandle(), NewAmmo);
 end
 function GameObject.SetMaxAmmo(self, NewAmmo)
-  ffi.C.SetMaxAmmo(self.handle, NewAmmo);
+  ffi.C.SetMaxAmmo(self:GetHandle(), NewAmmo);
 end
 function GameObject.GetTeamNum(self)
-  return ffi.C.GetTeamNum(self.handle);
+  return ffi.C.GetTeamNum(self:GetHandle());
 end
 function GameObject.SetTeamNum(self, t)
-  ffi.C.SetTeamNum(self.handle, t);
+  ffi.C.SetTeamNum(self:GetHandle(), t);
 end
 function GameObject.SetPositionP(self, path)
-  ffi.C.SetPositionP(self.handle, StringToCString(path));
+  ffi.C.SetPositionP(self:GetHandle(), tocstring(path));
 end
 function GameObject.SetVectorPosition(self, pos)
-  ffi.C.SetVectorPosition(self.handle, pos);
+  ffi.C.SetVectorPosition(self:GetHandle(), pos);
 end
 function GameObject.SetVelocity(self, vel)
-  ffi.C.SetVelocity(self.handle, vel);
+  ffi.C.SetVelocity(self:GetHandle(), vel);
 end
 --SetControls
 function GameObject.GetWhoShotMe(self)
-  return Handle.new(ffi.C.GetWhoShotMe(self.handle));
+  return Handle.new(ffi.C.GetWhoShotMe(self:GetHandle()));
 end
 --GetLastEnemyShot
 --GetLastFriendShot
@@ -983,11 +1153,11 @@ function UnAlly(t1, t2)
   ffi.C.UnAlly(t1, t2);
 end
 function GameObject.IsAlly(self, him)
-  return ffi.C.IsAlly(self.handle, him);
+  return ffi.C.IsAlly(self:GetHandle(), him);
 end
 function AudioMessage(msg, purge)
   if purge == nil then purge = false; end
-  return ffi.C.AudioMessage(StringToCString(msg), purge);
+  return ffi.C.AudioMessage(tocstring(msg), purge);
 end
 function IsAudioMessageDone(id)
   return ffi.C.IsAudioMessageDone(id);
@@ -996,33 +1166,29 @@ function StopAudioMessage(id)
   ffi.C.StopAudioMessage(id);
 end
 function PreloadAudioMessage(msg)
-  ffi.C.PreloadAudioMessage(StringToCString(msg));
+  ffi.C.PreloadAudioMessage(tocstring(msg));
 end
 function PurgeAudioMessage(msg)
-  ffi.C.PurgeAudioMessage(StringToCString(msg));
+  ffi.C.PurgeAudioMessage(tocstring(msg));
 end
 
 function PreloadMusicMessage(msg)
-  ffi.C.PreloadMusicMessage(StringToCString(msg));
+  ffi.C.PreloadMusicMessage(tocstring(msg));
 end
 function PurgeMusicMessage(msg)
-  ffi.C.PurgeMusicMessage(StringToCString(msg));
+  ffi.C.PurgeMusicMessage(tocstring(msg));
 end
 function LoadJukeFile(msg)
-  ffi.C.LoadJukeFile(StringToCString(msg));
+  ffi.C.LoadJukeFile(tocstring(msg));
 end
 function SetMusicIntensity(intensity)
   ffi.C.SetMusicIntensity(intensity);
 end
---FindAiPath
---FreeAiPath
---GetAiPaths
---SetPathType
 function GameObject.SetIndependence(independence)
-  ffi.C.SetIndependence(self.handle, independence);
+  ffi.C.SetIndependence(self:GetHandle(), independence);
 end
 function IsInfo(odf)
-  return ffi.C.IsInfo(StringToCString(odf));
+  return ffi.C.IsInfo(tocstring(odf));
 end
 function StartCockpitTimer(time, warn, alert)
   if warn == nil then warn = LONG_MIN; end
@@ -1056,13 +1222,13 @@ end
 --Read
 --Write
 function GameObject:IsPerson(self)
-  return ffi.C.IsPerson(self.handle);
+  return ffi.C.IsPerson(self:GetHandle());
 end
 function GetCurWorld()
   return ffi.C.GetCurWorld();
 end
 function GetVarItemStr(VarItemName)
-  return ffi.C.GetVarItemStr(StringToCString(VarItemName));
+  return ffi.C.GetVarItemStr(tocstring(VarItemName));
 end
 function GetVarItemInt(VarItemName)
   return ffi.C.GetVarItemStr(GetVarItemInt(VarItemName));
@@ -1074,84 +1240,84 @@ function GetCVarItemStr(TeamNum, Idx)
   return ffi.C.GetCVarItemStr(TeamNum, Idx);
 end
 function PreloadODF(cfg)
-  ffi.C.PreloadODF(StringToCString(cfg));
+  ffi.C.PreloadODF(tocstring(cfg));
 end
 function TerrainFindFloor(x, z)
   return ffi.C.TerrainFindFloor(x, z);
 end
 function GameObject.AddPilot(self)
-  ffi.C.AddPilotByHandle(self.handle)
+  ffi.C.AddPilotByHandle(self:GetHandle())
 end
 function PrintConsoleMessage(msg)
-  ffi.C.PrintConsoleMessage(StringToCString(msg));
+  ffi.C.PrintConsoleMessage(tocstring(msg));
 end
 function GetRandomFloat(range)
   return ffi.C.GetRandomFloat(range);
 end
 function GameObject.IsDeployed(self)
-  return ffi.C.IsDeployed(self.handle);
+  return ffi.C.IsDeployed(self:GetHandle());
 end
 function GameObject.Deploy(self)
-  ffi.C.Deploy(self.handle);
+  ffi.C.Deploy(self:GetHandle());
 end
 function GameObject.IsSelected(self)
-  return ffi.C.IsSelected(self.handle);
+  return ffi.C.IsSelected(self:GetHandle());
 end
 function SetWeaponMask(self, mask)
-  ffi.C.SetWeaponMask(self.handle, mask);
+  ffi.C.SetWeaponMask(self:GetHandle(), mask);
 end
 function GiveWeapon(self, weapon)
-  ffi.C.GiveWeapon(self.handle, StringToCString(weapon));
+  ffi.C.GiveWeapon(self:GetHandle(), tocstring(weapon));
 end
 function GameObject.FireAt(self, target, doAim)
   if doAim == nil then doAim = false; end
   if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.FireAt(self.handle, target:GetHandle(), doAim);
+    ffi.C.FireAt(self:GetHandle(), target:GetHandle(), doAim);
   else
     error("GameObject:FireAt target type invalid, received " .. type(target) .. ", expected GameObject");
   end
 end
 function GameObject.IsFollowing(self)
-  return ffi.C.IsFollowing(self.handle);
+  return ffi.C.IsFollowing(self:GetHandle());
 end
 function GameObject.WhoFollowing(self)
-  return GameObject.new(ffi.C.WhoFollowing(self.handle));
+  return GameObject.new(ffi.C.WhoFollowing(self:GetHandle()));
 end
 function SetUserTarget(h)
   ffi.C.SetUserTarget(h.GetHandle());
 end
 function GameObject.SetPerceivedTeam(self, team)
-  ffi.C.SetPerceivedTeam(self.handle, team);
+  ffi.C.SetPerceivedTeam(self:GetHandle(), team);
 end
 function GameObject.GetCurrentWho(self)
-  return GameObject.new(ffi.C.GetCurrentWho(self.handle));
+  return GameObject.new(ffi.C.GetCurrentWho(self:GetHandle()));
 end
 function GameObject.EjectPilot(self)
-  ffi.C.EjectPilot(self.handle);
+  ffi.C.EjectPilot(self:GetHandle());
 end
 function GameObject.HopOut(self)
-  ffi.C.HopOut(self.handle);
+  ffi.C.HopOut(self:GetHandle());
 end
 function GameObject.KillPilot(self)
-  ffi.C.KillPilot(self.handle);
+  ffi.C.KillPilot(self:GetHandle());
 end
 function GameObject.RemovePilotAI(self)
-  ffi.C.RemovePilotAI(self.handle);
+  ffi.C.RemovePilotAI(self:GetHandle());
 end
 function GameObject.HoppedOutOf(self)
-  return GameObject.new(ffi.C.HoppedOutOf(self.handle));
+  return GameObject.new(ffi.C.HoppedOutOf(self:GetHandle()));
 end
 --
 function CalcCRC(n)
-  return ffi.C.CalcCRC(StringToCString(n));
+  return ffi.C.CalcCRC(tocstring(n));
 end
 --
 function GameObject.SetSkill(self, s)
-  ffi.C.SetSkill(self.handle, s);
+  ffi.C.SetSkill(self:GetHandle(), s);
 end
 function SetPlan(cfg, team)
   if team == nil then team = -1; end
-  ffi.C.SetSkill(StringToCString(cfg), team);
+  ffi.C.SetSkill(tocstring(cfg), team);
 end
 function LogFloat(v)
   ffi.C.LogFloat(v);
@@ -1182,22 +1348,22 @@ end
 function GameObject.SetAnimation(self, name, type)
   if type == nil then type = 0; end
   type = math.clamp(type,0,1);
-  return ffi.C.SetAnimation(self.handle, StringToCString(name), type);
+  return ffi.C.SetAnimation(self:GetHandle(), tocstring(name), type);
 end
 function GameObject.GetAnimationFrame(self, name)
-  return ffi.C.GetAnimationFrame(self.handle, StringToCString(name));
+  return ffi.C.GetAnimationFrame(self:GetHandle(), tocstring(name));
 end
 function GameObject.StartAnimation(self)
-  ffi.C.StartAnimation(self.handle);
+  ffi.C.StartAnimation(self:GetHandle());
 end
 function GameObject.MaskEmitter(self, mask)
-  ffi.C.MaskEmitter(self.handle, mask);
+  ffi.C.MaskEmitter(self:GetHandle(), mask);
 end
 function GameObject.StartEmitter(self, slot)
-  ffi.C.StartEmitter(self.handle, slot);
+  ffi.C.StartEmitter(self:GetHandle(), slot);
 end
 function GameObject.StopEmitter(self, slot)
-  ffi.C.StopEmitter(self.handle, slot);
+  ffi.C.StopEmitter(self:GetHandle(), slot);
 end
 --SaveObjects
 --LoadObjects
@@ -1208,13 +1374,13 @@ function IsRecording()
   return ffi.C.IsRecording();
 end
 function GameObject.SetObjectiveOn(self)
-  ffi.C.SetObjectiveOn(self.handle);
+  ffi.C.SetObjectiveOn(self:GetHandle());
 end
 function GameObject.SetObjectiveOff(self)
-  ffi.C.SetObjectiveOff(self.handle);
+  ffi.C.SetObjectiveOff(self:GetHandle());
 end
 function GameObject.SetObjectiveName(self, name)
-  ffi.C.SetObjectiveName(self.handle, StringToCString(name));
+  ffi.C.SetObjectiveName(self:GetHandle(), tocstring(name));
 end
 function ClearObjectives()
   ffi.C.ClearObjectives();
@@ -1226,42 +1392,42 @@ function AddObjective(name, color, showTime)
   end
   colorIn = bit.band(0xFFFFFFFF,colorIn)
   if showTime == nil then
-    ffi.C.AddObjective(StringToCString(name),colorIn, 8.0)
+    ffi.C.AddObjective(tocstring(name),colorIn, 8.0)
   else
-    ffi.C.AddObjective(StringToCString(name),colorIn,showTime)
+    ffi.C.AddObjective(tocstring(name),colorIn,showTime)
   end
 end
 function GameObject.IsWithin(self, h2, distance)
-  return ffi.C.IsWithin(self.handle, h2:GetHandle(), distance);
+  return ffi.C.IsWithin(self:GetHandle(), h2:GetHandle(), distance);
 end
 function GameObject.CountUnitsNearObject(self, dist, team, odf)
-  return ffi.C.CountUnitsNearObject(self.handle, dist, team, StringToCString(odf));
+  return ffi.C.CountUnitsNearObject(self:GetHandle(), dist, team, tocstring(odf));
 end
 function GameObject.SetAvoidType(self, avoidType)
-  ffi.C.SetAvoidType(self.handle, avoidType);
+  ffi.C.SetAvoidType(self:GetHandle(), avoidType);
 end
 function GameObject.Annoy(self, target)
-  ffi.C.Annoy(self.handle, target:GetHandle());
+  ffi.C.Annoy(self:GetHandle(), target:GetHandle());
 end
 function GameObject.ClearThrust(self)
-  ffi.C.ClearThrust(self.handle);
+  ffi.C.ClearThrust(self:GetHandle());
 end
 function GameObject.SetVerbose(self, on)
-  ffi.C.SetVerbose(self.handle, on);
+  ffi.C.SetVerbose(self:GetHandle(), on);
 end
 function GameObject.ClearIdleAnims(self)
-  ffi.C.ClearIdleAnims(self.handle);
+  ffi.C.ClearIdleAnims(self:GetHandle());
 end
 function GameObject.AddIdleAnim(self, name)
-  ffi.C.AddIdleAnim(self.handle, StringToCString(name));
+  ffi.C.AddIdleAnim(self:GetHandle(), tocstring(name));
 end
 function GameObject.IsIdle(self)
-  return ffi.C.IsIdle(self.handle);
+  return ffi.C.IsIdle(self:GetHandle());
 end
 function GameObject.CountThreats(self)
   local here = ffi.new("int[1]");
   local coming = ffi.new("int[1]");
-  ffi.C.CountThreats(self.handle, here, coming);
+  ffi.C.CountThreats(self:GetHandle(), here, coming);
   return tonumber(here[0]),tonumber(coming[0]);
 end
 --SpawnBirds
@@ -1280,10 +1446,10 @@ function StopCheats()
 end
 --CalcCliffs
 function StartSoundEffect(file, h)
-  return ffi.C.StartSoundEffect(StringToCString(file), h:GetHandle());
+  return ffi.C.StartSoundEffect(tocstring(file), h:GetHandle());
 end
 function FindSoundEffect(file, h)
-  return ffi.C.FindSoundEffect(StringToCString(file), h:GetHandle());
+  return ffi.C.FindSoundEffect(tocstring(file), h:GetHandle());
 end
 function StopSoundEffect(sound)
   ffi.C.StopSoundEffect(sound);
@@ -1344,10 +1510,10 @@ function GetRaceOfTeam(TeamNum)
   return ffi.C.GetRaceOfTeam(TeamNum);
 end
 function GameObject.IsPlayer(self)
-  return ffi.C.IsPlayer(self.handle);
+  return ffi.C.IsPlayer(self:GetHandle());
 end
 function GameObject.GetPlayerName(self)
-  return ffi.C.GetPlayerName(self.handle);
+  return ffi.C.GetPlayerName(self:GetHandle());
 end
 function WhichTeamGroup(Team)
   local retVal = ffi.C.WhichTeamGroup(Team);
@@ -1376,7 +1542,7 @@ function GetTeamplayRanges(Team)
   return tonumber(DefenseTeamNum),tonumber(OffenseMinTeamNum),tonumber(OffenseMaxTeamNum);
 end
 function GameObject.SetRandomHeadingAngle(self)
-  return ffi.C.SetRandomHeadingAngle(self.handle);
+  return ffi.C.SetRandomHeadingAngle(self:GetHandle());
 end
 function ClearTeamColors()
   ffi.C.ClearTeamColors();
@@ -1397,14 +1563,14 @@ function ClearTeamColor(team)
   ffi.C.ClearTeamColor(team);
 end
 function GameObject.MakeInert(self)
-  ffi.C.MakeInert(self.handle);
+  ffi.C.MakeInert(self:GetHandle());
 end
 function GetPositionNear(Pos, MinRadiusAway, MaxRadiusAway)
   return ffi.C.GetPositionNear(Pos, MinRadiusAway, MaxRadiusAway);
 end
 --GetPlayerODF
 function GameObject.BuildEmptyCraftNear(self, ODF, Team, MinRadiusAway, MaxRadiusAway)
-  return GameObject.new(ffi.C.BuildEmptyCraftNear(self, StringToCString(ODF), Team, MinRadiusAway, MaxRadiusAway));
+  return GameObject.new(ffi.C.BuildEmptyCraftNear(self, tocstring(ODF), Team, MinRadiusAway, MaxRadiusAway));
 end
 function SetCircularPos(CenterPos, Radius, Angle)
   local NewPos = Vector();
@@ -1425,46 +1591,46 @@ function GetRandomSpawnpoint(TeamNum)
   return ffi.C.GetRandomSpawnpoint(TeamNum);
 end
 function SetTimerBox(message)
-  ffi.C.SetTimerBox(StringToCString(message));
+  ffi.C.SetTimerBox(tocstring(message));
 end
 function AddToMessagesBox(msg)
-  ffi.C.AddToMessagesBox(StringToCString(msg));
+  ffi.C.AddToMessagesBox(tocstring(msg));
 end
 function GameObject.GetDeaths(self)
-  return ffi.C.GetDeaths(self.handle);
+  return ffi.C.GetDeaths(self:GetHandle());
 end
 function GameObject.GetKills(self)
-  return ffi.C.GetKills(self.handle);
+  return ffi.C.GetKills(self:GetHandle());
 end
 function GameObject.GetScore(self)
-  return ffi.C.GetScore(self.handle);
+  return ffi.C.GetScore(self:GetHandle());
 end
 function GameObject.SetDeaths(self, NewValue)
-  return ffi.C.SetDeaths(self.handle, NewValue);
+  return ffi.C.SetDeaths(self:GetHandle(), NewValue);
 end
 function GameObject.SetKills(self, NewValue)
-  return ffi.C.SetKills(self.handle, NewValue);
+  return ffi.C.SetKills(self:GetHandle(), NewValue);
 end
 function GameObject.SetScore(self, NewValue)
-  return ffi.C.SetScore(self.handle, NewValue);
+  return ffi.C.SetScore(self:GetHandle(), NewValue);
 end
 function GameObject.AddDeaths(self, delta)
-  ffi.C.AddDeaths(self.handle, delta)
+  ffi.C.AddDeaths(self:GetHandle(), delta)
 end
 function GameObject.AddKills(self, delta)
-  ffi.C.AddKills(self.handle, delta)
+  ffi.C.AddKills(self:GetHandle(), delta)
 end
 function AddScore(team, delta)
   ffi.C.AddScore(team, delta)
 end
 function GameObject.SetAsUser(self, Team)
-  ffi.C.SetAsUser(self.handle, Team);
+  ffi.C.SetAsUser(self:GetHandle(), Team);
 end
 function GameObject.SetNoScrapFlagByHandle(self)
-  ffi.C.SetNoScrapFlagByHandle(self.handle);
+  ffi.C.SetNoScrapFlagByHandle(self:GetHandle());
 end
 function GameObject.ClearNoScrapFlagByHandle(self)
-  ffi.C.ClearNoScrapFlagByHandle(self.handle);
+  ffi.C.ClearNoScrapFlagByHandle(self:GetHandle());
 end
 function GetLocalPlayerTeamNumber()
   return ffi.C.GetLocalPlayerTeamNumber();
@@ -1473,25 +1639,25 @@ function GetLocalPlayerDPID()
   return ffi.C.GetLocalPlayerDPID();
 end
 function GameObject.FlagStealBy(self, holder)
-  ffi.C.FlagSteal(self.handle, holder.GetHandle());
+  ffi.C.FlagSteal(self:GetHandle(), holder.GetHandle());
 end
 function GameObject.FlagRecoverBy(self, holder)
-  ffi.C.FlagRecover(self.handle, holder.GetHandle());
+  ffi.C.FlagRecover(self:GetHandle(), holder.GetHandle());
 end
 function GameObject.FlagScoreBy(self, holder)
-  ffi.C.FlagScore(self.handle, holder.GetHandle());
+  ffi.C.FlagScore(self:GetHandle(), holder.GetHandle());
 end
 function GameObject.FlagSteal(self, holder)
-  ffi.C.FlagSteal(holder.GetHandle(), self.handle);
+  ffi.C.FlagSteal(holder.GetHandle(), self:GetHandle());
 end
 function GameObject.FlagRecover(self, holder)
-  ffi.C.FlagRecover(holder.GetHandle(), self.handle);
+  ffi.C.FlagRecover(holder.GetHandle(), self:GetHandle());
 end
 function GameObject.FlagScore(self, holder)
-  ffi.C.FlagScore(holder.GetHandle(), self.handle);
+  ffi.C.FlagScore(holder.GetHandle(), self:GetHandle());
 end
 function GameObject.MoneyScore(self, ammount)
-  ffi.C.MoneyScore(ammount, self.handle);
+  ffi.C.MoneyScore(ammount, self:GetHandle());
 end
 function NoteGameoverByTimelimit()
   ffi.C.NoteGameoverByTimelimit()
@@ -1521,11 +1687,11 @@ function GetUserTarget(TeamNum)
   return GameObject.new(ffi.C.GameUserTarget(TeamNum));
 end
 function GameObject.GetTarget(self)
-  return GameObject.new(GetTarget(self.handle));
+  return GameObject.new(GetTarget(self:GetHandle()));
 end
 function IFace_ConsoleCmd(pStr, bSquelchOutput)
   if bSquelchOutput == nil then bSquelchOutput = true; end
-  ffi.C.IFace_ConsoleCmd(StringToCString(pStr));
+  ffi.C.IFace_ConsoleCmd(tocstring(pStr));
 end
 function AddToMessagesBox2(message, color)
   local colorIn = color;
@@ -1533,32 +1699,32 @@ function AddToMessagesBox2(message, color)
     colorIn = color:ToColorLong()
   end
   colorIn = bit.band(0xFFFFFFFF,colorIn)
-  ffi.C.AddToMessagesBox2(StringToCString(message), colorIn)
+  ffi.C.AddToMessagesBox2(tocstring(message), colorIn)
 end
 function Network_SetString(name, value)
-  ffi.C.Network_SetString(StringToCString(name), StringToCString(value));
+  ffi.C.Network_SetString(tocstring(name), tocstring(value));
 end
 function Network_SetInteger(name, value)
-  ffi.C.Network_SetInteger(StringToCString(name), value);
+  ffi.C.Network_SetInteger(tocstring(name), value);
 end
 function GetFirstEmptyGroup(t)
   return ffi.C.GetFirstEmptyGroup(t);
 end
 function GameObject.GetVelocity(self)
-  return ffi.C.GetVelocity(self.handle);
+  return ffi.C.GetVelocity(self:GetHandle());
 end
 --GetObjInfo(Handle h, ObjectInfoType type, char pBuffer[64]);
 function DoesODFExist(odf)
-  return ffi.C.DoesODFExist(StringToCString(odf));
+  return ffi.C.DoesODFExist(tocstring(odf));
 end
 function GameObject.IsAlive2(self)
-  return ffi.C.IsAlive2(self.handle);
+  return ffi.C.IsAlive2(self:GetHandle());
 end
 function GameObject.IsFlying2(self)
-  return ffi.C.IsFlying2(self.handle);
+  return ffi.C.IsFlying2(self:GetHandle());
 end
 function GameObject.IsAliveAndPilot2(self)
-  return ffi.C.IsAliveAndPilot2(self.handle);
+  return ffi.C.IsAliveAndPilot2(self:GetHandle());
 end
 function TranslateString2(Src, size)
   local passIn;
@@ -1569,34 +1735,34 @@ function TranslateString2(Src, size)
     passIn = ffi.new("char[?]",size + 1);
   end
   ffi.fill(passIn,size + 1);
-  ffi.C.TranslateString2(passIn, size, StringToCString(Src));
+  ffi.C.TranslateString2(passIn, size, tocstring(Src));
   return tostring(passIn);
 end
 function GameObject.GetScavengerCurScrap(self)
-  local retVal = ffi.C.GetScavengerCurScrap(self.handle);
+  local retVal = ffi.C.GetScavengerCurScrap(self:GetHandle());
   if retVal == -1 then
     return nil;
   end
   return GameObject.new(retVal);
 end
 function GameObject.GetScavengerMaxScrap(self)
-  local retVal = ffi.C.GetScavengerMaxScrap(self.handle);
+  local retVal = ffi.C.GetScavengerMaxScrap(self:GetHandle());
   if retVal == -1 then
     return nil;
   end
   return GameObject.new(retVal);
 end
 function GameObject.SetScavengerCurScrap(self,aNewScrap)
-  ffi.C.SetScavengerCurScrap(self.handle,aNewScrap);
+  ffi.C.SetScavengerCurScrap(self:GetHandle(),aNewScrap);
 end
 function GameObject.SetScavengerMaxScrap(self,aNewScrap)
-  ffi.C.SetScavengerMaxScrap(self.handle,aNewScrap);
+  ffi.C.SetScavengerMaxScrap(self:GetHandle(),aNewScrap);
 end
 function GameObject.DamageF(self, amt)
-  ffi.C.DamageF(self.handle, amt);
+  ffi.C.DamageF(self:GetHandle(), amt);
 end
 function GameObject.SelfDamage(self, amt)
-  ffi.C.SelfDamage(self.handle, amt);
+  ffi.C.SelfDamage(self:GetHandle(), amt);
 end
 function WantBotKillMessages()
   ffi.C.WantBotKillMessages();
@@ -1611,15 +1777,15 @@ function GetLocalUserSelectHandle()
   return GameObject.new(ffi.C.GetLocalUserSelectHandle());
 end
 function GameObject.ResetTeamSlot(self)
-  ffi.C.ResetTeamSlot(self.handle);
+  ffi.C.ResetTeamSlot(self:GetHandle());
 end
 function GameObject.GetCategoryTypeOverride(self)
-  local retVal = ffi.C.GetCategoryTypeOverride(self.handle);
+  local retVal = ffi.C.GetCategoryTypeOverride(self:GetHandle());
   if retVal == -1 then return nil; end
   return retVal;
 end
 function GameObject.GetCategoryType(self)
-  local retVal = ffi.C.GetCategoryType(self.handle);
+  local retVal = ffi.C.GetCategoryType(self:GetHandle());
   if retVal == -1 then return nil; end
   return retVal;
 end
@@ -1636,10 +1802,10 @@ DLLEXPORT int DLLAPI GetODFVector(const char* file, const char* block, const cha
 DLLEXPORT bool DLLAPI OpenODF(char *name);
 DLLEXPORT bool DLLAPI CloseODF(char *name);]]
 function NoteGameoverWithCustomMessage(pString)
-  ffi.C.NoteGameoverWithCustomMessage(StringToCString(pString));
+  ffi.C.NoteGameoverWithCustomMessage(tocstring(pString));
 end
 function GameObject.SetBestGroup(self)
-  return ffi.C.SetBestGroup(self.handle);
+  return ffi.C.SetBestGroup(self:GetHandle());
 end
 function GetGroup(team, group, type)
   local pBuffer = ffi.new("char[64]");
@@ -1651,13 +1817,13 @@ function GetGroupCount(team, group)
 end
 function GameObject.SetLifespan(self, timout)
   if timeout == nil then timeout = -1; end
-  ffi.C.SetLifespan(self.handle, timeout);
+  ffi.C.SetLifespan(self:GetHandle(), timeout);
 end
 function DoesFileExist(filename)
-  return ffi.C.DoesFileExist(StringToCString(filename));
+  return ffi.C.DoesFileExist(tocstring(filename));
 end
 function LoadFile(filename)
-  local filenameC = StringToCString(LoadFile);
+  local filenameC = tocstring(LoadFile);
   local bufSize = ffi.new("unsigned int[1]");
   local success = ffi.C.LoadFile(filename, nil, bufSize);
   if not success then return nil; end
@@ -1672,17 +1838,17 @@ function StartAudio3D(name, gameobject, category, loop, stopLast)
   if category == nil then category = DLLAudioCategory.AUDIO_CAT_UNKNOWN; end
   if loop == nil then loop = false; end
   if stopLast == nil then stopLast = false; end
-  return ffi.C.StartAudio3D(StringToCString(name), gameobject.GetHandle(), category, loop, stopLast);
+  return ffi.C.StartAudio3D(tocstring(name), gameobject.GetHandle(), category, loop, stopLast);
 end
 function StartAudio3DV(name, pos, category, loop)
   if category == nil then category = DLLAudioCategory.AUDIO_CAT_UNKNOWN; end
   if loop == nil then loop = false; end
-  return ffi.C.StartAudio3DV(StringToCString(name), pos.x, post.y, pos.z, category, loop);
+  return ffi.C.StartAudio3DV(tocstring(name), pos.x, post.y, pos.z, category, loop);
 end
 function StartAudio2D(name, volume, pan, rate, loop, isMusic)
   if loop == nil then loop = false; end
   if isMusic == nil then isMusic = false; end
-  return ffi.C.StartAudio2D(StringToCString(name), volume, pan, rate, loop, isMusic);
+  return ffi.C.StartAudio2D(tocstring(name), volume, pan, rate, loop, isMusic);
 end
 function IsAudioPlaying(h)
   return ffi.C.IsAudioPlaying(h);
@@ -1727,13 +1893,13 @@ end
 function GameObject.SetCommand(self, cmd, priority, who, loc, param)
   if param == nil then param = 0; end
   if type(pos) == "cdata" and ffi.istype("Vector", pos) then
-    ffi.C.SetCommandV(self.handle, cmd, priority, who.GetHandle(), where, param);
+    ffi.C.SetCommandV(self:GetHandle(), cmd, priority, who.GetHandle(), where, param);
   else
     if priority == nil then priority = 0; end
     if who == nil then who = 0; end
     if isgameobject(who) then who = who.GetHandle(); end
-    if path ~= nil then path = StringToCString(path); end
-    ffi.C.SetCommandP(self.handle, cmd, priority, who, path, param);
+    if path ~= nil then path = tocstring(path); end
+    ffi.C.SetCommandP(self:GetHandle(), cmd, priority, who, path, param);
   end
 end
 function SetGravity(gravity)
@@ -1746,7 +1912,7 @@ function SetAutoGroupUnits(autoGroup)
 end
 function GameObject.KickPlayer(self, pExplanationStr, banAlso)
   if banAlso == nil then banAlso = false; end
-  ffi.C.KickPlayer(self.handle, StringToCString(pExplanationStr));
+  ffi.C.KickPlayer(self:GetHandle(), tocstring(pExplanationStr));
 end
 function TerrainIsWater(posORx, z)
   if z == nil then
@@ -1772,7 +1938,7 @@ function GetOutputPath()
   return tostring(pData);
 end
 function GetPathPoints(path)
-  local pathC = StringToCString(path);
+  local pathC = tocstring(path);
   local bufSize = ffi.new("int[0]");
   local sucess = ffi.C.GetPathPoints(pathC, bufSize, nil);
   if not success then return nil; end
@@ -1786,16 +1952,16 @@ function GetPathPoints(path)
   return paths;
 end
 function GameObject.GetOwner(self)
-  return GameObject.new(ffi.C.GetOwner(self.handle));
+  return GameObject.new(ffi.C.GetOwner(self:GetHandle()));
 end
 function GameObject.SetTarget(self, target)
-  return GameObject.new(ffi.C.SetTarget(self.handle, target));
+  return GameObject.new(ffi.C.SetTarget(self:GetHandle(), target));
 end
 function GameObject.SetOwner(self, owner)
-  return GameObject.new(ffi.C.SetOwner(self.handle, owner));
+  return GameObject.new(ffi.C.SetOwner(self:GetHandle(), owner));
 end
 function GameObject.SetPilotClass(self, odf)
-  ffi.C.SetPilotClass(self.handle, StringToCString(odf));
+  ffi.C.SetPilotClass(self:GetHandle(), tocstring(odf));
 end
 function AllowRandomTracks(allow)
   if allow == nil then allow = true end
@@ -1868,31 +2034,31 @@ function IsTeamAllied(t1, t2)
   return ffi.C.IsTeamAllied(t1, t2);
 end
 function GameObject.IsNotDeadAndPilot2(self)
-  return ffi.C.IsNotDeadAndPilot2(self.handle);
+  return ffi.C.IsNotDeadAndPilot2(self:GetHandle());
 end
 function GameObject.GetLabel(self)
-  return ffi.C.GetLabel(self.handle);
+  return ffi.C.GetLabel(self:GetHandle());
 end
 function GameObject.SetLabel(self, pLabel)
-  ffi.C.SetLabel(self.handle, StringToCString(pLabel));
+  ffi.C.SetLabel(self:GetHandle(), tocstring(pLabel));
 end
 function GameObject.GetTap(self, index)
-  return GameObject.new(ffi.C.GetTap(self.handle, index));
+  return GameObject.new(ffi.C.GetTap(self:GetHandle(), index));
 end
 function GameObject.SetTap(self, index, tapObjectHandle)
-  ffi.C.SetTap(self.handle, index, tapObjectHandle.GetHandle());
+  ffi.C.SetTap(self:GetHandle(), index, tapObjectHandle.GetHandle());
 end
 function GameObject.GetCurLocalAmmo(self, weaponIndex)
-  return ffi.C.GetCurLocalAmmo(self.handle, weaponIndex)
+  return ffi.C.GetCurLocalAmmo(self:GetHandle(), weaponIndex)
 end
 function GameObject.AddLocalAmmo(self, ammount, weaponIndex)
-  ffi.C.AddLocalAmmo(self.handle, ammount, weaponIndex)
+  ffi.C.AddLocalAmmo(self:GetHandle(), ammount, weaponIndex)
 end
 function GameObject.GetMaxLocalAmmo(self, weaponIndex)
-  return ffi.C.GetMaxLocalAmmo(self.handle, weaponIndex)
+  return ffi.C.GetMaxLocalAmmo(self:GetHandle(), weaponIndex)
 end
 function GameObject.SetCurLocalAmmo(self, v, weaponIndex)
-  ffi.C.SetCurLocalAmmo(self.handle, v, weaponIndex)
+  ffi.C.SetCurLocalAmmo(self:GetHandle(), v, weaponIndex)
 end
 
 
