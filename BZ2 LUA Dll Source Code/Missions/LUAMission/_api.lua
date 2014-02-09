@@ -717,6 +717,12 @@ function isstring(object)
     return (type(object) == "string");
 end
 
+--- Is this oject a number?
+-- @param object Object in question
+function isnumber(object)
+    return (type(object) == "number");
+end
+
 --- Is this oject a Vector?
 -- @param object Object in question
 function isvector(object)
@@ -728,6 +734,103 @@ end
 function ismatrix(object)
     return (type(object) == "cdata" and ffi.istype("Matrix", object));
 end
+
+--==============================================================================================================================================================
+-- Common Enums, Structs, Types
+--==============================================================================================================================================================
+
+local VECTOR_2D
+VECTOR_2D = ffi.metatype("VECTOR_2D", {
+  __add = function(a, b) return VECTOR_2D(a.x+b.x, a.z+b.z) end,
+})
+
+local Vector
+Vector = ffi.metatype("Vector", {
+  __add = function(a, b) return Vector(a.x+b.x, a.y+b.y, a.z+b.z) end,
+})
+
+local Matrix
+Matrix = ffi.metatype("Matrix", {})
+
+local AnimationType = {};
+AnimationType.loop = 0;
+AnimationType.twoway = 1;
+
+--==============================================================================================================================================================
+-- Color
+--==============================================================================================================================================================
+
+local Color = {};
+Color.__index = Color;
+Color.__add = function(a,b)
+    return Color.new((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2, (a.a + b.a) / 2));
+end;
+
+--- Create new Color Intance
+-- @param r Red or long describing color.
+-- @param g Green or nil if r is long.
+-- @param b Blue or nil if r is long.
+-- @param a Alpha, defaults to 255, nil if r is long.
+function Color.new(r,g,b,a)
+  local self = setmetatable({}, Color)
+  if r ~= nil and g == nil and b == nil and a == nil then
+    self.a = bit.rshift(bit.band(0xFF000000,r),24);
+    self.r = bit.rshift(bit.band(0x00FF0000,r),16);
+    self.g = bit.rshift(bit.band(0x0000FF00,r),8);
+    self.b = bit.band(0x000000FF,r);
+  else
+    self.r = math.clamp(r,0,255);
+    self.g = math.clamp(g,0,255);
+    self.b = math.clamp(b,0,255);
+    if a == nill then
+      self.a = 255;
+    else
+      self.a = math.clamp(a,0,255);
+    end
+  end
+  return self;
+end
+
+--- Return long form color for most BZ2 functions
+-- @param self Color instance
+-- @return long form color
+function Color.ToLong(self)
+  return bit.bor(bit.lshift(self.a, 24), bit.lshift(self.r, 16), bit.lshift(self.g, 8), self.b);
+end
+
+--- Return RGB form color for some BZ2 functions for normal use
+-- @param self Color instance
+-- @return Red
+-- @return Green
+-- @return Blue
+function Color.ToRGB(self)
+    return self.r,self.g,self.b;
+end
+
+--- Return RGBA form color for normal use
+-- @param self Color instance
+-- @return Red
+-- @return Green
+-- @return Blue
+-- @return Alpha
+function Color.ToRGBA(self)
+    return self.r,self.g,self.b,self.a;
+end
+
+--- Color long for White
+Color.WHITE     = 0xFFFFFFFF;
+--- Color long for Red
+Color.RED       = 0xFFFF0000;
+--- Color long for Green
+Color.GREEN     = 0xFF00FF00;
+--- Color long for Blue
+Color.BLUE      = 0xFF0000FF;
+--- Color long for Turquoise
+Color.TURQUOISE = 0xFF00FFFF;
+--- Color long for Violet
+Color.VIOLET    = 0xFFFF00FF;
+--- Color long for Yellow
+Color.YELLOW    = 0xFFFFFF00;
 
 --==============================================================================================================================================================
 -- AiPathObject
@@ -981,8 +1084,299 @@ function GameObject.LookAt(self, target, priority)
     ffi.C.LookAt(self:GetHandle(), target:GetHandle(), priority);
 end
 
+--- Order entire team to look at GameObject
+-- @param self GameObject instance.
+-- @param target Target team number.
+-- @param priority Order priority, >0 removes user control.
+function GameObject.AllLookAtMe(self, team, priority)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(team) then error("Paramater target must be number."); end
+    if priority == nil then priority = 1; end
+    ffi.C.AllLookAt(team, self:GetHandle(), priority);
+end
+
+--- Order GameObject to FireAt target GameObject
+-- @param self GameObject instance.
+-- @param target Gameobject instance.
+-- @param doAim Aimfirst, defaults to false.
+function GameObject.FireAt(self, target, doAim)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    ffi.C.FireAt(self:GetHandle(), target:GetHandle(), doAim);
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Position and Velocity
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Get the position vector of a GameObject
+-- @param self GameObject instance.
+-- @return Position Vector
+function GameObject.GetPositionV(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local Vector retVal = Vector();
+    ffi.C.GetPositionV(self:GetHandle(), retVal);
+    return retVal;
+end
+
+--- Get the position vector of a GameObject using deeper search
+-- Slower search that covers recently killed or removed objects.
+-- @param self GameObject instance.
+-- @return Position Vector
+function GameObject.GetPosition2(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local Vector retVal = Vector();
+    ffi.C.GetPosition2(self:GetHandle(), retVal);
+    return retVal;
+end
+
+--- Get the forward facing vector of the GameObject
+-- @param self GameObject instance.
+-- @return Facing Vector
+function GameObject.GetFront(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local Vector retVal = Vector();
+    ffi.C.GetFront(self:GetHandle(), retVal);
+    return retVal;
+end
+
+--- Get the position matrix of the GameObject
+-- @param self GameObject instance.
+-- @return Position Matrix
+function GameObject.GetPositionM(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local Matrix retVal = Matrix();
+    ffi.C.GetPositionM(self:GetHandle(), retVal);
+    return retVal;
+end
+
+--- Set the position matrix of the GameObject
+-- @param self GameObject instance.
+-- @param loc Vector or Matrix position, or path point string
+function GameObject.SetPosition(self, pos)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if ismatrix(loc) then
+        ffi.C.GetPositionM(self:GetHandle(), pos);
+    elseif isvector(loc) then
+        ffi.C.SetVectorPosition(self:GetHandle(), pos);
+    elseif isstring(loc) then
+        ffi.C.SetPositionP(self:GetHandle(), tocstring(pos));
+    else
+        error("Paramater loc must be Vector, Matrix, or path point name (string)."); end
+    end
+end
+
+--- Set the position matrix of the GameObject
+-- @param self GameObject instance.
+-- @param loc Matrix position.
+function GameObject.SetVelocity(self, vel)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isvector(vel) then error("Paramater vel must be Vector instance."); end
+    ffi.C.SetVelocity(self:GetHandle(), vel);
+end
 
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Health / Damage
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Applys damage to the GameObject
+-- @param self GameObject instance.
+-- @param amt Ammount of Damage.
+function GameObject.Damage(self, amt)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.Damage(self:GetHandle(), amt);
+end
+
+--- Get the health of the GameObject
+-- @param self GameObject instance.
+-- @return Health
+function GameObject.GetHealth(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetHealth(self:GetHandle());
+end
+
+--- Get the current health of the GameObject
+-- @param self GameObject instance.
+-- @return Health
+function GameObject.GetCurHealth(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetCurHealth(self:GetHandle());
+end
+
+--- Get the max health of the GameObject
+-- @param self GameObject instance.
+-- @return Health
+function GameObject.GetMaxHealth(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetMaxHealth(self:GetHandle());
+end
+
+--- Sets the current health of the GameObject
+-- @param self GameObject instance.
+-- @param NewHealth New health value.
+function GameObject.SetCurHealth(self, NewHealth)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(NewHealth) then error("Paramater NewHealth must be a number."); end
+    ffi.C.SetCurHealth(self:GetHandle(), NewHealth);
+end
+
+--- Sets the max health of the GameObject
+-- @param self GameObject instance.
+-- @param NewHealth New health value.
+function GameObject.SetMaxHealth(self, NewHealth)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(NewHealth) then error("Paramater NewHealth must be a number."); end
+    ffi.C.SetMaxHealth(self:GetHandle(), NewHealth);
+end
+
+--- Adds health to the GameObject
+-- @param self GameObject instance.
+-- @param health New health value.
+function GameObject.AddHealth(self, health)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(health) then error("Paramater health must be a number."); end
+    ffi.C.AddHealth(self:GetHandle(), health)
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Ammo / Local Ammo
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Get the ammo of the GameObject
+-- @param self GameObject instance.
+-- @return Ammo
+function GameObject.GetAmmo(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetAmmo(self:GetHandle());
+end
+
+--- Adds ammo to the GameObject
+-- @param self GameObject instance.
+-- @param ammo Ammo to add.
+function GameObject.AddAmmo(self, ammo)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(ammo) then error("Paramater health must be a number."); end
+    ffi.C.AddAmmo(self:GetHandle(), ammo);
+end
+
+--- Get the current ammo of the GameObject
+-- @param self GameObject instance.
+-- @return Current Ammo.
+function GameObject.GetCurAmmo(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetCurAmmo(self:GetHandle());
+end
+
+--- Get the max ammo of the GameObject
+-- @param self GameObject instance.
+-- @return Max Ammo.
+function GameObject.GetMaxAmmo(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetMaxAmmo(self:GetHandle());
+end
+
+--- Set current ammo of the GameObject
+-- @param self GameObject instance.
+-- @param NewAmmo Ammo to set.
+function GameObject.SetCurAmmo(self, NewAmmo)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(ammo) then error("Paramater ammo must be a number."); end
+    ffi.C.SetCurAmmo(self:GetHandle(), NewAmmo);
+end
+
+--- Set max ammo of the GameObject
+-- @param self GameObject instance.
+-- @param NewAmmo Max ammo to set.
+function GameObject.SetMaxAmmo(self, NewAmmo)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(ammo) then error("Paramater ammo must be a number."); end
+    ffi.C.SetMaxAmmo(self:GetHandle(), NewAmmo);
+end
+
+--- Get the current local ammo of the selected weapon of the GameObject
+-- @param self GameObject instance.
+-- @param weaponIndex Weapon index.
+-- @return Current local ammo.
+function GameObject.GetCurLocalAmmo(self, weaponIndex)
+  return ffi.C.GetCurLocalAmmo(self:GetHandle(), weaponIndex)
+end
+
+--- Add to the current local ammo of the selected weapon of the GameObject
+-- @param self GameObject instance.
+-- @param ammount Ammo to add.
+-- @param weaponIndex Weapon index.
+function GameObject.AddLocalAmmo(self, ammount, weaponIndex)
+  ffi.C.AddLocalAmmo(self:GetHandle(), ammount, weaponIndex)
+end
+
+--- Get the max local ammo of the selected weapon of the GameObject
+-- @param self GameObject instance.
+-- @param weaponIndex Weapon index.
+-- @return Max local ammo.
+function GameObject.GetMaxLocalAmmo(self, weaponIndex)
+  return ffi.C.GetMaxLocalAmmo(self:GetHandle(), weaponIndex)
+end
+
+--- Set the current local ammo of the selected weapon of the GameObject
+-- @param self GameObject instance.
+-- @param ammount Ammo to set.
+-- @param weaponIndex Weapon index.
+function GameObject.SetCurLocalAmmo(self, ammount, weaponIndex)
+  ffi.C.SetCurLocalAmmo(self:GetHandle(), ammount, weaponIndex)
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Animation and Effects
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Set the aimation of the GameObject
+-- @param self GameObject instance.
+-- @param name name of the animation
+-- @param type Animation type, referance AnimationType
+-- @return max frames
+function GameObject.SetAnimation(self, name, type)
+  if type == nil then type = 0; end
+  type = math.clamp(type,0,1);
+  return ffi.C.SetAnimation(self:GetHandle(), tocstring(name), type);
+end
+
+--- Get the aimation of the GameObject
+-- @param self GameObject instance.
+-- @param name name of the animation
+-- @return current frame
+function GameObject.GetAnimationFrame(self, name)
+  return ffi.C.GetAnimationFrame(self:GetHandle(), tocstring(name));
+end
+
+--- Start current aimation of the GameObject
+-- @param self GameObject instance.
+function GameObject.StartAnimation(self)
+  ffi.C.StartAnimation(self:GetHandle());
+end
+
+--- Start current emmiter mask of the GameObject
+-- [todo] check if mask is properly handled, might need to do some bitwise stuff
+-- @param self GameObject instance.
+function GameObject.MaskEmitter(self, mask)
+  ffi.C.MaskEmitter(self:GetHandle(), mask);
+end
+
+--- Start the emmiter in the selected slot of the GameObject
+-- @param self GameObject instance.
+-- @param slot Emitter slot.
+function GameObject.StartEmitter(self, slot)
+  ffi.C.StartEmitter(self:GetHandle(), slot);
+end
+
+--- Start the emmiter in the selected slot of the GameObject
+-- @param self GameObject instance.
+-- @param slot Emitter slot.
+function GameObject.StopEmitter(self, slot)
+  ffi.C.StopEmitter(self:GetHandle(), slot);
+end
 
 
 
@@ -1017,16 +1411,6 @@ function BuildObject(odf, team, pos)
   return GameObject.new(handle);
 end
 
-
-
-function AllLookAt(team, target, priority)
-  if priority == nil then priority = 1; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.AllLookAt(team, target:GetHandle(), priority);
-  else
-    error("AllLookAt target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
 function GameObject.IsOdf(self, odf)
   if type(odf) == "string" then
     local odfClean = tocstring(odf);
@@ -1057,83 +1441,15 @@ function GetHandle(name)
     error("GetHandle paramater type invalid, received " .. type(name) .. ", expected string or int");
   end
 end
-function GameObject.GetPositionV(self)
-  local Vector retVal = Vector();
-  ffi.C.GetPositionV(self:GetHandle(), retVal);
-  return retVal;
-end
-function GameObject.GetPosition2(self)
-  local Vector retVal = Vector();
-  ffi.C.GetPosition2(self:GetHandle(), retVal);
-  return retVal;
-end
-function GameObject.GetFront(self)
-  local Vector retVal = Vector();
-  ffi.C.GetFront(self:GetHandle(), retVal);
-  return retVal;
-end
-function GameObject.GetPositionM(self)
-  local Matrix retVal = Matrix();
-  ffi.C.GetPositionM(self:GetHandle(), retVal);
-  return retVal;
-end
-function GameObject.SetPositionM(self, loc)
-  ffi.C.GetPositionM(self:GetHandle(), loc);
-end
-function GameObject.Damage(self, amt)
-  ffi.C.Damage(self:GetHandle(), amt);
-end
-function GameObject.GetHealth(self)
-  return ffi.C.GetHealth(self:GetHandle());
-end
-function GameObject.GetCurHealth(self)
-  return ffi.C.GetCurHealth(self:GetHandle());
-end
-function GameObject.GetMaxHealth(self)
-  return ffi.C.GetMaxHealth(self:GetHandle());
-end
-function GameObject.SetCurHealth(self, NewHealth)
-  ffi.C.SetCurHealth(self:GetHandle(), NewHealth);
-end
-function GameObject.SetMaxHealth(self, NewHealth)
-  ffi.C.SetMaxHealth(self:GetHandle(), NewHealth);
-end
-function GameObject.AddHealth(self, health)
-  ffi.C.AddHealth(self:GetHandle(), health)
-end
-function GameObject.GetAmmo(self)
-  return ffi.C.GetAmmo(self:GetHandle());
-end
-function GameObject.AddAmmo(self, ammo)
-  ffi.C.AddAmmo(self:GetHandle(), ammo);
-end
-function GameObject.GetCurAmmo(self)
-  return ffi.C.GetCurAmmo(self:GetHandle());
-end
-function GameObject.GetMaxAmmo(self)
-  return ffi.C.GetMaxAmmo(self:GetHandle());
-end
-function GameObject.SetCurAmmo(self, NewAmmo)
-  ffi.C.SetCurAmmo(self:GetHandle(), NewAmmo);
-end
-function GameObject.SetMaxAmmo(self, NewAmmo)
-  ffi.C.SetMaxAmmo(self:GetHandle(), NewAmmo);
-end
+
+
 function GameObject.GetTeamNum(self)
   return ffi.C.GetTeamNum(self:GetHandle());
 end
 function GameObject.SetTeamNum(self, t)
   ffi.C.SetTeamNum(self:GetHandle(), t);
 end
-function GameObject.SetPositionP(self, path)
-  ffi.C.SetPositionP(self:GetHandle(), tocstring(path));
-end
-function GameObject.SetVectorPosition(self, pos)
-  ffi.C.SetVectorPosition(self:GetHandle(), pos);
-end
-function GameObject.SetVelocity(self, vel)
-  ffi.C.SetVelocity(self:GetHandle(), vel);
-end
+
 --SetControls
 function GameObject.GetWhoShotMe(self)
   return Handle.new(ffi.C.GetWhoShotMe(self:GetHandle()));
@@ -1269,14 +1585,7 @@ end
 function GiveWeapon(self, weapon)
   ffi.C.GiveWeapon(self:GetHandle(), tocstring(weapon));
 end
-function GameObject.FireAt(self, target, doAim)
-  if doAim == nil then doAim = false; end
-  if type(target) == "table" and target.GetHandle ~= nil and type(target.GetHandle) == "function" then
-    ffi.C.FireAt(self:GetHandle(), target:GetHandle(), doAim);
-  else
-    error("GameObject:FireAt target type invalid, received " .. type(target) .. ", expected GameObject");
-  end
-end
+
 function GameObject.IsFollowing(self)
   return ffi.C.IsFollowing(self:GetHandle());
 end
@@ -1345,26 +1654,7 @@ function GetInstantMySide()
 end
 --StoppedPlayback
 --Cam functions
-function GameObject.SetAnimation(self, name, type)
-  if type == nil then type = 0; end
-  type = math.clamp(type,0,1);
-  return ffi.C.SetAnimation(self:GetHandle(), tocstring(name), type);
-end
-function GameObject.GetAnimationFrame(self, name)
-  return ffi.C.GetAnimationFrame(self:GetHandle(), tocstring(name));
-end
-function GameObject.StartAnimation(self)
-  ffi.C.StartAnimation(self:GetHandle());
-end
-function GameObject.MaskEmitter(self, mask)
-  ffi.C.MaskEmitter(self:GetHandle(), mask);
-end
-function GameObject.StartEmitter(self, slot)
-  ffi.C.StartEmitter(self:GetHandle(), slot);
-end
-function GameObject.StopEmitter(self, slot)
-  ffi.C.StopEmitter(self:GetHandle(), slot);
-end
+
 --SaveObjects
 --LoadObjects
 function IgnoreSync(on)
@@ -2048,64 +2338,10 @@ end
 function GameObject.SetTap(self, index, tapObjectHandle)
   ffi.C.SetTap(self:GetHandle(), index, tapObjectHandle.GetHandle());
 end
-function GameObject.GetCurLocalAmmo(self, weaponIndex)
-  return ffi.C.GetCurLocalAmmo(self:GetHandle(), weaponIndex)
-end
-function GameObject.AddLocalAmmo(self, ammount, weaponIndex)
-  ffi.C.AddLocalAmmo(self:GetHandle(), ammount, weaponIndex)
-end
-function GameObject.GetMaxLocalAmmo(self, weaponIndex)
-  return ffi.C.GetMaxLocalAmmo(self:GetHandle(), weaponIndex)
-end
-function GameObject.SetCurLocalAmmo(self, v, weaponIndex)
-  ffi.C.SetCurLocalAmmo(self:GetHandle(), v, weaponIndex)
-end
 
 
--- Color
-local Color = {}
-Color.__index = Color
 
-function Color.new(r,g,b,a)
-  local self = setmetatable({}, Color)
-  if r ~= nil and g == nil and b == nil and a == nil then
-    self.a = bit.rshift(bit.band(0xFF000000,r),24)
-    self.r = bit.rshift(bit.band(0x00FF0000,r),16)
-    self.g = bit.rshift(bit.band(0x0000FF00,r),8)
-    self.b = bit.band(0x000000FF,r)
-  else
-    self.r = math.clamp(r,0,255)
-    self.g = math.clamp(g,0,255)
-    self.b = math.clamp(b,0,255)
-    if a == nill then
-      self.a = 255
-    else
-      self.a = math.clamp(a,0,255)
-    end
-  end
-  return self
-end
 
-function Color.ToColorLong(self)
-  return bit.bor(bit.lshift(self.a, 24), bit.lshift(self.r, 16), bit.lshift(self.g, 8), self.b)
-end
-
-function Color.FromRGB(r,g,b)
-  return bit.bor(0xFF000000, bit.lshift(r, 16), bit.lshift(g, 8), b)
-end
-
-function Color.FromRGBA(r,g,b,a)
-  return bit.bor(bit.lshift(a, 24), bit.lshift(r, 16), bit.lshift(g, 8), b)
-end
-
-Color.WHITE     = 0xFFFFFFFF
-Color.RED       = 0xFFFF0000
-Color.GREEN     = 0xFF00FF00
-Color.BLUE      = 0xFF0000FF
-Color.TURQUOISE = 0xFF00FFFF
-Color.VIOLET    = 0xFFFF00FF
-Color.YELLOW    = 0xFFFFFF00
--- /Color
 
 
 
@@ -2129,18 +2365,6 @@ end
 
 
 
-local VECTOR_2D
-VECTOR_2D = ffi.metatype("VECTOR_2D", {
-  __add = function(a, b) return VECTOR_2D(a.x+b.x, a.z+b.z) end,
-})
-
-local Vector
-Vector = ffi.metatype("Vector", {
-  __add = function(a, b, c) return Vector(a.x+b.x, a.y+b.y, a.z+b.z) end,
-})
-
-local Matrix
-Matrix = ffi.metatype("Matrix", {})
 
 
 
