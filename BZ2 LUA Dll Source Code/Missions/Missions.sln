@@ -1,0 +1,20 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Instant", "LUAMission\LUAMission.vcproj", "{F2664F57-2E80-431B-A4AD-0A68680DC311}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+		ReleaseEditor|Win32 = ReleaseEditor|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F2664F57-2E80-431B-A4AD-0A68680DC311}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F2664F57-2E80-431B-A4AD-0A68680DC311}.Release|Win32.ActiveCfg = Release|Win32
+		{F2664F57-2E80-431B-A4AD-0A68680DC311}.ReleaseEditor|Win32.ActiveCfg = ReleaseEditor|Win32
+		{F2664F57-2E80-431B-A4AD-0A68680DC311}.ReleaseEditor|Win32.Build.0 = ReleaseEditor|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

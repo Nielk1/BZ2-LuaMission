@@ -1,0 +1,23 @@
+class CameraAction;
+
+void cinToolSetup();
+void CinProcessCommand(unsigned long crc);
+void LoadCinFiles();
+void NewCinGroup();
+void EditSetup();
+bool PlaySequence(bool sequence);
+bool PlayMove();
+bool PlayMovie(char name[20]);
+void LoadSequence();
+void SaveMove(CameraAction *CamMove);
+void SaveSequence();
+void DollyCamera(CameraAction *CamMove);
+void StartCamAction(CameraAction *CamMove); 
+void PanCamera(CameraAction *CamMove);
+void RotateCamera(CameraAction *CamMove);
+void ChaseObject(CameraAction *CamMove);
+void CameraLookAtObject(CameraAction *CamMove) ;
+//bool PlayAction(/*char *actionname*/);
+void GeorgeReadsData(); 
+void OffsetCamera(Handle attachObject, Handle targetObject, int xDist, int yDist, int zDist); 
+CameraAction *findMoveData(char *moveName);
