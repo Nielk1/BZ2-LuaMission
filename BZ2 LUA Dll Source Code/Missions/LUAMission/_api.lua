@@ -87,7 +87,18 @@ __declspec( dllexport ) void __cdecl SetTeamNum(int,int) asm("?SetTeamNum@@YAXHH
 __declspec( dllexport ) void __cdecl SetPositionP(int,char *) asm("?SetPosition@@YAXHPAD@Z");
 __declspec( dllexport ) void __cdecl SetVectorPosition(int,struct Vector) asm("?SetVectorPosition@@YAXHUVector@@@Z");
 __declspec( dllexport ) void __cdecl SetVelocity(int,struct Vector const &) asm("?SetVelocity@@YAXHABUVector@@@Z");
-//__declspec( dllexport ) void __cdecl SetControls(int,struct VehicleControls const &,unsigned long) asm("?SetControls@@YAXHABUVehicleControls@@K@Z");
+typedef struct VehicleControls {
+	float braccel;
+	float steer;
+	float pitch;
+	float strafe;
+	char jump;
+	char deploy;
+	char eject;
+	char abandon;
+	char fire;
+} VehicleControls;
+__declspec( dllexport ) void __cdecl SetControls(int,struct VehicleControls const &,unsigned long) asm("?SetControls@@YAXHABUVehicleControls@@K@Z");
 __declspec( dllexport ) int __cdecl GetWhoShotMe(int) asm("?GetWhoShotMe@@YAHH@Z");
 __declspec( dllexport ) float __cdecl GetLastEnemyShot(int) asm("?GetLastEnemyShot@@YAMH@Z");
 __declspec( dllexport ) float __cdecl GetLastFriendShot(int) asm("?GetLastFriendShot@@YAMH@Z");
@@ -567,60 +578,6 @@ __declspec( dllexport ) bool __cdecl IsPlayingLooped(int) asm("?IsPlayingLooped@
 __declspec( dllexport ) int __cdecl GetNearestEnemy(int,bool,bool,float) asm("?GetNearestEnemy@@YAHH_N0M@Z");
 __declspec( dllexport ) int __cdecl GetNearestPowerup(int,bool,float) asm("?GetNearestPowerup@@YAHH_NM@Z");
 __declspec( dllexport ) int __cdecl GetNearestPerson(int,bool,float) asm("?GetNearestPerson@@YAHH_NM@Z");
-// 	CMD_NONE, // == 0
-// 	CMD_SELECT, // == 1
-// 	CMD_STOP, // == 2
-// 	CMD_GO, // == 3
-// 	CMD_ATTACK, // == 4
-// 	CMD_FOLLOW, // ... you do the math. Values increase by 1 per line
-// 	CMD_FORMATION, // not used anywhere in code.
-// 	CMD_PICKUP,
-// 	CMD_DROPOFF,
-// 	CMD_UNDEPLOY,
-// 	CMD_DEPLOY,
-// 	CMD_NO_DEPLOY, // Used by crigs, deploybuildings to indicate they can't do that there
-// 	CMD_GET_REPAIR,
-// 	CMD_GET_RELOAD,
-// 	CMD_GET_WEAPON,
-// 	CMD_GET_CAMERA, // Human players only.
-// 	CMD_GET_BOMB,
-// 	CMD_DEFEND,
-// 	CMD_RESCUE,
-// 	CMD_RECYCLE,
-// 	CMD_SCAVENGE,
-// 	CMD_HUNT,
-// 	CMD_BUILD,
-// 	CMD_PATROL,
-// 	CMD_STAGE,
-// 	CMD_SEND,
-// 	CMD_GET_IN,
-// 	CMD_LAY_MINES,
-// 	CMD_LOOK_AT,
-// 	CMD_SERVICE, // == 29
-// 	CMD_UPGRADE,
-// 	CMD_DEMOLISH,
-// 	CMD_POWER,
-// 	CMD_BACK,
-// 	CMD_DONE,
-// 	CMD_CANCEL,
-// 	CMD_SET_GROUP,
-// 	CMD_SET_TEAM,
-// 	CMD_SEND_GROUP,
-// 	CMD_TARGET,
-// 	CMD_INSPECT,
-// 	CMD_SWITCHTEAM,
-// 	CMD_INTERFACE,
-// 	CMD_LOGOFF,
-// 	CMD_AUTOPILOT,
-// 	CMD_MESSAGE,
-// 	CMD_CLOSE,
-// 	CMD_MORPH_SETDEPLOYED, // For morphtanks
-// 	CMD_MORPH_SETUNDEPLOYED, // For morphtanks
-// 	CMD_MORPH_UNLOCK, // For morphtanks
-// 	CMD_BAILOUT,
-// 	CMD_BUILD_ROTATE, // Update building rotations by 90 degrees.
-// 	CMD_CMDPANEL_SELECT,
-// 	CMD_CMDPANEL_DESELECT,
 __declspec( dllexport ) void __cdecl SetCommandV(int,int,int,int,struct Vector const &,int) asm("?SetCommand@@YAXHHHHABUVector@@H@Z");
 __declspec( dllexport ) void __cdecl SetCommandP(int,int,int,int,char * const,int) asm("?SetCommand@@YAXHHHHQADH@Z");
 __declspec( dllexport ) void __cdecl SetGravity(float) asm("?SetGravity@@YAXM@Z");
@@ -756,6 +713,62 @@ local AnimationType = {};
 AnimationType.loop = 0;
 AnimationType.twoway = 1;
 
+local Command = {};
+Command.CMD_NONE = 0;
+Command.CMD_SELECT = 1;
+Command.CMD_STOP = 2;
+Command.CMD_GO = 3;
+Command.CMD_ATTACK = 4;
+Command.CMD_FOLLOW = 5;
+Command.CMD_FORMATION = 6; -- not used anywhere in code.
+Command.CMD_PICKUP = 7;
+Command.CMD_DROPOFF = 8;
+Command.CMD_UNDEPLOY = 9;
+Command.CMD_DEPLOY = 10;
+Command.CMD_NO_DEPLOY = 11; -- Used by crigs, deploybuildings to indicate they can't do that there
+Command.CMD_GET_REPAIR = 12;
+Command.CMD_GET_RELOAD = 13;
+Command.CMD_GET_WEAPON = 14;
+Command.CMD_GET_CAMERA = 15; -- Human players only.
+Command.CMD_GET_BOMB = 16;
+Command.CMD_DEFEND = 17;
+Command.CMD_RESCUE = 18;
+Command.CMD_RECYCLE = 19;
+Command.CMD_SCAVENGE = 20;
+Command.CMD_HUNT = 21;
+Command.CMD_BUILD = 22;
+Command.CMD_PATROL = 23;
+Command.CMD_STAGE = 24;
+Command.CMD_SEND = 25;
+Command.CMD_GET_IN = 26;
+Command.CMD_LAY_MINES = 27;
+Command.CMD_LOOK_AT = 28;
+Command.CMD_SERVICE = 29;
+Command.CMD_UPGRADE = 30;
+Command.CMD_DEMOLISH = 31;
+Command.CMD_POWER = 32;
+Command.CMD_BACK = 33;
+Command.CMD_DONE = 34;
+Command.CMD_CANCEL = 35;
+Command.CMD_SET_GROUP = 36;
+Command.CMD_SET_TEAM = 37;
+Command.CMD_SEND_GROUP = 38;
+Command.CMD_TARGET = 39;
+Command.CMD_INSPECT = 40;
+Command.CMD_SWITCHTEAM = 41;
+Command.CMD_INTERFACE = 42;
+Command.CMD_LOGOFF = 43;
+Command.CMD_AUTOPILOT = 44;
+Command.CMD_MESSAGE = 45;
+Command.CMD_CLOSE = 46;
+Command.CMD_MORPH_SETDEPLOYED = 47; -- For morphtanks
+Command.CMD_MORPH_SETUNDEPLOYED = 48; -- For morphtanks
+Command.CMD_MORPH_UNLOCK = 49; -- For morphtanks
+Command.CMD_BAILOUT = 50;
+Command.CMD_BUILD_ROTATE = 51; -- Update building rotations by 90 degrees.
+Command.CMD_CMDPANEL_SELECT = 52;
+Command.CMD_CMDPANEL_DESELECT = 53;
+
 --==============================================================================================================================================================
 -- Color
 --==============================================================================================================================================================
@@ -763,7 +776,7 @@ AnimationType.twoway = 1;
 local Color = {};
 Color.__index = Color;
 Color.__add = function(a,b)
-    return Color.new((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2, (a.a + b.a) / 2));
+    return Color.new((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2, (a.a + b.a) / 2);
 end;
 
 --- Create new Color Intance
@@ -1105,6 +1118,29 @@ function GameObject.FireAt(self, target, doAim)
     ffi.C.FireAt(self:GetHandle(), target:GetHandle(), doAim);
 end
 
+--- Set command of GameObject directly
+-- @param self GameObject instance.
+-- @param cmd Command, see Command enum.
+-- @param priority Command priority, default is 0 but only if loc is Vector
+-- @param who GameObject target, defaults to 0/invalid/none but only if loc is Vector
+-- @param pos Vector position or path name string
+-- @param param Optional paramater interger
+function GameObject.SetCommand(self, cmd, priority, who, loc, param)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(cmd) then error("Paramater target must be number."); end
+    if param == nil then param = 0; end
+    if isvector(pos) then
+        ffi.C.SetCommandV(self:GetHandle(), cmd, priority, who.GetHandle(), where, param);
+    else
+        if priority == nil then priority = 0; end
+        if who == nil then who = 0; end
+        if isgameobject(who) then who = who.GetHandle(); end
+        if path ~= nil then path = tocstring(path); end
+        ffi.C.SetCommandP(self:GetHandle(), cmd, priority, who, path, param);
+    end
+end
+
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GameObject - Position and Velocity
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1150,7 +1186,7 @@ function GameObject.GetPositionM(self)
     return retVal;
 end
 
---- Set the position matrix of the GameObject
+--- Set the position of the GameObject
 -- @param self GameObject instance.
 -- @param loc Vector or Matrix position, or path point string
 function GameObject.SetPosition(self, pos)
@@ -1162,17 +1198,32 @@ function GameObject.SetPosition(self, pos)
     elseif isstring(loc) then
         ffi.C.SetPositionP(self:GetHandle(), tocstring(pos));
     else
-        error("Paramater loc must be Vector, Matrix, or path point name (string)."); end
+        error("Paramater loc must be Vector, Matrix, or path point name (string).");
     end
 end
 
---- Set the position matrix of the GameObject
+--- Get the velocity vector of the GameObject
 -- @param self GameObject instance.
--- @param loc Matrix position.
+-- @return Velocity vector.
+function GameObject.GetVelocity(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetVelocity(self:GetHandle());
+end
+
+--- Set the velocity vector of the GameObject
+-- @param self GameObject instance.
+-- @param vel Velocity vector.
 function GameObject.SetVelocity(self, vel)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isvector(vel) then error("Paramater vel must be Vector instance."); end
     ffi.C.SetVelocity(self:GetHandle(), vel);
+end
+
+--- Set a random heading angle for the GameObject
+-- @param self GameObject instance.
+function GameObject.SetRandomHeadingAngle(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.SetRandomHeadingAngle(self:GetHandle());
 end
 
 
@@ -1180,12 +1231,31 @@ end
 -- GameObject - Health / Damage
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---- Applys damage to the GameObject
+--- Applys damage to the GameObject crediting last damager
 -- @param self GameObject instance.
--- @param amt Ammount of Damage.
+-- @param amt Ammount of Damage, support whole numbers.
 function GameObject.Damage(self, amt)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(amt) then error("Paramater amt must be a number."); end
     ffi.C.Damage(self:GetHandle(), amt);
+end
+
+--- Applys damage to the GameObject crediting last damager
+-- @param self GameObject instance.
+-- @param amt Ammount of Damage, supports decimal numbers.
+function GameObject.DamageF(self, amt)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(amt) then error("Paramater amt must be a number."); end
+    ffi.C.DamageF(self:GetHandle(), amt);
+end
+
+--- Applys damage to the GameObject with the doer as self
+-- @param self GameObject instance.
+-- @param amt Ammount of Damage, supports decimal numbers.
+function GameObject.SelfDamage(self, amt)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(amt) then error("Paramater amt must be a number."); end
+    ffi.C.SelfDamage(self:GetHandle(), amt);
 end
 
 --- Get the health of the GameObject
@@ -1193,6 +1263,7 @@ end
 -- @return Health
 function GameObject.GetHealth(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(amt) then error("Paramater amt must be a number."); end
     return ffi.C.GetHealth(self:GetHandle());
 end
 
@@ -1300,7 +1371,9 @@ end
 -- @param weaponIndex Weapon index.
 -- @return Current local ammo.
 function GameObject.GetCurLocalAmmo(self, weaponIndex)
-  return ffi.C.GetCurLocalAmmo(self:GetHandle(), weaponIndex)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(weaponIndex) then error("Paramater weaponIndex must be a number."); end
+    return ffi.C.GetCurLocalAmmo(self:GetHandle(), weaponIndex)
 end
 
 --- Add to the current local ammo of the selected weapon of the GameObject
@@ -1308,7 +1381,10 @@ end
 -- @param ammount Ammo to add.
 -- @param weaponIndex Weapon index.
 function GameObject.AddLocalAmmo(self, ammount, weaponIndex)
-  ffi.C.AddLocalAmmo(self:GetHandle(), ammount, weaponIndex)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(ammount) then error("Paramater ammount must be a number."); end
+    if not isnumber(weaponIndex) then error("Paramater weaponIndex must be a number."); end
+    ffi.C.AddLocalAmmo(self:GetHandle(), ammount, weaponIndex)
 end
 
 --- Get the max local ammo of the selected weapon of the GameObject
@@ -1316,7 +1392,9 @@ end
 -- @param weaponIndex Weapon index.
 -- @return Max local ammo.
 function GameObject.GetMaxLocalAmmo(self, weaponIndex)
-  return ffi.C.GetMaxLocalAmmo(self:GetHandle(), weaponIndex)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(weaponIndex) then error("Paramater weaponIndex must be a number."); end
+    return ffi.C.GetMaxLocalAmmo(self:GetHandle(), weaponIndex)
 end
 
 --- Set the current local ammo of the selected weapon of the GameObject
@@ -1324,7 +1402,10 @@ end
 -- @param ammount Ammo to set.
 -- @param weaponIndex Weapon index.
 function GameObject.SetCurLocalAmmo(self, ammount, weaponIndex)
-  ffi.C.SetCurLocalAmmo(self:GetHandle(), ammount, weaponIndex)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(ammount) then error("Paramater ammount must be a number."); end
+    if not isnumber(weaponIndex) then error("Paramater weaponIndex must be a number."); end
+    ffi.C.SetCurLocalAmmo(self:GetHandle(), ammount, weaponIndex)
 end
 
 
@@ -1338,9 +1419,12 @@ end
 -- @param type Animation type, referance AnimationType
 -- @return max frames
 function GameObject.SetAnimation(self, name, type)
-  if type == nil then type = 0; end
-  type = math.clamp(type,0,1);
-  return ffi.C.SetAnimation(self:GetHandle(), tocstring(name), type);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(name) then error("Paramater name must be a string."); end
+    if not isnumber(type) then error("Paramater type must be a number."); end
+    if type == nil then type = 0; end
+    type = math.clamp(type,0,1);
+    return ffi.C.SetAnimation(self:GetHandle(), tocstring(name), type);
 end
 
 --- Get the aimation of the GameObject
@@ -1348,35 +1432,874 @@ end
 -- @param name name of the animation
 -- @return current frame
 function GameObject.GetAnimationFrame(self, name)
-  return ffi.C.GetAnimationFrame(self:GetHandle(), tocstring(name));
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(name) then error("Paramater name must be a string."); end
+    return ffi.C.GetAnimationFrame(self:GetHandle(), tocstring(name));
 end
 
 --- Start current aimation of the GameObject
 -- @param self GameObject instance.
 function GameObject.StartAnimation(self)
-  ffi.C.StartAnimation(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.StartAnimation(self:GetHandle());
 end
 
 --- Start current emmiter mask of the GameObject
 -- [todo] check if mask is properly handled, might need to do some bitwise stuff
 -- @param self GameObject instance.
 function GameObject.MaskEmitter(self, mask)
-  ffi.C.MaskEmitter(self:GetHandle(), mask);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(mask) then error("Paramater mask must be a number."); end
+    ffi.C.MaskEmitter(self:GetHandle(), mask);
 end
 
 --- Start the emmiter in the selected slot of the GameObject
 -- @param self GameObject instance.
 -- @param slot Emitter slot.
 function GameObject.StartEmitter(self, slot)
-  ffi.C.StartEmitter(self:GetHandle(), slot);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(slot) then error("Paramater slot must be a number."); end
+    ffi.C.StartEmitter(self:GetHandle(), slot);
 end
 
 --- Start the emmiter in the selected slot of the GameObject
 -- @param self GameObject instance.
 -- @param slot Emitter slot.
 function GameObject.StopEmitter(self, slot)
-  ffi.C.StopEmitter(self:GetHandle(), slot);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(slot) then error("Paramater slot must be a number."); end
+    ffi.C.StopEmitter(self:GetHandle(), slot);
 end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Idel State and Animations
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Clear idel animations on this GameObject.
+-- @param self GameObject instance.
+function GameObject.ClearIdleAnims(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.ClearIdleAnims(self:GetHandle());
+end
+
+--- Add an idel animation to this GameObject.
+-- @param self GameObject instance.
+-- @param name Animation name.
+function GameObject.AddIdleAnim(self, name)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(name) then error("Paramater name must be a string."); end
+    ffi.C.AddIdleAnim(self:GetHandle(), tocstring(name));
+end
+
+--- Is this GameObject idel.
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsIdle(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsIdle(self:GetHandle());
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Objectification
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Objectify the GameObject
+-- @param self GameObject instance.
+function GameObject.SetObjectiveOn(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SetObjectiveOn(self:GetHandle());
+end
+
+--- Objectify the GameObject
+-- @param self GameObject instance.
+function GameObject.SetObjectiveOff(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SetObjectiveOff(self:GetHandle());
+end
+
+--- Set the objective name of the GameObject
+-- @param self GameObject instance.
+-- @param name Name for the objective.
+function GameObject.SetObjectiveName(self, name)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(name) then error("Paramater name must be a string."); end
+    ffi.C.SetObjectiveName(self:GetHandle(), tocstring(name));
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - CTF Flag and Loot Money
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Trigger a flag steal of this object by target GameObject
+-- @param self GameObject instance.
+-- @param holder Flag holder.
+function GameObject.FlagStealBy(self, holder)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(holder) then error("Paramater holder must be GameObject instance."); end
+    ffi.C.FlagSteal(self:GetHandle(), holder.GetHandle());
+end
+
+--- Trigger a flag recovery of this object by target GameObject
+-- @param self GameObject instance.
+-- @param holder Flag holder.
+function GameObject.FlagRecoverBy(self, holder)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(holder) then error("Paramater holder must be GameObject instance."); end
+    ffi.C.FlagRecover(self:GetHandle(), holder.GetHandle());
+end
+
+--- Trigger a flag score of this object by target GameObject
+-- @param self GameObject instance.
+-- @param holder Flag holder.
+function GameObject.FlagScoreBy(self, holder)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(holder) then error("Paramater holder must be GameObject instance."); end
+    ffi.C.FlagScore(self:GetHandle(), holder.GetHandle());
+end
+
+--- Trigger a flag steal of the target by this GameObject
+-- @param self GameObject instance.
+-- @param holder Flag holder.
+function GameObject.FlagSteal(self, flag)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(flag) then error("Paramater flag must be GameObject instance."); end
+    ffi.C.FlagSteal(flag.GetHandle(), self:GetHandle());
+end
+
+--- Trigger a flag recover of the target by this GameObject
+-- @param self GameObject instance.
+-- @param holder Flag holder.
+function GameObject.FlagRecover(self, flag)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(flag) then error("Paramater flag must be GameObject instance."); end
+    ffi.C.FlagRecover(flag.GetHandle(), self:GetHandle());
+end
+
+--- Trigger a flag score of the target by this GameObject
+-- @param self GameObject instance.
+-- @param holder Flag holder.
+function GameObject.FlagScore(self, flag)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(flag) then error("Paramater flag must be GameObject instance."); end
+    ffi.C.FlagScore(flag.GetHandle(), self:GetHandle());
+end
+
+--- Trigger a money score by this GameObject
+-- @param self GameObject instance.
+-- @param ammount Score to award.
+function GameObject.MoneyScore(self, ammount)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(ammount) then error("Paramater ammount must be a string."); end
+    ffi.C.MoneyScore(ammount, self:GetHandle());
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Team
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Get team of GameObject
+-- @param self GameObject instance.
+-- @return Team number.
+function GameObject.GetTeamNum(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetTeamNum(self:GetHandle());
+end
+
+--- Set team of GameObject
+-- @param self GameObject instance.
+-- @param t Team number.
+function GameObject.SetTeamNum(self, t)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(ammount) then error("Paramater ammount must be a string."); end
+    ffi.C.SetTeamNum(self:GetHandle(), t);
+end
+
+--- Set team of GameObject
+-- Note aliances are 1 directional, be sure to check both ways
+-- @param self GameObject instance.
+-- @param him GameObject instance.
+-- @return Is ally bool.
+function GameObject.IsAlly(self, him)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(him) then error("Paramater him must be GameObject instance."); end
+    return ffi.C.IsAlly(self:GetHandle(), him);
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Deaths
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Get deaths of GameObject
+-- @param self GameObject instance.
+-- @return Death count
+function GameObject.GetDeaths(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetDeaths(self:GetHandle());
+end
+
+--- Set deaths of GameObject
+-- @param self GameObject instance.
+-- @param NewValue GameObject instance.
+function GameObject.SetDeaths(self, NewValue)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(NewValue) then error("Paramater NewValue must be GameObject instance."); end
+    ffi.C.SetDeaths(self:GetHandle(), NewValue);
+end
+
+--- Add to deaths of GameObject
+-- @param delta GameObject instance.
+-- @param him GameObject instance.
+function GameObject.AddDeaths(self, delta)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(delta) then error("Paramater delta must be GameObject instance."); end
+    ffi.C.AddDeaths(self:GetHandle(), delta)
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Kills
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Get kills of GameObject
+-- @param self GameObject instance.
+-- @return Kill count
+function GameObject.GetKills(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetKills(self:GetHandle());
+end
+
+--- Set kills of GameObject
+-- @param self GameObject instance.
+-- @param NewValue GameObject instance.
+function GameObject.SetKills(self, NewValue)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(NewValue) then error("Paramater NewValue must be GameObject instance."); end
+    return ffi.C.SetKills(self:GetHandle(), NewValue);
+end
+
+--- Add to kills of GameObject
+-- @param delta GameObject instance.
+-- @param him GameObject instance.
+function GameObject.AddKills(self, delta)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(delta) then error("Paramater delta must be GameObject instance."); end
+    ffi.C.AddKills(self:GetHandle(), delta)
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Score
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Get score of GameObject
+-- @param self GameObject instance.
+-- @return Score count
+function GameObject.GetScore(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetScore(self:GetHandle());
+end
+
+--- Set score of GameObject
+-- @param self GameObject instance.
+-- @param NewValue GameObject instance.
+function GameObject.SetScore(self, NewValue)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(NewValue) then error("Paramater NewValue must be GameObject instance."); end
+    return ffi.C.SetScore(self:GetHandle(), NewValue);
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Scavenger
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Get current scrap in hold of GameObject
+-- @param self GameObject instance.
+function GameObject.GetScavengerCurScrap(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local retVal = ffi.C.GetScavengerCurScrap(self:GetHandle());
+    if retVal == -1 then return nil; end
+    return GameObject.new(retVal);
+end
+
+--- Get max scrap in hold of GameObject
+-- @param self GameObject instance.
+function GameObject.GetScavengerMaxScrap(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local retVal = ffi.C.GetScavengerMaxScrap(self:GetHandle());
+    if retVal == -1 then return nil; end
+    return GameObject.new(retVal);
+end
+
+--- Set current scrap in hold of GameObject
+-- @param self GameObject instance.
+-- @param aNewScrap new scrap ammount.
+function GameObject.SetScavengerCurScrap(self,aNewScrap)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SetScavengerCurScrap(self:GetHandle(),aNewScrap);
+end
+
+--- Set max scrap in hold of GameObject
+-- @param self GameObject instance.
+-- @param aNewScrap new scrap ammount.
+function GameObject.SetScavengerMaxScrap(self,aNewScrap)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SetScavengerMaxScrap(self:GetHandle(),aNewScrap);
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Scavenger
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Get nearest enemy to this GameObject
+-- @param self GameObject instance.
+-- @param ignorePilots Ignore pilots?
+-- @param ignoreScavs Ignore scavengers?
+-- @param maxDist Max distance to search, hard ceiling of 450.0, which is the max
+-- @return Gameobject found
+function GameObject.GetNearestEnemy(self, ignorePilots, ignoreScavs, maxDist)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    -- can't check for bools since nil = false and !nil = true
+    if maxDist == nil then maxDist = 450.0; end
+    return GameObject.new(ffi.C.GetNearestEnemy(self.handle, ignorePilots, ignoreScavs, maxDist));
+end
+
+--- Get nearest powerup to this GameObject
+-- @param self GameObject instance.
+-- @param ignoreSpawnpoints Ignore spawn points?
+-- @param maxDist Max distance to search, hard ceiling of 450.0, which is the max
+-- @return Gameobject found
+function GameObject.GetNearestPowerup(self, ignoreSpawnpoints, maxDist)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    -- can't check for bools since nil = false and !nil = true
+    if maxDist == nil then maxDist = 450.0; end
+    return GameObject.new(ffi.C.GetNearestPowerup(self.handle, ignoreSpawnpoints, maxDist));
+end
+
+--- Get nearest person to this GameObject
+-- @param self GameObject instance.
+-- @param skipFriendlies Ignore friendly objects?
+-- @param maxDist Max distance to search, hard ceiling of 450.0, which is the max
+-- @return GameObject found.
+function GameObject.GetNearestPerson(self, skipFriendlies, maxDist)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    -- can't check for bools since nil = false and !nil = true
+    if maxDist == nil then maxDist = 450.0; end
+    return GameObject.new(ffi.C.GetNearestPerson(self.handle, skipFriendlies, maxDist));
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Actions
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Deploy this GameObject
+-- @param self GameObject instance.
+function GameObject.Deploy(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.Deploy(self:GetHandle());
+end
+
+--- Annoy the target GameObject with this GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject instance.
+function GameObject.Annoy(self, target)
+  ffi.C.Annoy(self:GetHandle(), target:GetHandle());
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Order States and General States
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Is this GameObject following something?
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsFollowing(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsFollowing(self:GetHandle());
+end
+
+--- Get what this GameObject is following
+-- @param self GameObject instance.
+-- @return GameObject we are following.
+function GameObject.WhoFollowing(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return GameObject.new(ffi.C.WhoFollowing(self:GetHandle()));
+end
+
+--- Get the subject of this GameObject's current order
+-- @param self GameObject instance.
+-- @return GameObject subject of our orders.
+function GameObject.GetCurrentWho(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return GameObject.new(ffi.C.GetCurrentWho(self:GetHandle()));
+end
+
+--- Is this GameObject deployed?
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsDeployed(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsDeployed(self:GetHandle());
+end
+
+--- Is this GameObject selected?
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsSelected(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsSelected(self:GetHandle());
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Pilot Operations
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Eject the pilot from the GameObject
+-- @param self GameObject instance.
+function GameObject.EjectPilot(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.EjectPilot(self:GetHandle());
+end
+
+--- Hop the pilot out from the GameObject
+-- @param self GameObject instance.
+function GameObject.HopOut(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.HopOut(self:GetHandle());
+end
+
+--- Kill the pilot of the GameObject
+-- @param self GameObject instance.
+function GameObject.KillPilot(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.KillPilot(self:GetHandle());
+end
+
+--- Remove the AI of the GameObject without killing or removing the pilot
+-- @param self GameObject instance.
+function GameObject.RemovePilotAI(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.RemovePilotAI(self:GetHandle());
+end
+
+--- The GameObject which this GameObject hopped out of
+-- @param self GameObject instance.
+-- @return GameObject that this hopped out of.
+function GameObject.HoppedOutOf(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return GameObject.new(ffi.C.HoppedOutOf(self:GetHandle()));
+end
+
+--- Adds a pilot if needed to the GameObject
+-- @param self GameObject instance.
+function GameObject.AddPilot(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.AddPilotByHandle(self:GetHandle())
+end
+
+--- Sets the pilot class of he GameObject
+-- @param self GameObject instance.
+-- @param odf Object Definition of pilot.
+function GameObject.SetPilotClass(self, odf)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(odf) then error("Paramater odf must be a string."); end
+    ffi.C.SetPilotClass(self:GetHandle(), tocstring(odf));
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Status
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Is the GameObject alive?
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsAlive2(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsAlive2(self:GetHandle());
+end
+
+--- Is the GameObject flying?
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsFlying2(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsFlying2(self:GetHandle());
+end
+
+--- Is the GameObject alive and pilot?
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsAliveAndPilot2(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsAliveAndPilot2(self:GetHandle());
+end
+
+--- Is the GameObject not dead and pilot?
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsNotDeadAndPilot2(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsNotDeadAndPilot2(self:GetHandle());
+end
+
+--- The GameObject is around
+-- @param self GameObject instance.
+-- @return boolean
+function GameObject.IsAround(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsAround(self:GetHandle());
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Shooting
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Who shot this GameObject?
+-- @param self GameObject instance.
+-- @return Shooter GameObject.
+function GameObject.GetWhoShotMe(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return Handle.new(ffi.C.GetWhoShotMe(self:GetHandle()));
+end
+
+--- Get last time this GameObject shot an enemy
+-- @param self GameObject instance.
+-- @return time of last event.
+function GameObject.GetLastEnemyShot(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetLastEnemyShot();
+end
+
+--- Get last time this GameObject shot an friend
+-- @param self GameObject instance.
+-- @return time of last event.
+function GameObject.GetLastFriendShot(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetLastFriendShot();
+end
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Other (Too Many...)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Owner of this GameObject
+-- @param self GameObject instance.
+-- @return owner GameObject.
+function GameObject.GetOwner(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return GameObject.new(ffi.C.GetOwner(self:GetHandle()));
+end
+
+--- Set the target of this GameObject
+-- @param self GameObject instance.
+-- @param target Target GameObject.
+function GameObject.SetTarget(self, target)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+    GameObject.new(ffi.C.SetTarget(self:GetHandle(), target));
+end
+
+--- Set the owner of this GameObject
+-- @param self GameObject instance.
+-- @param owner Owner GameObject.
+function GameObject.SetOwner(self, owner)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(owner) then error("Paramater owner must be GameObject instance."); end
+    GameObject.new(ffi.C.SetOwner(self:GetHandle(), owner));
+end
+
+--- Is this GameObject an instance of given odf?
+-- @param self GameObject instance.
+-- @param odf ODF to check.
+-- @return boolean, this GameObject is an instance of given odf.
+function GameObject.IsOdf(self, odf)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(odf) then error("Paramater odf must be a string."); end
+    local odfClean = tocstring(odf);
+    return ffi.C.IsOdf(self:GetHandle(), odfClean);
+end
+
+--- Get the race character of the GameObject
+-- @param self GameObject instance.
+-- @return race character.
+function GameObject.GetRace(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetRace(self:GetHandle());
+end
+
+--- Get the building the GameObject is in
+-- @param self GameObject instance.
+-- @return Building the GameObject is in.
+function GameObject.InBuilding(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return Handle.new(ffi.C.InBuilding(self:GetHandle()));
+end
+
+--- Get the terminal the GameObject is at
+-- @param self GameObject instance.
+-- @return Terminal the GameObject is at.
+function GameObject.AtTerminal(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return Handle.new(ffi.C.AtTerminal(self:GetHandle()));
+end
+
+--- Set the controls of the GameObject
+-- @param self GameObject instance.
+-- @param controls Controls object, nil results in clear control set.
+-- @param CTRL_BRACCEL Apply braccel control? Default false.
+-- @param CTRL_STEER Apply steer control? Default false.
+-- @param CTRL_PITCH Apply pitch control? Default false.
+-- @param CTRL_STRAFE Apply strafe control? Default false.
+-- @param CTRL_JUMP Apply jump control? Default false.
+-- @param CTRL_DEPLOY Apply deploy control? Default false.
+-- @param CTRL_EJECT Apply eject control? Default false.
+-- @param CTRL_ABANDON Apply abandon control? Default false.
+-- @param CTRL_FIRE Apply fire control? Default false.
+function GameObject.SetControls(self, controls, CTRL_BRACCEL, CTRL_STEER, CTRL_PITCH, CTRL_STRAFE, CTRL_JUMP, CTRL_DEPLOY, CTRL_EJECT, CTRL_ABANDON, CTRL_FIRE)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local whichControls = 0;
+    if CTRL_BRACCEL then whichControls = whichControls +   1; end
+    if CTRL_STEER   then whichControls = whichControls +   2; end
+    if CTRL_PITCH   then whichControls = whichControls +   4; end
+    if CTRL_STRAFE  then whichControls = whichControls +   8; end
+    if CTRL_JUMP    then whichControls = whichControls +  16; end
+    if CTRL_DEPLOY  then whichControls = whichControls +  32; end
+    if CTRL_EJECT   then whichControls = whichControls +  64; end
+    if CTRL_ABANDON then whichControls = whichControls + 128; end
+    if CTRL_FIRE    then whichControls = whichControls + 256; end
+    if controls == nil then controls = VehicleControls(); end
+    ffi.C.SetControls(self.GetHandle(), controls, whichControls);
+end
+
+--- Set the independence of the GameObject
+-- @param self GameObject instance.
+-- @param independence 1 = high, 0 = low.
+function GameObject.SetIndependence(self, independence)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SetIndependence(self:GetHandle(), independence);
+end
+
+--- Set the weapon mask of the GameObject
+-- @param self GameObject instance.
+-- @param mask A long of bits, similar to the mask in ODFs but converted to a decimal number.
+function GameObject.SetWeaponMask(self, mask)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(mask) then error("Paramater mask must be a number"); end
+    ffi.C.SetWeaponMask(self:GetHandle(), mask);
+end
+
+--- Give a weapon to the GameObject
+-- This function runs through normal powerup pickup logic.
+-- For more control you might need to get creative with checking weapons and giving weapons.
+-- @param self GameObject instance.
+-- @param weapon Weapon Name.
+function GameObject.GiveWeapon(self, weapon)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(weapon) then error("Paramater weapon must be a string"); end
+    ffi.C.GiveWeapon(self:GetHandle(), tocstring(weapon));
+end
+
+--- Set the perceived team of the GameObject
+-- @param self GameObject instance.
+-- @param team
+function GameObject.SetPerceivedTeam(self, team)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    ffi.C.SetPerceivedTeam(self:GetHandle(), team);
+end
+
+--- Set the skill level of the GameObject
+-- @param self GameObject instance.
+-- @param s Skill level.
+function GameObject.SetSkill(self, s)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(s) then error("Paramater s must be a number"); end
+    ffi.C.SetSkill(self:GetHandle(), s);
+end
+
+--- Check if the GameObject is within given distance of another object.
+-- @param self GameObject instance.
+-- @param h2 Other Object.
+-- @param distance Distance to check within.
+function GameObject.IsWithin(self, h2, distance)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(h2) then error("Paramater h2 must be GameObject instance."); end
+    if not isnumber(distance) then error("Paramater distance must be a number"); end
+    return ffi.C.IsWithin(self:GetHandle(), h2:GetHandle(), distance);
+end
+
+
+
+
+
+
+
+
+function GameObject.CountUnitsNearObject(self, dist, team, odf)
+  return ffi.C.CountUnitsNearObject(self:GetHandle(), dist, team, tocstring(odf));
+end
+function GameObject.SetAvoidType(self, avoidType)
+  ffi.C.SetAvoidType(self:GetHandle(), avoidType);
+end
+
+function GameObject.ClearThrust(self)
+  ffi.C.ClearThrust(self:GetHandle());
+end
+function GameObject.SetVerbose(self, on)
+  ffi.C.SetVerbose(self:GetHandle(), on);
+end
+
+function GameObject.CountThreats(self)
+  local here = ffi.new("int[1]");
+  local coming = ffi.new("int[1]");
+  ffi.C.CountThreats(self:GetHandle(), here, coming);
+  return tonumber(here[0]),tonumber(coming[0]);
+end
+
+function GameObject.IsPlayer(self)
+  return ffi.C.IsPlayer(self:GetHandle());
+end
+function GameObject.GetPlayerName(self)
+  return ffi.C.GetPlayerName(self:GetHandle());
+end
+
+function GameObject.MakeInert(self)
+  ffi.C.MakeInert(self:GetHandle());
+end
+
+function GameObject.GetLabel(self)
+  return ffi.C.GetLabel(self:GetHandle());
+end
+function GameObject.SetLabel(self, pLabel)
+  ffi.C.SetLabel(self:GetHandle(), tocstring(pLabel));
+end
+function GameObject.GetTap(self, index)
+  return GameObject.new(ffi.C.GetTap(self:GetHandle(), index));
+end
+function GameObject.SetTap(self, index, tapObjectHandle)
+  ffi.C.SetTap(self:GetHandle(), index, tapObjectHandle.GetHandle());
+end
+
+function GameObject.BuildEmptyCraftNear(self, ODF, Team, MinRadiusAway, MaxRadiusAway)
+  return GameObject.new(ffi.C.BuildEmptyCraftNear(self, tocstring(ODF), Team, MinRadiusAway, MaxRadiusAway));
+end
+
+
+function GameObject.SetAsUser(self, Team)
+  ffi.C.SetAsUser(self:GetHandle(), Team);
+end
+function GameObject.SetNoScrapFlagByHandle(self)
+  ffi.C.SetNoScrapFlagByHandle(self:GetHandle());
+end
+function GameObject.ClearNoScrapFlagByHandle(self)
+  ffi.C.ClearNoScrapFlagByHandle(self:GetHandle());
+end
+function GameObject.GetTarget(self)
+  return GameObject.new(GetTarget(self:GetHandle()));
+end
+
+
+function GameObject.ResetTeamSlot(self)
+  ffi.C.ResetTeamSlot(self:GetHandle());
+end
+function GameObject.GetCategoryTypeOverride(self)
+  local retVal = ffi.C.GetCategoryTypeOverride(self:GetHandle());
+  if retVal == -2 then return nil; end
+  return retVal;
+end
+function GameObject.GetCategoryType(self)
+  local retVal = ffi.C.GetCategoryType(self:GetHandle());
+  if retVal == -2 then return nil; end
+  return retVal;
+end
+function GameObject.SetBestGroup(self)
+  return ffi.C.SetBestGroup(self:GetHandle());
+end
+function GameObject.SetLifespan(self, timout)
+  if timeout == nil then timeout = -1; end
+  ffi.C.SetLifespan(self:GetHandle(), timeout);
+end
+
+
+
+function GameObject.KickPlayer(self, pExplanationStr, banAlso)
+  if banAlso == nil then banAlso = false; end
+  ffi.C.KickPlayer(self:GetHandle(), tocstring(pExplanationStr));
+end
+
+
+
+
+
+
+
+
+
+
+
+
+--==============================================================================================================================================================
+-- Cockpit Timer
+--==============================================================================================================================================================
+
+--- Start the Cockpit Timer countdown
+-- @param time Target time.
+-- @param warn Time for warning color.
+-- @param alert Time for alert color.
+function StartCockpitTimer(time, warn, alert)
+    if not isgameobject(time) then error("Paramater time must be a number."); end
+    if not isgameobject(warn) then error("Paramater warn must be a number."); end
+    if not isgameobject(alert) then error("Paramater alert must be a number."); end
+    if warn == nil then warn = LONG_MIN; end
+    if alert == nil then alert = LONG_MIN; end
+    ffi.C.StartCockpitTimer(time, warn, alert);
+end
+
+--- Start the Cockpit Timer countup
+-- @param time Starting time.
+-- @param warn Time for warning color.
+-- @param alert Time for alert color.
+function StartCockpitTimerUp(time, warn, alert)
+    if not isgameobject(time) then error("Paramater time must be a number."); end
+    if not isgameobject(warn) then error("Paramater warn must be a number."); end
+    if not isgameobject(alert) then error("Paramater alert must be a number."); end
+    if warn == nil then warn = LONG_MAX; end
+    if alert == nil then alert = LONG_MAX; end
+    ffi.C.StartCockpitTimerUp(time, warn, alert);
+end
+
+--- Stop the Cockpit Timer
+function StopCockpitTimer()
+  ffi.C.StopCockpitTimer();
+end
+
+--- Hide the Cockpit Timer
+function HideCockpitTimer()
+  ffi.C.HideCockpitTimer();
+end
+
+--- Get the Cockpit Timer time
+-- @return time of timer
+function GetCockpitTimer()
+  return ffi.C.GetCockpitTimer();
+end
+
+
+
+
+
 
 
 
@@ -1411,26 +2334,7 @@ function BuildObject(odf, team, pos)
   return GameObject.new(handle);
 end
 
-function GameObject.IsOdf(self, odf)
-  if type(odf) == "string" then
-    local odfClean = tocstring(odf);
-    return ffi.C.IsOdf(self:GetHandle(), odfClean);
-  else
-    error("IsOdf paramater type invalid, received " .. type(odf) .. ", expected string");
-  end
-end
-function GameObject.GetRace(self)
-  return ffi.C.GetRace(self:GetHandle());
-end
-function GameObject.IsAround(self)
-  return ffi.C.IsAround(self:GetHandle());
-end
-function GameObject.InBuilding(self)
-  return Handle.new(ffi.C.InBuilding(self:GetHandle()));
-end
-function GameObject.AtTerminal(self)
-  return Handle.new(ffi.C.AtTerminal(self:GetHandle()));
-end
+
 function GetHandle(name)
   if type(name) == "string" then
     local cName = tocstring(name);
@@ -1443,19 +2347,7 @@ function GetHandle(name)
 end
 
 
-function GameObject.GetTeamNum(self)
-  return ffi.C.GetTeamNum(self:GetHandle());
-end
-function GameObject.SetTeamNum(self, t)
-  ffi.C.SetTeamNum(self:GetHandle(), t);
-end
 
---SetControls
-function GameObject.GetWhoShotMe(self)
-  return Handle.new(ffi.C.GetWhoShotMe(self:GetHandle()));
-end
---GetLastEnemyShot
---GetLastFriendShot
 function DefaultAllies()
   ffi.C.DefaultAllies();
 end
@@ -1468,9 +2360,7 @@ end
 function UnAlly(t1, t2)
   ffi.C.UnAlly(t1, t2);
 end
-function GameObject.IsAlly(self, him)
-  return ffi.C.IsAlly(self:GetHandle(), him);
-end
+
 function AudioMessage(msg, purge)
   if purge == nil then purge = false; end
   return ffi.C.AudioMessage(tocstring(msg), purge);
@@ -1500,31 +2390,11 @@ end
 function SetMusicIntensity(intensity)
   ffi.C.SetMusicIntensity(intensity);
 end
-function GameObject.SetIndependence(independence)
-  ffi.C.SetIndependence(self:GetHandle(), independence);
-end
+
 function IsInfo(odf)
   return ffi.C.IsInfo(tocstring(odf));
 end
-function StartCockpitTimer(time, warn, alert)
-  if warn == nil then warn = LONG_MIN; end
-  if alert == nil then alert = LONG_MIN; end
-  ffi.C.StartCockpitTimer(time, warn, alert);
-end
-function StartCockpitTimerUp(time, warn, alert)
-  if warn == nil then warn = LONG_MAX; end
-  if alert == nil then alert = LONG_MAX; end
-  ffi.C.StartCockpitTimerUp(time, warn, alert);
-end
-function StopCockpitTimer()
-  ffi.C.StopCockpitTimer();
-end
-function HideCockpitTimer()
-  ffi.C.HideCockpitTimer();
-end
-function GetCockpitTimer()
-  return ffi.C.GetCockpitTimer();
-end
+
 function StartEarthQuake(magnitude)
   ffi.C.StartEarthQuake(magnitude);
 end
@@ -1561,69 +2431,24 @@ end
 function TerrainFindFloor(x, z)
   return ffi.C.TerrainFindFloor(x, z);
 end
-function GameObject.AddPilot(self)
-  ffi.C.AddPilotByHandle(self:GetHandle())
-end
+
 function PrintConsoleMessage(msg)
   ffi.C.PrintConsoleMessage(tocstring(msg));
 end
 function GetRandomFloat(range)
   return ffi.C.GetRandomFloat(range);
 end
-function GameObject.IsDeployed(self)
-  return ffi.C.IsDeployed(self:GetHandle());
-end
-function GameObject.Deploy(self)
-  ffi.C.Deploy(self:GetHandle());
-end
-function GameObject.IsSelected(self)
-  return ffi.C.IsSelected(self:GetHandle());
-end
-function SetWeaponMask(self, mask)
-  ffi.C.SetWeaponMask(self:GetHandle(), mask);
-end
-function GiveWeapon(self, weapon)
-  ffi.C.GiveWeapon(self:GetHandle(), tocstring(weapon));
-end
 
-function GameObject.IsFollowing(self)
-  return ffi.C.IsFollowing(self:GetHandle());
-end
-function GameObject.WhoFollowing(self)
-  return GameObject.new(ffi.C.WhoFollowing(self:GetHandle()));
-end
 function SetUserTarget(h)
   ffi.C.SetUserTarget(h.GetHandle());
 end
-function GameObject.SetPerceivedTeam(self, team)
-  ffi.C.SetPerceivedTeam(self:GetHandle(), team);
-end
-function GameObject.GetCurrentWho(self)
-  return GameObject.new(ffi.C.GetCurrentWho(self:GetHandle()));
-end
-function GameObject.EjectPilot(self)
-  ffi.C.EjectPilot(self:GetHandle());
-end
-function GameObject.HopOut(self)
-  ffi.C.HopOut(self:GetHandle());
-end
-function GameObject.KillPilot(self)
-  ffi.C.KillPilot(self:GetHandle());
-end
-function GameObject.RemovePilotAI(self)
-  ffi.C.RemovePilotAI(self:GetHandle());
-end
-function GameObject.HoppedOutOf(self)
-  return GameObject.new(ffi.C.HoppedOutOf(self:GetHandle()));
-end
+
 --
 function CalcCRC(n)
   return ffi.C.CalcCRC(tocstring(n));
 end
 --
-function GameObject.SetSkill(self, s)
-  ffi.C.SetSkill(self:GetHandle(), s);
-end
+
 function SetPlan(cfg, team)
   if team == nil then team = -1; end
   ffi.C.SetSkill(tocstring(cfg), team);
@@ -1663,15 +2488,7 @@ end
 function IsRecording()
   return ffi.C.IsRecording();
 end
-function GameObject.SetObjectiveOn(self)
-  ffi.C.SetObjectiveOn(self:GetHandle());
-end
-function GameObject.SetObjectiveOff(self)
-  ffi.C.SetObjectiveOff(self:GetHandle());
-end
-function GameObject.SetObjectiveName(self, name)
-  ffi.C.SetObjectiveName(self:GetHandle(), tocstring(name));
-end
+
 function ClearObjectives()
   ffi.C.ClearObjectives();
 end
@@ -1687,39 +2504,7 @@ function AddObjective(name, color, showTime)
     ffi.C.AddObjective(tocstring(name),colorIn,showTime)
   end
 end
-function GameObject.IsWithin(self, h2, distance)
-  return ffi.C.IsWithin(self:GetHandle(), h2:GetHandle(), distance);
-end
-function GameObject.CountUnitsNearObject(self, dist, team, odf)
-  return ffi.C.CountUnitsNearObject(self:GetHandle(), dist, team, tocstring(odf));
-end
-function GameObject.SetAvoidType(self, avoidType)
-  ffi.C.SetAvoidType(self:GetHandle(), avoidType);
-end
-function GameObject.Annoy(self, target)
-  ffi.C.Annoy(self:GetHandle(), target:GetHandle());
-end
-function GameObject.ClearThrust(self)
-  ffi.C.ClearThrust(self:GetHandle());
-end
-function GameObject.SetVerbose(self, on)
-  ffi.C.SetVerbose(self:GetHandle(), on);
-end
-function GameObject.ClearIdleAnims(self)
-  ffi.C.ClearIdleAnims(self:GetHandle());
-end
-function GameObject.AddIdleAnim(self, name)
-  ffi.C.AddIdleAnim(self:GetHandle(), tocstring(name));
-end
-function GameObject.IsIdle(self)
-  return ffi.C.IsIdle(self:GetHandle());
-end
-function GameObject.CountThreats(self)
-  local here = ffi.new("int[1]");
-  local coming = ffi.new("int[1]");
-  ffi.C.CountThreats(self:GetHandle(), here, coming);
-  return tonumber(here[0]),tonumber(coming[0]);
-end
+
 --SpawnBirds
 --SpawnBirds
 --RemoveBirds
@@ -1799,12 +2584,7 @@ end
 function GetRaceOfTeam(TeamNum)
   return ffi.C.GetRaceOfTeam(TeamNum);
 end
-function GameObject.IsPlayer(self)
-  return ffi.C.IsPlayer(self:GetHandle());
-end
-function GameObject.GetPlayerName(self)
-  return ffi.C.GetPlayerName(self:GetHandle());
-end
+
 function WhichTeamGroup(Team)
   local retVal = ffi.C.WhichTeamGroup(Team);
   if retVal == 0xA5A5A5A5 then return nil; end
@@ -1831,9 +2611,7 @@ function GetTeamplayRanges(Team)
   local OffenseMaxTeamNum = ffi.new("int[0]");
   return tonumber(DefenseTeamNum),tonumber(OffenseMinTeamNum),tonumber(OffenseMaxTeamNum);
 end
-function GameObject.SetRandomHeadingAngle(self)
-  return ffi.C.SetRandomHeadingAngle(self:GetHandle());
-end
+
 function ClearTeamColors()
   ffi.C.ClearTeamColors();
 end
@@ -1852,16 +2630,12 @@ end
 function ClearTeamColor(team)
   ffi.C.ClearTeamColor(team);
 end
-function GameObject.MakeInert(self)
-  ffi.C.MakeInert(self:GetHandle());
-end
+
 function GetPositionNear(Pos, MinRadiusAway, MaxRadiusAway)
   return ffi.C.GetPositionNear(Pos, MinRadiusAway, MaxRadiusAway);
 end
 --GetPlayerODF
-function GameObject.BuildEmptyCraftNear(self, ODF, Team, MinRadiusAway, MaxRadiusAway)
-  return GameObject.new(ffi.C.BuildEmptyCraftNear(self, tocstring(ODF), Team, MinRadiusAway, MaxRadiusAway));
-end
+
 function SetCircularPos(CenterPos, Radius, Angle)
   local NewPos = Vector();
   ffi.C.SetCircularPos(CenterPos, Radius, Angle, NewPos);
@@ -1886,69 +2660,29 @@ end
 function AddToMessagesBox(msg)
   ffi.C.AddToMessagesBox(tocstring(msg));
 end
-function GameObject.GetDeaths(self)
-  return ffi.C.GetDeaths(self:GetHandle());
-end
-function GameObject.GetKills(self)
-  return ffi.C.GetKills(self:GetHandle());
-end
-function GameObject.GetScore(self)
-  return ffi.C.GetScore(self:GetHandle());
-end
-function GameObject.SetDeaths(self, NewValue)
-  return ffi.C.SetDeaths(self:GetHandle(), NewValue);
-end
-function GameObject.SetKills(self, NewValue)
-  return ffi.C.SetKills(self:GetHandle(), NewValue);
-end
-function GameObject.SetScore(self, NewValue)
-  return ffi.C.SetScore(self:GetHandle(), NewValue);
-end
-function GameObject.AddDeaths(self, delta)
-  ffi.C.AddDeaths(self:GetHandle(), delta)
-end
-function GameObject.AddKills(self, delta)
-  ffi.C.AddKills(self:GetHandle(), delta)
-end
+
+
+
+
+
+--- Add to score of GameObject
+-- @param team GameObject instance.
+-- @param delta Score to add.
 function AddScore(team, delta)
-  ffi.C.AddScore(team, delta)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(delta) then error("Paramater delta must be GameObject instance."); end
+    ffi.C.AddScore(team, delta)
 end
-function GameObject.SetAsUser(self, Team)
-  ffi.C.SetAsUser(self:GetHandle(), Team);
-end
-function GameObject.SetNoScrapFlagByHandle(self)
-  ffi.C.SetNoScrapFlagByHandle(self:GetHandle());
-end
-function GameObject.ClearNoScrapFlagByHandle(self)
-  ffi.C.ClearNoScrapFlagByHandle(self:GetHandle());
-end
+
+
+
 function GetLocalPlayerTeamNumber()
   return ffi.C.GetLocalPlayerTeamNumber();
 end
 function GetLocalPlayerDPID()
   return ffi.C.GetLocalPlayerDPID();
 end
-function GameObject.FlagStealBy(self, holder)
-  ffi.C.FlagSteal(self:GetHandle(), holder.GetHandle());
-end
-function GameObject.FlagRecoverBy(self, holder)
-  ffi.C.FlagRecover(self:GetHandle(), holder.GetHandle());
-end
-function GameObject.FlagScoreBy(self, holder)
-  ffi.C.FlagScore(self:GetHandle(), holder.GetHandle());
-end
-function GameObject.FlagSteal(self, holder)
-  ffi.C.FlagSteal(holder.GetHandle(), self:GetHandle());
-end
-function GameObject.FlagRecover(self, holder)
-  ffi.C.FlagRecover(holder.GetHandle(), self:GetHandle());
-end
-function GameObject.FlagScore(self, holder)
-  ffi.C.FlagScore(holder.GetHandle(), self:GetHandle());
-end
-function GameObject.MoneyScore(self, ammount)
-  ffi.C.MoneyScore(ammount, self:GetHandle());
-end
+
 function NoteGameoverByTimelimit()
   ffi.C.NoteGameoverByTimelimit()
 end
@@ -1976,9 +2710,9 @@ end
 function GetUserTarget(TeamNum)
   return GameObject.new(ffi.C.GameUserTarget(TeamNum));
 end
-function GameObject.GetTarget(self)
-  return GameObject.new(GetTarget(self:GetHandle()));
-end
+
+
+
 function IFace_ConsoleCmd(pStr, bSquelchOutput)
   if bSquelchOutput == nil then bSquelchOutput = true; end
   ffi.C.IFace_ConsoleCmd(tocstring(pStr));
@@ -2000,22 +2734,12 @@ end
 function GetFirstEmptyGroup(t)
   return ffi.C.GetFirstEmptyGroup(t);
 end
-function GameObject.GetVelocity(self)
-  return ffi.C.GetVelocity(self:GetHandle());
-end
+
 --GetObjInfo(Handle h, ObjectInfoType type, char pBuffer[64]);
 function DoesODFExist(odf)
   return ffi.C.DoesODFExist(tocstring(odf));
 end
-function GameObject.IsAlive2(self)
-  return ffi.C.IsAlive2(self:GetHandle());
-end
-function GameObject.IsFlying2(self)
-  return ffi.C.IsFlying2(self:GetHandle());
-end
-function GameObject.IsAliveAndPilot2(self)
-  return ffi.C.IsAliveAndPilot2(self:GetHandle());
-end
+
 function TranslateString2(Src, size)
   local passIn;
   if size == nil then size = 1024; end
@@ -2028,32 +2752,7 @@ function TranslateString2(Src, size)
   ffi.C.TranslateString2(passIn, size, tocstring(Src));
   return tostring(passIn);
 end
-function GameObject.GetScavengerCurScrap(self)
-  local retVal = ffi.C.GetScavengerCurScrap(self:GetHandle());
-  if retVal == -1 then
-    return nil;
-  end
-  return GameObject.new(retVal);
-end
-function GameObject.GetScavengerMaxScrap(self)
-  local retVal = ffi.C.GetScavengerMaxScrap(self:GetHandle());
-  if retVal == -1 then
-    return nil;
-  end
-  return GameObject.new(retVal);
-end
-function GameObject.SetScavengerCurScrap(self,aNewScrap)
-  ffi.C.SetScavengerCurScrap(self:GetHandle(),aNewScrap);
-end
-function GameObject.SetScavengerMaxScrap(self,aNewScrap)
-  ffi.C.SetScavengerMaxScrap(self:GetHandle(),aNewScrap);
-end
-function GameObject.DamageF(self, amt)
-  ffi.C.DamageF(self:GetHandle(), amt);
-end
-function GameObject.SelfDamage(self, amt)
-  ffi.C.SelfDamage(self:GetHandle(), amt);
-end
+
 function WantBotKillMessages()
   ffi.C.WantBotKillMessages();
 end
@@ -2065,19 +2764,6 @@ function GetLocalUserInspectHandle()
 end
 function GetLocalUserSelectHandle()
   return GameObject.new(ffi.C.GetLocalUserSelectHandle());
-end
-function GameObject.ResetTeamSlot(self)
-  ffi.C.ResetTeamSlot(self:GetHandle());
-end
-function GameObject.GetCategoryTypeOverride(self)
-  local retVal = ffi.C.GetCategoryTypeOverride(self:GetHandle());
-  if retVal == -1 then return nil; end
-  return retVal;
-end
-function GameObject.GetCategoryType(self)
-  local retVal = ffi.C.GetCategoryType(self:GetHandle());
-  if retVal == -1 then return nil; end
-  return retVal;
 end
 --[[DLLEXPORT int DLLAPI GetODFHexInt(const char* file, const char* block, const char* name, int* value = NULL, int defval = 0);
 DLLEXPORT int DLLAPI GetODFInt(const char* file, const char* block, const char* name, int* value = NULL, int defval = 0);
@@ -2094,9 +2780,7 @@ DLLEXPORT bool DLLAPI CloseODF(char *name);]]
 function NoteGameoverWithCustomMessage(pString)
   ffi.C.NoteGameoverWithCustomMessage(tocstring(pString));
 end
-function GameObject.SetBestGroup(self)
-  return ffi.C.SetBestGroup(self:GetHandle());
-end
+
 function GetGroup(team, group, type)
   local pBuffer = ffi.new("char[64]");
   ffi.C.GetGroup(team, group, type, pBuffer);
@@ -2105,10 +2789,10 @@ end
 function GetGroupCount(team, group)
   return ffi.C.GetGroupCount(team, group);
 end
-function GameObject.SetLifespan(self, timout)
-  if timeout == nil then timeout = -1; end
-  ffi.C.SetLifespan(self:GetHandle(), timeout);
-end
+
+
+
+
 function DoesFileExist(filename)
   return ffi.C.DoesFileExist(tocstring(filename));
 end
@@ -2168,30 +2852,7 @@ end
 function IsPlayingLooped(h)
   return ffi.C.IsPlayingLooped(h);
 end
-function GetNearestEnemy(h, ignorePilots, ignoreScavs, maxDist)
-  if maxDist == nil then maxDist = 450.0; end
-  return GameObject.new(ffi.C.GetNearestEnemy(h.handle, ignorePilots, ignoreScavs, maxDist));
-end
-function GetNearestPowerup(h, ignoreSpawnpoints, maxDist)
-  if maxDist == nil then maxDist = 450.0; end
-  return GameObject.new(ffi.C.GetNearestPowerup(h.handle, ignoreSpawnpoints, maxDist));
-end
-function GetNearestPerson(h, skipFriendlies, maxDist)
-  if maxDist == nil then maxDist = 450.0; end
-  return GameObject.new(ffi.C.GetNearestPerson(h.handle, skipFriendlies, maxDist));
-end
-function GameObject.SetCommand(self, cmd, priority, who, loc, param)
-  if param == nil then param = 0; end
-  if type(pos) == "cdata" and ffi.istype("Vector", pos) then
-    ffi.C.SetCommandV(self:GetHandle(), cmd, priority, who.GetHandle(), where, param);
-  else
-    if priority == nil then priority = 0; end
-    if who == nil then who = 0; end
-    if isgameobject(who) then who = who.GetHandle(); end
-    if path ~= nil then path = tocstring(path); end
-    ffi.C.SetCommandP(self:GetHandle(), cmd, priority, who, path, param);
-  end
-end
+
 function SetGravity(gravity)
   if gravity == nil then gravity = 12.5; end
   ffi.C.SetGravity(gravity);
@@ -2200,10 +2861,7 @@ function SetAutoGroupUnits(autoGroup)
   if autoGroup == nil then autoGroup = true; end
   ffi.C.SetAutoGroupUnits(autoGroup);
 end
-function GameObject.KickPlayer(self, pExplanationStr, banAlso)
-  if banAlso == nil then banAlso = false; end
-  ffi.C.KickPlayer(self:GetHandle(), tocstring(pExplanationStr));
-end
+
 function TerrainIsWater(posORx, z)
   if z == nil then
     ffa.C.TerrainIsWaterV(posOrx);
@@ -2241,18 +2899,7 @@ function GetPathPoints(path)
   end
   return paths;
 end
-function GameObject.GetOwner(self)
-  return GameObject.new(ffi.C.GetOwner(self:GetHandle()));
-end
-function GameObject.SetTarget(self, target)
-  return GameObject.new(ffi.C.SetTarget(self:GetHandle(), target));
-end
-function GameObject.SetOwner(self, owner)
-  return GameObject.new(ffi.C.SetOwner(self:GetHandle(), owner));
-end
-function GameObject.SetPilotClass(self, odf)
-  ffi.C.SetPilotClass(self:GetHandle(), tocstring(odf));
-end
+
 function AllowRandomTracks(allow)
   if allow == nil then allow = true end
   ffi.C.AllowRandomTracks(allow)
@@ -2323,22 +2970,6 @@ end
 function IsTeamAllied(t1, t2)
   return ffi.C.IsTeamAllied(t1, t2);
 end
-function GameObject.IsNotDeadAndPilot2(self)
-  return ffi.C.IsNotDeadAndPilot2(self:GetHandle());
-end
-function GameObject.GetLabel(self)
-  return ffi.C.GetLabel(self:GetHandle());
-end
-function GameObject.SetLabel(self, pLabel)
-  ffi.C.SetLabel(self:GetHandle(), tocstring(pLabel));
-end
-function GameObject.GetTap(self, index)
-  return GameObject.new(ffi.C.GetTap(self:GetHandle(), index));
-end
-function GameObject.SetTap(self, index, tapObjectHandle)
-  ffi.C.SetTap(self:GetHandle(), index, tapObjectHandle.GetHandle());
-end
-
 
 
 
