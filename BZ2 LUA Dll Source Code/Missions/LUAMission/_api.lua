@@ -158,37 +158,95 @@ __declspec( dllexport ) void __cdecl GiveWeapon(int,char *) asm("?GiveWeapon@@YA
 __declspec( dllexport ) void __cdecl FireAt(int,int,bool) asm("?FireAt@@YAXHH_N@Z");
 __declspec( dllexport ) bool __cdecl IsFollowing(int) asm("?IsFollowing@@YA_NH@Z");
 __declspec( dllexport ) int __cdecl WhoFollowing(int) asm("?WhoFollowing@@YAHH@Z");
-__declspec( dllexport ) void __cdecl SetUserTarget(int) asm("?SetUserTarget@@YAXH@Z");
+//__declspec( dllexport ) void __cdecl SetUserTarget(int) asm("?SetUserTarget@@YAXH@Z");// legacy
 //__declspec( dllexport ) int __cdecl GetUserTarget(void) asm("?GetUserTarget@@YAHXZ");// legacy
 __declspec( dllexport ) void __cdecl SetPerceivedTeam(int,int) asm("?SetPerceivedTeam@@YAXHH@Z");
-//__declspec( dllexport ) enum AiCommand __cdecl GetCurrentCommand(int) asm("?GetCurrentCommand@@YA?AW4AiCommand@@H@Z");
+enum AiCommand {
+	CMD_NONE,
+	CMD_SELECT,
+	CMD_STOP,
+	CMD_GO,
+	CMD_ATTACK,
+	CMD_FOLLOW,
+	CMD_FORMATION,
+	CMD_PICKUP,
+	CMD_DROPOFF,
+	CMD_UNDEPLOY,
+	CMD_DEPLOY,
+	CMD_NO_DEPLOY,
+	CMD_GET_REPAIR,
+	CMD_GET_RELOAD,
+	CMD_GET_WEAPON,
+	CMD_GET_CAMERA,
+	CMD_GET_BOMB,
+	CMD_DEFEND,
+	CMD_RESCUE,
+	CMD_RECYCLE,
+	CMD_SCAVENGE,
+	CMD_HUNT,
+	CMD_BUILD,
+	CMD_PATROL,
+	CMD_STAGE,
+	CMD_SEND,
+	CMD_GET_IN,
+	CMD_LAY_MINES,
+	CMD_LOOK_AT,
+	CMD_SERVICE,
+	CMD_UPGRADE,
+	CMD_DEMOLISH,
+	CMD_POWER,
+	CMD_BACK,
+	CMD_DONE,
+	CMD_CANCEL,
+	CMD_SET_GROUP,
+	CMD_SET_TEAM,
+	CMD_SEND_GROUP,
+	CMD_TARGET,
+	CMD_INSPECT,
+	CMD_SWITCHTEAM,
+	CMD_INTERFACE,
+	CMD_LOGOFF,
+	CMD_AUTOPILOT,
+	CMD_MESSAGE,
+	CMD_CLOSE,
+	CMD_MORPH_SETDEPLOYED, // For morphtanks
+	CMD_MORPH_SETUNDEPLOYED, // For morphtanks
+	CMD_MORPH_UNLOCK, // For morphtanks
+	CMD_BAILOUT,
+	CMD_BUILD_ROTATE, // Update building rotations by 90 degrees.
+	CMD_CMDPANEL_SELECT,
+	CMD_CMDPANEL_DESELECT,
+
+	NUM_CMD // Must be last!
+}; // Don't let NUM_COMMAND go past 255, as 1 byte is used for it when sending across network
+__declspec( dllexport ) enum AiCommand __cdecl GetCurrentCommand(int) asm("?GetCurrentCommand@@YA?AW4AiCommand@@H@Z");
 __declspec( dllexport ) int __cdecl GetCurrentWho(int) asm("?GetCurrentWho@@YAHH@Z");
 __declspec( dllexport ) void __cdecl EjectPilot(int) asm("?EjectPilot@@YAXH@Z");
 __declspec( dllexport ) void __cdecl HopOut(int) asm("?HopOut@@YAXH@Z");
 __declspec( dllexport ) void __cdecl KillPilot(int) asm("?KillPilot@@YAXH@Z");
 __declspec( dllexport ) void __cdecl RemovePilotAI(int) asm("?RemovePilotAI@@YAXH@Z");
 __declspec( dllexport ) int __cdecl HoppedOutOf(int) asm("?HoppedOutOf@@YAHH@Z");
-//__declspec( dllexport ) void __cdecl GetCameraPosition(struct Vector &,struct Vector &) asm("?GetCameraPosition@@YAXAAUVector@@0@Z");
-//__declspec( dllexport ) void __cdecl SetCameraPosition(struct Vector const &,struct Vector const &) asm("?SetCameraPosition@@YAXABUVector@@0@Z");
-//__declspec( dllexport ) void __cdecl ResetCameraPosition(void) asm("?ResetCameraPosition@@YAXXZ");
+__declspec( dllexport ) void __cdecl GetCameraPosition(struct Vector &,struct Vector &) asm("?GetCameraPosition@@YAXAAUVector@@0@Z");
+__declspec( dllexport ) void __cdecl SetCameraPosition(struct Vector const &,struct Vector const &) asm("?SetCameraPosition@@YAXABUVector@@0@Z");
+__declspec( dllexport ) void __cdecl ResetCameraPosition(void) asm("?ResetCameraPosition@@YAXXZ");
 __declspec( dllexport ) unsigned long __cdecl CalcCRC(char *) asm("?CalcCRC@@YAKPAD@Z");
-//__declspec( dllexport ) void __cdecl IFace_Exec(char *) asm("?IFace_Exec@@YAXPAD@Z");
-//__declspec( dllexport ) void __cdecl IFace_Activate(char *) asm("?IFace_Activate@@YAXPAD@Z");
-//__declspec( dllexport ) void __cdecl IFace_Deactivate(char *) asm("?IFace_Deactivate@@YAXPAD@Z");
-//__declspec( dllexport ) void __cdecl IFace_CreateCommand(char *) asm("?IFace_CreateCommand@@YAXPAD@Z");
-//__declspec( dllexport ) void __cdecl IFace_CreateString(char *,char *) asm("?IFace_CreateString@@YAXPAD0@Z");
-//__declspec( dllexport ) void __cdecl IFace_SetString(char *,char *) asm("?IFace_SetString@@YAXPAD0@Z");
-//__declspec( dllexport ) void __cdecl IFace_GetString(char *,char *,int) asm("?IFace_GetString@@YAXPAD0H@Z");
-//__declspec( dllexport ) void __cdecl IFace_CreateInteger(char *,int) asm("?IFace_CreateInteger@@YAXPADH@Z");
-//__declspec( dllexport ) void __cdecl IFace_SetInteger(char *,int) asm("?IFace_SetInteger@@YAXPADH@Z");
-//__declspec( dllexport ) int __cdecl IFace_GetInteger(char *) asm("?IFace_GetInteger@@YAHPAD@Z");
-//__declspec( dllexport ) void __cdecl IFace_SetIntegerRange(char *,int,int) asm("?IFace_SetIntegerRange@@YAXPADHH@Z");
-//__declspec( dllexport ) void __cdecl IFace_CreateFloat(char *,float) asm("?IFace_CreateFloat@@YAXPADM@Z");
-//__declspec( dllexport ) void __cdecl IFace_SetFloat(char *,float) asm("?IFace_SetFloat@@YAXPADM@Z");
-//__declspec( dllexport ) float __cdecl IFace_GetFloat(char *) asm("?IFace_GetFloat@@YAMPAD@Z");
-//__declspec( dllexport ) void __cdecl IFace_ClearListBox(char *) asm("?IFace_ClearListBox@@YAXPAD@Z");
-//__declspec( dllexport ) void __cdecl IFace_AddTextItem(char *,char *) asm("?IFace_AddTextItem@@YAXPAD0@Z");
-//__declspec( dllexport ) void __cdecl IFace_GetSelectedItem(char *,char *,int) asm("?IFace_GetSelectedItem@@YAXPAD0H@Z");
+__declspec( dllexport ) void __cdecl IFace_Exec(char *) asm("?IFace_Exec@@YAXPAD@Z");
+__declspec( dllexport ) void __cdecl IFace_Activate(char *) asm("?IFace_Activate@@YAXPAD@Z");
+__declspec( dllexport ) void __cdecl IFace_Deactivate(char *) asm("?IFace_Deactivate@@YAXPAD@Z");
+__declspec( dllexport ) void __cdecl IFace_CreateCommand(char *) asm("?IFace_CreateCommand@@YAXPAD@Z");
+__declspec( dllexport ) void __cdecl IFace_CreateString(char *,char *) asm("?IFace_CreateString@@YAXPAD0@Z");
+__declspec( dllexport ) void __cdecl IFace_SetString(char *,char *) asm("?IFace_SetString@@YAXPAD0@Z");
+__declspec( dllexport ) void __cdecl IFace_GetString(char *,char *,int) asm("?IFace_GetString@@YAXPAD0H@Z");
+__declspec( dllexport ) void __cdecl IFace_CreateInteger(char *,int) asm("?IFace_CreateInteger@@YAXPADH@Z");
+__declspec( dllexport ) void __cdecl IFace_SetInteger(char *,int) asm("?IFace_SetInteger@@YAXPADH@Z");
+__declspec( dllexport ) int __cdecl IFace_GetInteger(char *) asm("?IFace_GetInteger@@YAHPAD@Z");
+__declspec( dllexport ) void __cdecl IFace_SetIntegerRange(char *,int,int) asm("?IFace_SetIntegerRange@@YAXPADHH@Z");
+__declspec( dllexport ) void __cdecl IFace_CreateFloat(char *,float) asm("?IFace_CreateFloat@@YAXPADM@Z");
+__declspec( dllexport ) void __cdecl IFace_SetFloat(char *,float) asm("?IFace_SetFloat@@YAXPADM@Z");
+__declspec( dllexport ) float __cdecl IFace_GetFloat(char *) asm("?IFace_GetFloat@@YAMPAD@Z");
+__declspec( dllexport ) void __cdecl IFace_ClearListBox(char *) asm("?IFace_ClearListBox@@YAXPAD@Z");
+__declspec( dllexport ) void __cdecl IFace_AddTextItem(char *,char *) asm("?IFace_AddTextItem@@YAXPAD0@Z");
+__declspec( dllexport ) void __cdecl IFace_GetSelectedItem(char *,char *,int) asm("?IFace_GetSelectedItem@@YAXPAD0H@Z");
 __declspec( dllexport ) void __cdecl SetSkill(int,int) asm("?SetSkill@@YAXHH@Z");
 __declspec( dllexport ) void __cdecl SetPlan(char *,int) asm("?SetPlan@@YAXPADH@Z");
 __declspec( dllexport ) void __cdecl LogFloat(float) asm("?LogFloat@@YAXM@Z");
@@ -200,21 +258,21 @@ __declspec( dllexport ) int __cdecl GetInstantType(void) asm("?GetInstantType@@Y
 __declspec( dllexport ) int __cdecl GetInstantFlag(void) asm("?GetInstantFlag@@YAHXZ");
 __declspec( dllexport ) int __cdecl GetInstantMySide(void) asm("?GetInstantMySide@@YAHXZ");
 //DLLEXPORT bool DLLAPI StoppedPlayback(void); // not found in exports
-//__declspec( dllexport ) bool __cdecl CameraReady(void) asm("?CameraReady@@YA_NXZ");
-//__declspec( dllexport ) bool __cdecl CameraPath(char *,int,int,int) asm("?CameraPath@@YA_NPADHHH@Z");
-//__declspec( dllexport ) bool __cdecl CameraPathDir(char *,int,int) asm("?CameraPathDir@@YA_NPADHH@Z");
-//__declspec( dllexport ) bool __cdecl PanDone(void) asm("?PanDone@@YA_NXZ");
-//__declspec( dllexport ) bool __cdecl CameraObject(int,float,float,float,int) asm("?CameraObject@@YA_NHMMMH@Z");
-//__declspec( dllexport ) bool __cdecl CameraFinish(void) asm("?CameraFinish@@YA_NXZ");
-//__declspec( dllexport ) bool __cdecl CameraCancelled(void) asm("?CameraCancelled@@YA_NXZ");
-//__declspec( dllexport ) bool __cdecl FreeCamera(void) asm("?FreeCamera@@YA_NXZ");
-//__declspec( dllexport ) bool __cdecl FreeFinish(void) asm("?FreeFinish@@YA_NXZ");
-//__declspec( dllexport ) bool __cdecl PlayMovie(char * const) asm("?PlayMovie@@YA_NQAD@Z");
-//__declspec( dllexport ) void __cdecl StopMovie(void) asm("?StopMovie@@YAXXZ");
-//__declspec( dllexport ) bool __cdecl PlayMove(void) asm("?PlayMove@@YA_NXZ");
-//__declspec( dllexport ) bool __cdecl PlayRecording(char * const) asm("?PlayRecording@@YA_NQAD@Z");
-//__declspec( dllexport ) bool __cdecl PlayRecording(char * const,bool) asm("?PlayRecording@@YA_NQAD_N@Z");
-//__declspec( dllexport ) bool __cdecl PlaybackVehicle(char * const) asm("?PlaybackVehicle@@YA_NQAD@Z");
+__declspec( dllexport ) bool __cdecl CameraReady(void) asm("?CameraReady@@YA_NXZ");
+__declspec( dllexport ) bool __cdecl CameraPath(char *,int,int,int) asm("?CameraPath@@YA_NPADHHH@Z");
+__declspec( dllexport ) bool __cdecl CameraPathDir(char *,int,int) asm("?CameraPathDir@@YA_NPADHH@Z");
+__declspec( dllexport ) bool __cdecl PanDone(void) asm("?PanDone@@YA_NXZ");
+__declspec( dllexport ) bool __cdecl CameraObject(int,float,float,float,int) asm("?CameraObject@@YA_NHMMMH@Z");
+__declspec( dllexport ) bool __cdecl CameraFinish(void) asm("?CameraFinish@@YA_NXZ");
+__declspec( dllexport ) bool __cdecl CameraCancelled(void) asm("?CameraCancelled@@YA_NXZ");
+__declspec( dllexport ) bool __cdecl FreeCamera(void) asm("?FreeCamera@@YA_NXZ");
+__declspec( dllexport ) bool __cdecl FreeFinish(void) asm("?FreeFinish@@YA_NXZ");
+__declspec( dllexport ) bool __cdecl PlayMovie(char * const) asm("?PlayMovie@@YA_NQAD@Z");
+__declspec( dllexport ) void __cdecl StopMovie(void) asm("?StopMovie@@YAXXZ");
+__declspec( dllexport ) bool __cdecl PlayMove(void) asm("?PlayMove@@YA_NXZ");
+__declspec( dllexport ) bool __cdecl PlayRecording(char * const) asm("?PlayRecording@@YA_NQAD@Z");
+__declspec( dllexport ) bool __cdecl PlayRecordingU(char * const,bool) asm("?PlayRecording@@YA_NQAD_N@Z");
+__declspec( dllexport ) bool __cdecl PlaybackVehicle(char * const) asm("?PlaybackVehicle@@YA_NQAD@Z");
 __declspec( dllexport ) float __cdecl SetAnimation(int,char *,int) asm("?SetAnimation@@YAMHPADH@Z");
 __declspec( dllexport ) float __cdecl GetAnimationFrame(int,char *) asm("?GetAnimationFrame@@YAMHPAD@Z");
 __declspec( dllexport ) void __cdecl StartAnimation(int) asm("?StartAnimation@@YAXH@Z");
@@ -240,13 +298,13 @@ __declspec( dllexport ) void __cdecl ClearIdleAnims(int) asm("?ClearIdleAnims@@Y
 __declspec( dllexport ) void __cdecl AddIdleAnim(int,char *) asm("?AddIdleAnim@@YAXHPAD@Z");
 __declspec( dllexport ) bool __cdecl IsIdle(int) asm("?IsIdle@@YA_NH@Z");
 __declspec( dllexport ) void __cdecl CountThreats(int,int &,int &) asm("?CountThreats@@YAXHAAH0@Z");
-//__declspec( dllexport ) void __cdecl SpawnBirds(int,int,char *,int,char *) asm("?SpawnBirds@@YAXHHPADH0@Z");
-//__declspec( dllexport ) void __cdecl SpawnBirds(int,int,char *,int,int,int) asm("?SpawnBirds@@YAXHHPADHHH@Z");
-//__declspec( dllexport ) void __cdecl RemoveBirds(int) asm("?RemoveBirds@@YAXH@Z");
+__declspec( dllexport ) void __cdecl SpawnBirds(int,int,char *,int,char *) asm("?SpawnBirds@@YAXHHPADH0@Z");
+__declspec( dllexport ) void __cdecl SpawnBirds(int,int,char *,int,int,int) asm("?SpawnBirds@@YAXHHPADHHH@Z");
+__declspec( dllexport ) void __cdecl RemoveBirds(int) asm("?RemoveBirds@@YAXH@Z");
 __declspec( dllexport ) void __cdecl SetColorFade(float,float,unsigned long) asm("?SetColorFade@@YAXMMK@Z");
 __declspec( dllexport ) void __cdecl StopCheats(void) asm("?StopCheats@@YAXXZ");
-//__declspec( dllexport ) void __cdecl CalcCliffs(int,int,float) asm("?CalcCliffs@@YAXHHM@Z");
-//__declspec( dllexport ) void __cdecl CalcCliffs(char *) asm("?CalcCliffs@@YAXPAD@Z");
+__declspec( dllexport ) void __cdecl CalcCliffs(int,int,float) asm("?CalcCliffs@@YAXHHM@Z");
+__declspec( dllexport ) void __cdecl CalcCliffsP(char *) asm("?CalcCliffs@@YAXPAD@Z");
 __declspec( dllexport ) int __cdecl StartSoundEffect(char const *,int) asm("?StartSoundEffect@@YAHPBDH@Z");
 __declspec( dllexport ) int __cdecl FindSoundEffect(char const *,int) asm("?FindSoundEffect@@YAHPBDH@Z");
 __declspec( dllexport ) void __cdecl StopSoundEffect(int) asm("?StopSoundEffect@@YAXH@Z");
@@ -280,7 +338,12 @@ __declspec( dllexport ) void __cdecl SetTeamColor(int,int,int,int) asm("?SetTeam
 __declspec( dllexport ) void __cdecl ClearTeamColor(int) asm("?ClearTeamColor@@YAXH@Z");
 __declspec( dllexport ) void __cdecl MakeInert(int) asm("?MakeInert@@YAXH@Z");
 __declspec( dllexport ) struct Vector __cdecl GetPositionNear(struct Vector,float,float) asm("?GetPositionNear@@YA?AUVector@@U1@MM@Z");
-//__declspec( dllexport ) char * __cdecl GetPlayerODF(int,enum RandomizeType) asm("?GetPlayerODF@@YAPADHW4RandomizeType@@@Z");
+enum RandomizeType {
+	Randomize_None, // Don't modify what they selected in the shell.
+	Randomize_ByRace,
+	Randomize_Any,
+};
+__declspec( dllexport ) char * __cdecl GetPlayerODF(int,enum RandomizeType) asm("?GetPlayerODF@@YAPADHW4RandomizeType@@@Z");
 __declspec( dllexport ) int __cdecl BuildEmptyCraftNear(int,char *,int,float,float) asm("?BuildEmptyCraftNear@@YAHHPADHMM@Z");
 __declspec( dllexport ) void __cdecl SetCircularPos(struct Vector const &,float,float,struct Vector &) asm("?SetCircularPos@@YAXABUVector@@MMAAU1@@Z");
 __declspec( dllexport ) struct Vector __cdecl GetSafestSpawnpoint(void) asm("?GetSafestSpawnpoint@@YA?AUVector@@XZ");
@@ -511,7 +574,7 @@ enum ObjectInfoType {
 	Get_Weapon3GOClass,
 	Get_Weapon4GOClass,
 };
-//__declspec( dllexport ) bool __cdecl GetObjInfo(int,enum ObjectInfoType,char * const) asm("?GetObjInfo@@YA_NHW4ObjectInfoType@@QAD@Z");
+__declspec( dllexport ) bool __cdecl GetObjInfo(int,enum ObjectInfoType,char * const) asm("?GetObjInfo@@YA_NHW4ObjectInfoType@@QAD@Z");
 __declspec( dllexport ) bool __cdecl DoesODFExist(char *) asm("?DoesODFExist@@YA_NPAD@Z");
 __declspec( dllexport ) bool __cdecl IsAlive2(int) asm("?IsAlive2@@YA_NH@Z");
 __declspec( dllexport ) bool __cdecl IsFlying2(int) asm("?IsFlying2@@YA_NH@Z");
@@ -530,18 +593,18 @@ __declspec( dllexport ) int __cdecl GetLocalUserSelectHandle(void) asm("?GetLoca
 __declspec( dllexport ) void __cdecl ResetTeamSlot(int) asm("?ResetTeamSlot@@YAXH@Z");
 __declspec( dllexport ) int __cdecl GetCategoryTypeOverride(int) asm("?GetCategoryTypeOverride@@YAHH@Z");
 __declspec( dllexport ) int __cdecl GetCategoryType(int) asm("?GetCategoryType@@YAHH@Z");
-//__declspec( dllexport ) int __cdecl GetODFHexInt(char const *,char const *,char const *,int *,int) asm("?GetODFHexInt@@YAHPBD00PAHH@Z");
-//__declspec( dllexport ) int __cdecl GetODFInt(char const *,char const *,char const *,int *,int) asm("?GetODFInt@@YAHPBD00PAHH@Z");
-//__declspec( dllexport ) int __cdecl GetODFLong(char const *,char const *,char const *,long *,long) asm("?GetODFLong@@YAHPBD00PAJJ@Z");
-//__declspec( dllexport ) int __cdecl GetODFFloat(char const *,char const *,char const *,float *,float) asm("?GetODFFloat@@YAHPBD00PAMM@Z");
-//__declspec( dllexport ) int __cdecl GetODFDouble(char const *,char const *,char const *,double *,double) asm("?GetODFDouble@@YAHPBD00PANN@Z");
-//__declspec( dllexport ) int __cdecl GetODFChar(char const *,char const *,char const *,char *,char) asm("?GetODFChar@@YAHPBD00PADD@Z");
-//__declspec( dllexport ) int __cdecl GetODFBool(char const *,char const *,char const *,bool *,bool) asm("?GetODFBool@@YAHPBD00PA_N_N@Z");
-//__declspec( dllexport ) int __cdecl GetODFString(char const *,char const *,char const *,unsigned int,char *,char const *) asm("?GetODFString@@YAHPBD00IPAD0@Z");
-//__declspec( dllexport ) int __cdecl GetODFColor(char const *,char const *,char const *,unsigned long *,unsigned long) asm("?GetODFColor@@YAHPBD00PAKK@Z");
-//__declspec( dllexport ) int __cdecl GetODFVector(char const *,char const *,char const *,struct Vector *,struct Vector) asm("?GetODFVector@@YAHPBD00PAUVector@@U1@@Z");
-//__declspec( dllexport ) bool __cdecl OpenODF(char *) asm("?OpenODF@@YA_NPAD@Z");
-//__declspec( dllexport ) bool __cdecl CloseODF(char *) asm("?CloseODF@@YA_NPAD@Z");
+__declspec( dllexport ) int __cdecl GetODFHexInt(char const *,char const *,char const *,int *,int) asm("?GetODFHexInt@@YAHPBD00PAHH@Z");
+__declspec( dllexport ) int __cdecl GetODFInt(char const *,char const *,char const *,int *,int) asm("?GetODFInt@@YAHPBD00PAHH@Z");
+__declspec( dllexport ) int __cdecl GetODFLong(char const *,char const *,char const *,long *,long) asm("?GetODFLong@@YAHPBD00PAJJ@Z");
+__declspec( dllexport ) int __cdecl GetODFFloat(char const *,char const *,char const *,float *,float) asm("?GetODFFloat@@YAHPBD00PAMM@Z");
+__declspec( dllexport ) int __cdecl GetODFDouble(char const *,char const *,char const *,double *,double) asm("?GetODFDouble@@YAHPBD00PANN@Z");
+__declspec( dllexport ) int __cdecl GetODFChar(char const *,char const *,char const *,char *,char) asm("?GetODFChar@@YAHPBD00PADD@Z");
+__declspec( dllexport ) int __cdecl GetODFBool(char const *,char const *,char const *,bool *,bool) asm("?GetODFBool@@YAHPBD00PA_N_N@Z");
+__declspec( dllexport ) int __cdecl GetODFString(char const *,char const *,char const *,unsigned int,char *,char const *) asm("?GetODFString@@YAHPBD00IPAD0@Z");
+__declspec( dllexport ) int __cdecl GetODFColor(char const *,char const *,char const *,unsigned long *,unsigned long) asm("?GetODFColor@@YAHPBD00PAKK@Z");
+__declspec( dllexport ) int __cdecl GetODFVector(char const *,char const *,char const *,struct Vector *,struct Vector) asm("?GetODFVector@@YAHPBD00PAUVector@@U1@@Z");
+__declspec( dllexport ) bool __cdecl OpenODF(char *) asm("?OpenODF@@YA_NPAD@Z");
+__declspec( dllexport ) bool __cdecl CloseODF(char *) asm("?CloseODF@@YA_NPAD@Z");
 __declspec( dllexport ) void __cdecl NoteGameoverWithCustomMessage(char const *) asm("?NoteGameoverWithCustomMessage@@YAXPBD@Z");
 __declspec( dllexport ) int __cdecl SetBestGroup(int) asm("?SetBestGroup@@YAHH@Z");
 __declspec( dllexport ) void __cdecl GetGroup(int,int,enum ObjectInfoType,char * const) asm("?GetGroup@@YAXHHW4ObjectInfoType@@QAD@Z");
@@ -549,7 +612,6 @@ __declspec( dllexport ) int __cdecl GetGroupCount(int,int) asm("?GetGroupCount@@
 __declspec( dllexport ) void __cdecl SetLifespan(int,float) asm("?SetLifespan@@YAXHM@Z");
 __declspec( dllexport ) bool __cdecl DoesFileExist(char const *) asm("?DoesFileExist@@YA_NPBD@Z");
 __declspec( dllexport ) bool __cdecl LoadFile(char const *,void *,unsigned int &) asm("?LoadFile@@YA_NPBDPAXAAI@Z");
-typedef int DLLAudioHandle;
 enum DLLAudioCategory
 {
 	AUDIO_CAT_UNKNOWN,
@@ -692,6 +754,44 @@ function ismatrix(object)
     return (type(object) == "cdata" and ffi.istype("Matrix", object));
 end
 
+--- Is this object a Color?
+-- @param object Object in question
+function iscolor(object)
+    return (type(object) == "table" and object.ToColorLong ~= nil and type(object.ToColorLong) == "function" and object.ToRBGA ~= nil and type(object.ToRBGA) == "function" and object.ToRBG ~= nil and type(object.ToRBG) == "function");
+end
+
+--- Is this object a TEAMCOLOR_TYPE?
+-- @param object Object in question
+function isteamcolortype(object)
+    return (type(object) == "cdata" and ffi.istype("TEAMCOLOR_TYPE", object));
+end
+
+--- Is this object a ObjectInfoType?
+-- @param object Object in question
+function isobjectinfotype(object)
+    return (type(object) == "cdata" and ffi.istype("ObjectInfoType", object));
+end
+
+--- Is this object a ObjectInfoType?
+-- @param object Object in question
+function isaudiocategory(object)
+    return (type(object) == "cdata" and ffi.istype("DLLAudioCategory", object));
+end
+
+--- Is this oject an instance of AudioHandle?
+-- Checks that the object is a AudioHandle or similar enough to one
+-- @param object Object in question
+function isaudiohandle(object)
+    return (type(object) == "table" and object.GetAudioHandle ~= nil and type(object.GetAudioHandle) == "function");
+end
+
+--- Is this oject an instance of RandomizeType?
+-- @param object Object in question
+function israndomizetype(object)
+    return (type(object) == "cdata" and ffi.istype("RandomizeType", object));
+end
+
+
 --==============================================================================================================================================================
 -- Common Enums, Structs, Types
 --==============================================================================================================================================================
@@ -712,6 +812,11 @@ Matrix = ffi.metatype("Matrix", {})
 local AnimationType = {};
 AnimationType.loop = 0;
 AnimationType.twoway = 1;
+
+local AvoidType = {};
+AvoidType.AVD_NONE = 0; -- don't avoid collisions
+AvoidType.AVD_FORCE = 1; -- use force avoidance
+AvoidType.AVD_PLAN = 2; -- plan collision avoidance
 
 local Command = {};
 Command.CMD_NONE = 0;
@@ -769,6 +874,23 @@ Command.CMD_BUILD_ROTATE = 51; -- Update building rotations by 90 degrees.
 Command.CMD_CMDPANEL_SELECT = 52;
 Command.CMD_CMDPANEL_DESELECT = 53;
 
+local Slots = {};
+Slots.DLL_TEAM_SLOT_RECYCLER = 1;
+Slots.DLL_TEAM_SLOT_FACTORY = 2;
+Slots.DLL_TEAM_SLOT_ARMORY = 3;
+Slots.DLL_TEAM_SLOT_TRAINING = 4;
+Slots.DLL_TEAM_SLOT_BOMBERBAY = 5;
+Slots.DLL_TEAM_SLOT_SERVICE = 6;
+Slots.DLL_TEAM_SLOT_TECHCENTER = 7;
+Slots.DLL_TEAM_SLOT_COMMTOWER = 8;
+Slots.DLL_TEAM_SLOT_BASE4 = 9; -- Whatever's in base slot #4 (only w/ mods)
+Slots.DLL_TEAM_SLOT_BASE5 = 10; -- see above
+Slots.DLL_TEAM_SLOT_BASE6 = 11; -- see above
+Slots.DLL_TEAM_SLOT_BASE7 = 12; -- see above
+Slots.DLL_TEAM_SLOT_BASE8 = 13; -- see above
+Slots.DLL_TEAM_SLOT_BASE9 = 14; -- see above
+
+
 --==============================================================================================================================================================
 -- Color
 --==============================================================================================================================================================
@@ -807,7 +929,7 @@ end
 --- Return long form color for most BZ2 functions
 -- @param self Color instance
 -- @return long form color
-function Color.ToLong(self)
+function Color.ToColorLong(self)
   return bit.bor(bit.lshift(self.a, 24), bit.lshift(self.r, 16), bit.lshift(self.g, 8), self.b);
 end
 
@@ -879,6 +1001,293 @@ function AiPathObject.GetAiPath(self)
   return self.object;
 end
 ]]
+
+
+--==============================================================================================================================================================
+-- ObjectDefinition
+--==============================================================================================================================================================
+
+local ObjectDefinition_ = {};
+ObjectDefinition_.__index = ObjectDefinition_;
+
+function ObjectDefinition(name)
+    if not isstring(name) then error("Paramater name must be string."); end
+    local self = setmetatable({}, ObjectDefinition_)
+    self.name = name;
+    return self;
+end
+
+function ObjectDefinition_.Open(self)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not self.open then
+       ffi.C.OpenODF(tocstring(self.name)); 
+       self.open = true;
+    end
+end
+
+function ObjectDefinition_.Close(self)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if self.open then
+       ffi.C.CloseODF(tocstring(self.name)); 
+       self.open = false;
+    end
+end
+
+function ObjectDefinition_.GetHexInt(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = 0; end
+    local value = ffi.new("int[1]");
+    ffi.C.GetODFHexInt(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return tonumber(value);
+end
+
+function ObjectDefinition_.GetInt(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = 0; end
+    local value = ffi.new("int[1]");
+    ffi.C.GetODFInt(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return tonumber(value);
+end
+
+function ObjectDefinition_.GetLong(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = 0; end
+    local value = ffi.new("long[1]");
+    ffi.C.GetODFLong(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return tonumber(value);
+end
+
+function ObjectDefinition_.GetFloat(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = 0.0; end
+    local value = ffi.new("float[1]");
+    ffi.C.GetODFFloat(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return tonumber(value);
+end
+
+function ObjectDefinition_.GetDouble(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = 0.0; end
+    local value = ffi.new("double[1]");
+    ffi.C.GetODFDouble(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return tonumber(value);
+end
+
+function ObjectDefinition_.GetChar(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = '\0'; end
+    local value = ffi.new("char[1]");
+    ffi.C.GetODFChar(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return tostring(value);
+end
+
+function ObjectDefinition_.GetBool(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = false; end
+    local value = ffi.new("bool[1]");
+    ffi.C.GetODFBool(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return tobool(value);
+end
+
+function ObjectDefinition_.GetString(self, block, name, size, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = nil; end
+    local passIn;
+    if size == nil then size = 1024; end
+    if size < 1025 then
+        passIn = msgBuffer;
+    else
+        passIn = ffi.new("char[?]",size + 1);
+    end
+    ffi.fill(passIn,size + 1);
+    ffi.C.GetODFString(tocstring(self.name), tocstring(block), tocstring(name), size, passIn, tocstring(default));
+    return tostring(value);
+end
+
+function ObjectDefinition_.GetColor(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then
+        default = 0;
+    elseif iscolor(default) then
+        default = default:ToColorLong();
+    end
+    local value = ffi.new("unsigned long[1]");
+    ffi.C.GetODFColor(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return Color.new(value);
+end
+
+function ObjectDefinition_.GetVector(self, block, name, default)
+    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isstring(name) then error("Paramater name must be string."); end
+    if default == nil then default = Vector(); end
+    local value = ffi.new("Vector[1]");
+    ffi.C.GetODFVector(tocstring(self.name), tocstring(block), tocstring(name), value, default);
+    return value;
+end
+
+
+
+--==============================================================================================================================================================
+-- AudioHandle
+--==============================================================================================================================================================
+
+local AudioHandle = {};
+AudioHandle.__index = AudioHandle;
+
+function AudioHandle.new(id)
+    local self = setmetatable({}, AudioHandle)
+    self.handle = id;
+    return self;
+end
+
+function AudioHandle.GetAudioHandle(self)
+    return self.handle;
+end
+
+--- Start audio in 3D on object
+-- @param name Soundfile name
+-- @param gameobject GameObject to play sound around
+-- @param category DLLAudioCategory
+-- @param loop Loop audio, defaults to false
+-- @param stopLast Stop a prior sound on this object with the same name
+-- @return AudioHandle object
+function StartAudio3D(name, gameobject, category, loop, stopLast)
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isgameobject(gameobject) then error("Paramater gameobject must be GameObject instance."); end
+    if category == nil then category = DLLAudioCategory.AUDIO_CAT_UNKNOWN; end
+    if not isaudiocategory(category) then error("Paramater block must be string."); end
+    --if loop == nil then loop = false; end
+    --if stopLast == nil then stopLast = false; end
+    return AudioHandle.new(ffi.C.StartAudio3D(tocstring(name), gameobject:GetHandle(), category, loop, stopLast));
+end
+
+--- Start audio in 3D at a location
+-- @param name Soundfile name
+-- @param pos Vector location for sound
+-- @param category DLLAudioCategory
+-- @param loop Loop audio, defaults to false
+-- @return AudioHandle object
+function StartAudio3DV(name, pos, category, loop)
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isvector(pos) then error("Paramater pos must be a Vector."); end
+    if category == nil then category = DLLAudioCategory.AUDIO_CAT_UNKNOWN; end
+    if not isaudiocategory(category) then error("Paramater block must be string."); end
+    --if loop == nil then loop = false; end
+    return ffi.C.StartAudio3DV(tocstring(name), pos.x, post.y, pos.z, category, loop);
+end
+
+--- Start audio in 2D
+-- @param name Soundfile name
+-- @param volume Volume, -1 uses ShellSFX volume
+-- @param pan Pan
+-- @param rate Rate
+-- @param loop Loop audio, defaults to false, default false
+-- @param isMusic Is this muic? Defaults false
+-- @return AudioHandle object
+function StartAudio2D(name, volume, pan, rate, loop, isMusic)
+    if not isstring(block) then error("Paramater block must be string."); end
+    if not isnumber(volume) then error("Paramater volume must be number."); end
+    if not isnumber(pan) then error("Paramater pan must be number."); end
+    if not isnumber(rate) then error("Paramater rate must be number."); end
+    --if loop == nil then loop = false; end
+    --if isMusic == nil then isMusic = false; end
+    return AudioHandle.new(ffi.C.StartAudio2D(tocstring(name), volume, pan, rate, loop, isMusic));
+end
+
+--- Is audio playing?
+-- Looped audio will be true unless a reload has occured
+-- @param self AudioHandle instance.
+-- @return Boolean
+function AudioHandle.IsAudioPlaying(self)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    return ffi.C.IsAudioPlaying(self:GetAudioHandle());
+end
+
+--- Stop
+-- @param self AudioHandle instance.
+-- @return Boolean
+function AudioHandle.StopAudio(self)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    ffi.C.StopAudio(self:GetAudioHandle());
+end
+
+--- Pause
+-- @param self AudioHandle instance.
+function AudioHandle.PauseAudio(self)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    ffi.C.PauseAudio(self:GetAudioHandle());
+end
+
+--- Resume
+-- @param self AudioHandle instance.
+function AudioHandle.ResumeAudio(self)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    ffi.C.ResumeAudio(self:GetAudioHandle());
+end
+
+--- Set Volume
+-- @param self AudioHandle instance.
+-- @param vol Volume ratio
+-- @param ignoreUserVolume Do not use the user's preference as 100%
+function SetVolume(self, vol, ignoreUserVolume)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    if not isnumber(vol) then error("Paramater vol must be number."); end
+    ffi.C.SetVolume(self:GetAudioHandle(), vol, not ignoreUserVolume);
+end
+
+--- Set Pan
+-- @param self AudioHandle instance.
+-- @param pan Pan Only valid for 2D sounds, -1.0 to +1.0
+function SetPan(self, pan)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    if not isnumber(vol) then error("Paramater vol must be number."); end
+    ffi.C.SetPan(self:GetAudioHandle(), pan);
+end
+
+--- Set the rate
+-- @param self AudioHandle instance.
+-- @param rate Valid values are 0.0f .. 44100.0f. 
+function SetRate(self, rate)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    if not isnumber(vol) then error("Paramater vol must be number."); end
+    ffi.C.SetRate(self:GetAudioHandle(), rate);
+end
+
+--- Get duration
+-- @param self AudioHandle instance.
+-- @return Length in seconds
+function GetAudioFileDuration(self)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    return ffi.C.GetAudioFileDuration(self:GetAudioHandle());
+end
+
+--- Is the playing looped
+-- @param self AudioHandle instance.
+-- @return Boolean
+function IsPlayingLooped(self)
+    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
+    return ffi.C.IsPlayingLooped(self:GetAudioHandle());
+end
+
 
 --==============================================================================================================================================================
 -- GameObject
@@ -1834,6 +2243,14 @@ function GameObject.WhoFollowing(self)
     return GameObject.new(ffi.C.WhoFollowing(self:GetHandle()));
 end
 
+--- Get current command
+-- @param self GameObject instance.
+-- @return AiCommand enum value
+function GetCurrentCommand(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetCurrentCommand(self:GetHandle());
+end
+
 --- Get the subject of this GameObject's current order
 -- @param self GameObject instance.
 -- @return GameObject subject of our orders.
@@ -2140,114 +2557,259 @@ function GameObject.IsWithin(self, h2, distance)
     return ffi.C.IsWithin(self:GetHandle(), h2:GetHandle(), distance);
 end
 
-
-
-
-
-
-
-
+--- Count untits near GameObject.
+-- [future] test to see what the deal is with this function, can it have some things left out?
+-- @param self GameObject instance.
+-- @param dist Distance to check within.
+-- @param team Team filter.
+-- @param odf ODF
+-- @return count of objects
 function GameObject.CountUnitsNearObject(self, dist, team, odf)
-  return ffi.C.CountUnitsNearObject(self:GetHandle(), dist, team, tocstring(odf));
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(dist) then error("Paramater dist must be a number"); end
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    if not isstring(odf) then error("Paramater odf must be a string"); end
+    return ffi.C.CountUnitsNearObject(self:GetHandle(), dist, team, tocstring(odf));
 end
+
+--- Set avoid type of GameObject.
+-- @param self GameObject instance.
+-- @param avoidType See AvoidType table.
 function GameObject.SetAvoidType(self, avoidType)
-  ffi.C.SetAvoidType(self:GetHandle(), avoidType);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(avoidType) then error("Paramater avoidType must be a number"); end
+    ffi.C.SetAvoidType(self:GetHandle(), avoidType);
 end
 
+--- Clear the thrust of the GameObject.
+-- @param self GameObject instance.
 function GameObject.ClearThrust(self)
-  ffi.C.ClearThrust(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.ClearThrust(self:GetHandle());
 end
+
+--- Clear the thrust of the GameObject.
+-- @param self GameObject instance.
+-- @param on Boolean
 function GameObject.SetVerbose(self, on)
-  ffi.C.SetVerbose(self:GetHandle(), on);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SetVerbose(self:GetHandle(), on);
 end
 
+--- Clear the thrust of the GameObject.
+-- @param self GameObject instance.
+-- @return Here
+-- @return Coming
 function GameObject.CountThreats(self)
-  local here = ffi.new("int[1]");
-  local coming = ffi.new("int[1]");
-  ffi.C.CountThreats(self:GetHandle(), here, coming);
-  return tonumber(here[0]),tonumber(coming[0]);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local here = ffi.new("int[1]");
+    local coming = ffi.new("int[1]");
+    ffi.C.CountThreats(self:GetHandle(), here, coming);
+    return tonumber(here[0]),tonumber(coming[0]);
 end
 
+--- Is this GameObject the player?
+-- @param self GameObject instance.
+-- @return Boolean
 function GameObject.IsPlayer(self)
-  return ffi.C.IsPlayer(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.IsPlayer(self:GetHandle());
 end
+
+--- Get this player's name.
+-- @param self GameObject instance.
+-- @return Player name
 function GameObject.GetPlayerName(self)
-  return ffi.C.GetPlayerName(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetPlayerName(self:GetHandle());
 end
 
+--- Make the GameObject inert.
+-- This function was used on the dedicated server host back when that was attempted.
+-- @param self GameObject instance.
 function GameObject.MakeInert(self)
-  ffi.C.MakeInert(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.MakeInert(self:GetHandle());
 end
 
+--- Get the GameObject's label (set in editor)
+-- @param self GameObject instance.
+-- @return Object label
 function GameObject.GetLabel(self)
-  return ffi.C.GetLabel(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.GetLabel(self:GetHandle());
 end
+
+--- Set the GameObject's label
+-- @param self GameObject instance.
+-- @param pLabel New object label
 function GameObject.SetLabel(self, pLabel)
-  ffi.C.SetLabel(self:GetHandle(), tocstring(pLabel));
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(pLabel) then error("Paramater pLabel must be a string."); end
+    ffi.C.SetLabel(self:GetHandle(), tocstring(pLabel));
 end
+
+--- Get the GameObject's Tap by index
+-- @param self GameObject instance.
+-- @param index Tap index.
+-- @return Tap object
 function GameObject.GetTap(self, index)
-  return GameObject.new(ffi.C.GetTap(self:GetHandle(), index));
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(index) then error("Paramater index must be a number."); end
+    return GameObject.new(ffi.C.GetTap(self:GetHandle(), index));
 end
+
+--- Get the GameObject's Tap by index
+-- @param self GameObject instance.
+-- @param index Tap index.
+-- @param tapObjectHandle Object to set as tap.
 function GameObject.SetTap(self, index, tapObjectHandle)
-  ffi.C.SetTap(self:GetHandle(), index, tapObjectHandle.GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(index) then error("Paramater index must be a number."); end
+    if not isgameobject(tapObjectHandle) then error("Paramater tapObjectHandle must be GameObject instance."); end
+    ffi.C.SetTap(self:GetHandle(), index, tapObjectHandle.GetHandle());
 end
 
+--- Create an empty craft within the two radius defined of GameObject
+-- @param self GameObject instance.
+-- @param ODF ODF file.
+-- @param Team Team number.
+-- @param MinRadiusAway Minimum radius for spawn.
+-- @return New GameObject.
 function GameObject.BuildEmptyCraftNear(self, ODF, Team, MinRadiusAway, MaxRadiusAway)
-  return GameObject.new(ffi.C.BuildEmptyCraftNear(self, tocstring(ODF), Team, MinRadiusAway, MaxRadiusAway));
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(ODF) then error("Paramater  ODF must be a string."); end
+    if not isnumber(Team) then error("Paramater Team must be a number."); end
+    if not isnumber(MinRadiusAway) then error("Paramater MinRadiusAway must be a number."); end
+    if not isnumber(MaxRadiusAway) then error("Paramater MaxRadiusAway must be a number."); end
+    return GameObject.new(ffi.C.BuildEmptyCraftNear(self, tocstring(ODF), Team, MinRadiusAway, MaxRadiusAway));
 end
 
-
+--- Set this GameObject as User for given team
+-- @param self GameObject instance.
+-- @param Team Team number.
 function GameObject.SetAsUser(self, Team)
-  ffi.C.SetAsUser(self:GetHandle(), Team);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isnumber(Team) then error("Paramater Team must be a number."); end
+    ffi.C.SetAsUser(self:GetHandle(), Team);
 end
+
+--- Set the No Scrap Flag for this GameObject
+-- @param self GameObject instance.
 function GameObject.SetNoScrapFlagByHandle(self)
-  ffi.C.SetNoScrapFlagByHandle(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SetNoScrapFlagByHandle(self:GetHandle());
 end
+
+--- Clear the No Scrap Flag for this GameObject
+-- @param self GameObject instance.
 function GameObject.ClearNoScrapFlagByHandle(self)
-  ffi.C.ClearNoScrapFlagByHandle(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.ClearNoScrapFlagByHandle(self:GetHandle());
 end
+
+--- Get the GameObject's Target.
+-- @param self GameObject instance.
+-- @return Targeted GameObject.
 function GameObject.GetTarget(self)
-  return GameObject.new(GetTarget(self:GetHandle()));
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return GameObject.new(GetTarget(self:GetHandle()));
 end
 
-
+--- Reset the GameObject's team slot.
+-- @param self GameObject instance.
 function GameObject.ResetTeamSlot(self)
-  ffi.C.ResetTeamSlot(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    ffi.C.ResetTeamSlot(self:GetHandle());
 end
+
+--- Get the GameObject's category type override.
+-- @param self GameObject instance.
+-- @return Category Type Override, nil if invalid handle.
 function GameObject.GetCategoryTypeOverride(self)
-  local retVal = ffi.C.GetCategoryTypeOverride(self:GetHandle());
-  if retVal == -2 then return nil; end
-  return retVal;
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local retVal = ffi.C.GetCategoryTypeOverride(self:GetHandle());
+    if retVal == -2 then return nil; end
+    return retVal;
 end
+
+--- Get the GameObject's category type.
+-- @param self GameObject instance.
+-- @return Category Type, nil if invalid handle.
 function GameObject.GetCategoryType(self)
-  local retVal = ffi.C.GetCategoryType(self:GetHandle());
-  if retVal == -2 then return nil; end
-  return retVal;
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local retVal = ffi.C.GetCategoryType(self:GetHandle());
+    if retVal == -2 then return nil; end
+    return retVal;
 end
+
+--- Set the GameObject group to the first non-full group matching its type.
+-- @param self GameObject instance.
+-- @return Group the unit was moved too, nil if any problems.
 function GameObject.SetBestGroup(self)
-  return ffi.C.SetBestGroup(self:GetHandle());
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    return ffi.C.SetBestGroup(self:GetHandle());
 end
+
+--- Set the GameObject's lifespan.
+-- @param self GameObject instance.
+-- @param timeout Timeout time, -1 or nil will clear the timeout.
 function GameObject.SetLifespan(self, timout)
-  if timeout == nil then timeout = -1; end
-  ffi.C.SetLifespan(self:GetHandle(), timeout);
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if timeout == nil then timeout = -1; end
+    ffi.C.SetLifespan(self:GetHandle(), timeout);
 end
 
-
-
+--- The the player that is this GameObject
+-- @param self GameObject instance.
+-- @param pExplanationStr Reason for the kick.
+-- @param banAlso Ban the player from the session.
 function GameObject.KickPlayer(self, pExplanationStr, banAlso)
-  if banAlso == nil then banAlso = false; end
-  ffi.C.KickPlayer(self:GetHandle(), tocstring(pExplanationStr));
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(pExplanationStr) then error("Paramater pExplanationStr must be a string."); end
+    -- banAlso as nil would be treated as false
+    ffi.C.KickPlayer(self:GetHandle(), tocstring(pExplanationStr));
+end
+
+--- Is this GameObject a person?
+-- @param self GameObject instance.
+-- @return Boolean
+function GameObject:IsPerson(self)
+    return ffi.C.IsPerson(self:GetHandle());
 end
 
 
+--==============================================================================================================================================================
+-- ObjectInfo
+--==============================================================================================================================================================
 
+--- Get Object Info
+-- @param h GameObject
+-- @param type ObjectInfoType
+-- @return String value
+function GetObjInfo(h, type)
+    if not isgameobject(h) then error("Paramater h must be GameObject instance."); end
+    if not isobjectinfotype(type) then error("Paramater type must be an ObjectInfoType."); end
+    local pBuffer = ffi.new("char[65]");
+    ffi.fill(pBuffer, 65);
+    ffi.C.GetObjInfo(h:GetHandle(),type, pBuffer);
+    return tostring(pBuffer);
+end
 
-
-
-
-
-
-
+--- Get Group Info
+-- @param team Team number
+-- @param group Group number
+-- @param type ObjectInfoType, only accepts Get_CFG, Get_ODF, or Get_GOClass_gCfg
+-- @return String value
+function GetGroup(team, group, type)
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    if not isnumber(group) then error("Paramater group must be a number."); end
+    if not isobjectinfotype(type) then error("Paramater type must be an ObjectInfoType."); end
+    local pBuffer = ffi.new("char[65]");
+    ffi.fill(pBuffer, 65);
+    ffi.C.GetGroup(team, group, type, pBuffer);
+    return tostring(pBuffer);
+end
 
 
 --==============================================================================================================================================================
@@ -2259,9 +2821,9 @@ end
 -- @param warn Time for warning color.
 -- @param alert Time for alert color.
 function StartCockpitTimer(time, warn, alert)
-    if not isgameobject(time) then error("Paramater time must be a number."); end
-    if not isgameobject(warn) then error("Paramater warn must be a number."); end
-    if not isgameobject(alert) then error("Paramater alert must be a number."); end
+    if not isnumber(time) then error("Paramater time must be a number."); end
+    if not isnumber(warn) then error("Paramater warn must be a number."); end
+    if not isnumber(alert) then error("Paramater alert must be a number."); end
     if warn == nil then warn = LONG_MIN; end
     if alert == nil then alert = LONG_MIN; end
     ffi.C.StartCockpitTimer(time, warn, alert);
@@ -2272,9 +2834,9 @@ end
 -- @param warn Time for warning color.
 -- @param alert Time for alert color.
 function StartCockpitTimerUp(time, warn, alert)
-    if not isgameobject(time) then error("Paramater time must be a number."); end
-    if not isgameobject(warn) then error("Paramater warn must be a number."); end
-    if not isgameobject(alert) then error("Paramater alert must be a number."); end
+    if not isnumber(time) then error("Paramater time must be a number."); end
+    if not isnumber(warn) then error("Paramater warn must be a number."); end
+    if not isnumber(alert) then error("Paramater alert must be a number."); end
     if warn == nil then warn = LONG_MAX; end
     if alert == nil then alert = LONG_MAX; end
     ffi.C.StartCockpitTimerUp(time, warn, alert);
@@ -2297,7 +2859,8 @@ function GetCockpitTimer()
 end
 
 
-
+--==============================================================================================================================================================
+-- End of nicely sorted stuff
 
 
 
@@ -2313,357 +2876,682 @@ end
 -- @param odf Object Definition File (without ".odf")
 -- @param team Team number for the object, 0 to 15
 -- @param pos Position as GameObject, Pathpoint Name, AiPath, Vector, or Matrix
+-- @return Newly built GameObject
 function BuildObject(odf, team, pos)
-  local msg = tocstring(odf); -- convert lua string to cstring
-  local handle = 0;
-  if isgameobject(pos) then
-    handle = ffi.C.BuildObject(msg, team, pos:GetHandle());
-  elseif isstring(pos) then
-    handle = ffi.C.BuildObjectP(msg, team, tocstring(pos));
-  --elseif type(pos) == "AiPath" then
-  --  handle = ffi.C.BuildObject(msg, team, pos)
-  elseif isvector(pos) then
-    handle = ffi.C.BuildObjectV(msg, team, pos);
-  elseif ismatrix(pos) then
-    handle = ffi.C.BuildObjectM(msg, team, pos);
-  else
-    error("BuildObject pos paramater is invalid, received " .. type(pos) .. ", expected GameObject, Path Name (string), AiPath, Vector, or Matrix");
-  end
-  
-  if handle == 0 then return nil end;
-  return GameObject.new(handle);
+    if not isstring(odf) then error("Paramater odf must be a string."); end
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    local msg = tocstring(odf); -- convert lua string to cstring
+    local handle = 0;
+    if isgameobject(pos) then
+        handle = ffi.C.BuildObject(msg, team, pos:GetHandle());
+    elseif isstring(pos) then
+        handle = ffi.C.BuildObjectP(msg, team, tocstring(pos));
+    --elseif type(pos) == "AiPath" then
+    --  handle = ffi.C.BuildObject(msg, team, pos)
+    elseif isvector(pos) then
+        handle = ffi.C.BuildObjectV(msg, team, pos);
+    elseif ismatrix(pos) then
+        handle = ffi.C.BuildObjectM(msg, team, pos);
+    else
+        error("BuildObject pos paramater is invalid, received " .. type(pos) .. ", expected GameObject, Path Name (string), AiPath, Vector, or Matrix");
+    end
+      
+    if handle == 0 then return nil end;
+    return GameObject.new(handle);
 end
 
-
+--- Get object by label or seq no.
+-- @param name Label on GameObject.
+-- @return GameObject with label
 function GetHandle(name)
-  if type(name) == "string" then
-    local cName = tocstring(name);
-    return Handle.new(ffi.C.GetHandle(cName));
-  elseif type(name) == "number" then
-    return Handle.new(ffi.C.GetHandleSeq(name));
-  else
-    error("GetHandle paramater type invalid, received " .. type(name) .. ", expected string or int");
-  end
+    local handle = 0;
+    if isstring(name) then
+        local cName = tocstring(name);
+        handle = ffi.C.GetHandle(cName);
+    elseif isstring(name) then
+        handle = ffi.C.GetHandleSeq(name);
+    else
+        error("GetHandle paramater type invalid, received " .. type(name) .. ", expected string or int");
+    end
+    if handle == 0 then return nil; end
+    return Handle.new(handle);
 end
 
 
-
+--- Set DefaultAllies
 function DefaultAllies()
-  ffi.C.DefaultAllies();
-end
-function TeamplayAllies()
-  ffi.C.TeamplayAllies();
-end
-function Ally(t1, t2)
-  ffi.C.Ally(t1, t2);
-end
-function UnAlly(t1, t2)
-  ffi.C.UnAlly(t1, t2);
+    ffi.C.DefaultAllies();
 end
 
-function AudioMessage(msg, purge)
-  if purge == nil then purge = false; end
-  return ffi.C.AudioMessage(tocstring(msg), purge);
+--- Set TeamplayAllies
+function TeamplayAllies()
+    ffi.C.TeamplayAllies();
 end
+
+--- Ally two teams
+-- This operation is one way, be sure to call again with the team paramaters swapped for a proper alliance.
+-- @param t1 Team 1
+-- @param t2 Team 2
+function Ally(t1, t2)
+    if not isnumber(t1) then error("Paramater t1 must be a number."); end
+    if not isnumber(t2) then error("Paramater t2 must be a number."); end
+    ffi.C.Ally(t1, t2);
+end
+
+--- UnAlly two teams
+-- This operation is one way, be sure to call again with the team paramaters swapped for a proper un-alliance.
+-- @param t1 Team 1
+-- @param t2 Team 2
+function UnAlly(t1, t2)
+    if not isnumber(t1) then error("Paramater t1 must be a number."); end
+    if not isnumber(t2) then error("Paramater t2 must be a number."); end
+    ffi.C.UnAlly(t1, t2);
+end
+
+
+--- Play audio message
+-- @param msg Filename of audio message.
+-- @param purge Optional bool to purge other sounds.
+-- @return AudioMessage ID.
+function AudioMessage(msg, purge)
+    if not isstring(msg) then error("Paramater msg must be a string."); end
+    return ffi.C.AudioMessage(tocstring(msg), purge);
+end
+
+--- Is the audio message done?
+-- @param id AudioMessage ID.
+-- @return Boolean
 function IsAudioMessageDone(id)
+    if not isnumber(id) then error("Paramater msg must be a isnumber."); end
   return ffi.C.IsAudioMessageDone(id);
 end
+
+--- Is the audio message done?
+-- @param id AudioMessage ID.
 function StopAudioMessage(id)
-  ffi.C.StopAudioMessage(id);
+    if not isnumber(id) then error("Paramater msg must be a isnumber."); end
+    ffi.C.StopAudioMessage(id);
 end
+
+--- Preload the audio message file
+-- @param msg Filename of audio message.
 function PreloadAudioMessage(msg)
-  ffi.C.PreloadAudioMessage(tocstring(msg));
+    if not isstring(msg) then error("Paramater msg must be a string."); end
+    ffi.C.PreloadAudioMessage(tocstring(msg));
 end
+
+--- Purge the audio message file
+-- @param msg Filename of audio message.
 function PurgeAudioMessage(msg)
-  ffi.C.PurgeAudioMessage(tocstring(msg));
+    if not isstring(msg) then error("Paramater msg must be a string."); end
+    ffi.C.PurgeAudioMessage(tocstring(msg));
 end
 
+--- Preload the music message file
+-- @param msg Filename of music message.
 function PreloadMusicMessage(msg)
-  ffi.C.PreloadMusicMessage(tocstring(msg));
+    if not isstring(msg) then error("Paramater msg must be a string."); end
+    ffi.C.PreloadMusicMessage(tocstring(msg));
 end
+
+--- Purge the music message file
+-- @param msg Filename of music message.
 function PurgeMusicMessage(msg)
-  ffi.C.PurgeMusicMessage(tocstring(msg));
+    if not isstring(msg) then error("Paramater msg must be a string."); end
+    ffi.C.PurgeMusicMessage(tocstring(msg));
 end
+
+--- Play music message
+-- @param msg Filename of music message.
 function LoadJukeFile(msg)
-  ffi.C.LoadJukeFile(tocstring(msg));
+    if not isstring(msg) then error("Paramater msg must be a string."); end
+    ffi.C.LoadJukeFile(tocstring(msg));
 end
+
+--- Set music message intensity
+-- @param intensity Music message intensity.
 function SetMusicIntensity(intensity)
-  ffi.C.SetMusicIntensity(intensity);
+    if not isnumber(intensity) then error("Paramater intensity must be a number."); end
+    ffi.C.SetMusicIntensity(intensity);
 end
 
+--- Is the object the local user is inspecting defined by this object definition?
+-- @param odf The definition file of the object being inspected.
+-- @return Boolean
 function IsInfo(odf)
-  return ffi.C.IsInfo(tocstring(odf));
+    if not isstring(intensity) then error("Paramater intensity must be a string."); end
+    return ffi.C.IsInfo(tocstring(odf));
 end
 
+--- Start a quake
+-- @param magnitude Magnitude of the quake.
 function StartEarthQuake(magnitude)
-  ffi.C.StartEarthQuake(magnitude);
+    if not isnumber(magnitude) then error("Paramater magnitude must be a number."); end
+    ffi.C.StartEarthQuake(magnitude);
 end
+--- Change the quake magnitude
+-- @param magnitude Magnitude of the quake.
 function UpdateEarthQuake(magnitude)
-  ffi.C.UpdateEarthQuake(magnitude);
+    if not isnumber(magnitude) then error("Paramater magnitude must be a number."); end
+    ffi.C.UpdateEarthQuake(magnitude);
 end
+
+--- Stop the quake
 function StopEarthQuake()
   ffi.C.StopEarthQuake();
 end
---ConvertHandles
---Read
---Write
-function GameObject:IsPerson(self)
-  return ffi.C.IsPerson(self:GetHandle());
-end
+
+--- Get the world the DLL is currently executing in
+-- [future] document what world number is what.
+-- @return World number
 function GetCurWorld()
-  return ffi.C.GetCurWorld();
+    return ffi.C.GetCurWorld();
 end
+
+--- Get string variable by name
+-- @param VarItemName Variable name.
+-- @return Variable value.
 function GetVarItemStr(VarItemName)
-  return ffi.C.GetVarItemStr(tocstring(VarItemName));
+    if not isstring(VarItemName) then error("Paramater VarItemName must be a string."); end
+    return tostring(ffi.C.GetVarItemStr(tocstring(VarItemName)));
 end
+
+--- Get integer variable by name
+-- @param VarItemName Variable name.
+-- @return Variable value.
 function GetVarItemInt(VarItemName)
-  return ffi.C.GetVarItemStr(GetVarItemInt(VarItemName));
+    if not isstring(VarItemName) then error("Paramater VarItemName must be a string."); end
+    return ffi.C.GetVarItemStr(GetVarItemInt(VarItemName));
 end
+
+--- Get client integer variable by index and team
+-- @param TeamNum Team number.
+-- @param Idx civar index.
+-- @return Variable value.
 function GetCVarItemInt(TeamNum, Idx)
-  return ffi.C.GetCVarItemInt(TeamNum, Idx);
+    if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
+    if not isnumber(Idx) then error("Paramater Idx must be a number."); end
+    return ffi.C.GetCVarItemInt(TeamNum, Idx);
 end
+
+--- Get client string variable by index and team
+-- @param TeamNum Team number.
+-- @param Idx civar index.
+-- @return Variable value.
 function GetCVarItemStr(TeamNum, Idx)
-  return ffi.C.GetCVarItemStr(TeamNum, Idx);
+    if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
+    if not isnumber(Idx) then error("Paramater Idx must be a number."); end
+    return tostring(ffi.C.GetCVarItemStr(TeamNum, Idx));
 end
+
+--- Preload an ODF by filename
+-- @param cfg Object Definition filename.
 function PreloadODF(cfg)
-  ffi.C.PreloadODF(tocstring(cfg));
+    if not isstring(cfg) then error("Paramater cfg must be a string."); end
+    ffi.C.PreloadODF(tocstring(cfg));
 end
+
+--- Terrain floor at X/Z
+-- @param x X coordinate.
+-- @param z Z coordinate.
+-- @return Y coordinate of terrain at that X/Z.
 function TerrainFindFloor(x, z)
-  return ffi.C.TerrainFindFloor(x, z);
+    if not isnumber(x) then error("Paramater x must be a number."); end
+    if not isnumber(z) then error("Paramater z must be a number."); end
+    return ffi.C.TerrainFindFloor(x, z);
 end
 
+--- PrintConsoleMessage
+-- @param msg Message to print.
 function PrintConsoleMessage(msg)
-  ffi.C.PrintConsoleMessage(tocstring(msg));
+    if not isstring(msg) then error("Paramater msg must be a string."); end
+    ffi.C.PrintConsoleMessage(tocstring(msg));
 end
+
+--- Get Random Float
+-- Safe for MP, portable function.
+-- @param range upper bound of random range.
+-- @return Random float within range.
 function GetRandomFloat(range)
-  return ffi.C.GetRandomFloat(range);
+    if not isnumber(range) then error("Paramater range must be a number."); end
+    return ffi.C.GetRandomFloat(range);
 end
 
-function SetUserTarget(h)
-  ffi.C.SetUserTarget(h.GetHandle());
-end
-
---
+--- Calculate the CRC of a string
+-- @param n Input string.
+-- @return long CRC value.
 function CalcCRC(n)
-  return ffi.C.CalcCRC(tocstring(n));
+    if not isstring(n) then error("Paramater n must be a string."); end
+    return ffi.C.CalcCRC(tocstring(n));
 end
---
 
+--- Set AI Plan for given team
+-- @param cfg AIP filename.
+-- @param team Team number, defaults to -1.
 function SetPlan(cfg, team)
-  if team == nil then team = -1; end
-  ffi.C.SetSkill(tocstring(cfg), team);
+    if not isstring(cfg) then error("Paramater (cfg must be a string."); end
+    if team == nil then team = -1; end
+    ffi.C.SetSkill(tocstring(cfg), team);
 end
+
+--- Log a float
+-- @param v A decimal number.
 function LogFloat(v)
-  ffi.C.LogFloat(v);
+    ffi.C.LogFloat(v);
 end
+
+--- Get Instation Option 'My Force'
+-- @param Integer value
 function GetInstantMyForce()
-  return ffi.C.GetInstantMyForce();
+    return ffi.C.GetInstantMyForce();
 end
+
+--- Get Instation Option 'Computer Force'
+-- @param Integer value
 function GetInstantCompForce()
-  return ffi.C.GetInstantCompForce();
+    return ffi.C.GetInstantCompForce();
 end
+
+--- Get Instation Option 'Difficulty'
+-- @param Integer value
 function GetInstantDifficulty()
-  return ffi.C.GetInstantDifficulty();
+    return ffi.C.GetInstantDifficulty();
 end
+
+--- Get Instation Option 'Goal'
+-- @param Integer value
 function GetInstantGoal()
-  return ffi.C.GetInstantGoal();
+    return ffi.C.GetInstantGoal();
 end
+
+--- Get Instation Option 'My Force'
+-- @param Integer value
 function GetInstantType()
-  return ffi.C.GetInstantType();
+    return ffi.C.GetInstantType();
 end
+
+--- Get Instation Option 'Flag'
+-- @param Integer value
 function GetInstantFlag()
-  return ffi.C.GetInstantFlag();
+    return ffi.C.GetInstantFlag();
 end
+
+--- Get Instation Option 'My Side'
+-- @param Integer value
 function GetInstantMySide()
   return ffi.C.GetInstantMySide();
 end
---StoppedPlayback
---Cam functions
 
---SaveObjects
---LoadObjects
+--- Ignore Sync
+-- @param on Boolean, turn on?
 function IgnoreSync(on)
-  ffi.C.IgnoreSync(on);
+    ffi.C.IgnoreSync(on);
 end
+
+--- Is recording?
+-- @return Boolean
 function IsRecording()
-  return ffi.C.IsRecording();
+    return ffi.C.IsRecording();
 end
 
+--- Clear Text Ojectives
 function ClearObjectives()
-  ffi.C.ClearObjectives();
+    ffi.C.ClearObjectives();
 end
+
+--- Add Objective Text
+-- @param name Text to display
+-- @param color Color for the text
+-- @param showTime Time to show the objective box, defaults to 8.0
 function AddObjective(name, color, showTime)
-  local colorIn = color;
-  if type(color) == "table" and color.ToColorLong ~= nil then
-    colorIn = color:ToColorLong()
-  end
-  colorIn = bit.band(0xFFFFFFFF,colorIn)
-  if showTime == nil then
-    ffi.C.AddObjective(tocstring(name),colorIn, 8.0)
-  else
-    ffi.C.AddObjective(tocstring(name),colorIn,showTime)
-  end
+    if not isstring(name) then error("Paramater name must be a string."); end
+    if not iscolor(color) then error("Paramater color must be an instance of color."); end
+    if showTime == nil then showTime = 8.0; end
+    ffi.C.AddObjective(tocstring(name),color:ToColorLong(),showTime);
 end
 
---SpawnBirds
---SpawnBirds
---RemoveBirds
+--- Set color fade
+-- @param ratio Ratio
+-- @param rate Rate
+-- @param color Color to fade
 function SetColorFade(ratio, rate, color)
-  local colorIn = color;
-  if type(color) == "table" and color.ToColorLong ~= nil then
-    colorIn = color:ToColorLong()
-  end
-  colorIn = bit.band(0xFFFFFFFF,colorIn)
-  ffi.C.SetColorFade(ratio, rate, colorIn);
+    if not isnumber(ratio) then error("Paramater ratio must be a number."); end
+    if not isnumber(rate) then error("Paramater rate must be a number."); end
+    if not iscolor(color) then error("Paramater color must be an instance of color."); end
+    ffi.C.SetColorFade(ratio, rate, color:ToColorLong());
 end
+
+--- Stop cheats
 function StopCheats()
-  ffi.C.StopCheats();
+    ffi.C.StopCheats();
 end
---CalcCliffs
+
+--- Recalculate Cliffs between two objects
+-- @param h1 First Object
+-- @param h2 Last Object
+-- @param radius Radius
+function CalcCliffs(h1, h2, radius)
+    if not isgameobject(h1) then error("Paramater h1 must be GameObject instance."); end
+    if not isgameobject(h2) then error("Paramater h2 must be GameObject instance."); end
+    if not isnumber(radius) then error("Paramater radius must be a number."); end
+    ffi.C.CalcCliffs(tocstring(path));
+end
+
+--- Recalculate Cliffs along path
+-- @param path Path
+function CalcCliffsP(path)
+    if not isstring(path) then error("Paramater path must be a string."); end
+    ffi.C.CalcCliffsP(tocstring(path));
+end
+
+--- Start sound effect
+-- @param file Filename
+-- @param h Optional handle
+-- @return Sound effect ID
 function StartSoundEffect(file, h)
-  return ffi.C.StartSoundEffect(tocstring(file), h:GetHandle());
+    if not isstring(path) then error("Paramater path must be a string."); end
+    local handle = 0;
+    if isgameobject(h) then handle = h:GetHandle(); end
+    return ffi.C.StartSoundEffect(tocstring(file), h);
 end
+
+--- Start sound effect
+-- @param file Filename
+-- @param h Optional handle
+-- @return Sound effect ID
 function FindSoundEffect(file, h)
-  return ffi.C.FindSoundEffect(tocstring(file), h:GetHandle());
+    if not isstring(path) then error("Paramater path must be a string."); end
+    local handle = 0;
+    if isgameobject(h) then handle = h:GetHandle(); end
+    return ffi.C.FindSoundEffect(tocstring(file), h);
 end
+
+-- Stop sound effect by ID
+-- @param sound Sound Effect ID
 function StopSoundEffect(sound)
-  ffi.C.StopSoundEffect(sound);
+    if not isnumber(sound) then error("Paramater sound must be a number."); end
+    ffi.C.StopSoundEffect(sound);
 end
---[[
-const int DLL_TEAM_SLOT_RECYCLER = 1;
-const int DLL_TEAM_SLOT_FACTORY = 2;
-const int DLL_TEAM_SLOT_ARMORY = 3;
-const int DLL_TEAM_SLOT_TRAINING = 4;
-const int DLL_TEAM_SLOT_BOMBERBAY = 5;
-const int DLL_TEAM_SLOT_SERVICE = 6;
-const int DLL_TEAM_SLOT_TECHCENTER = 7;
-const int DLL_TEAM_SLOT_COMMTOWER = 8;
-const int DLL_TEAM_SLOT_BASE4 = 9; // Whatever's in base slot #4 (only w/ mods)
-const int DLL_TEAM_SLOT_BASE5 = 10; // see above
-const int DLL_TEAM_SLOT_BASE6 = 11; // see above
-const int DLL_TEAM_SLOT_BASE7 = 12; // see above
-const int DLL_TEAM_SLOT_BASE8 = 13; // see above
-const int DLL_TEAM_SLOT_BASE9 = 14; // see above
-]]
+
+--- Get object by team slot and team
+-- @param TeamNum Team number
+-- @param Slot Slot, see Slots table
+-- @return Found GameObject
 function GetObjectByTeamSlot(TeamNum, Slot)
-  return GameObject.new(ffi.C.GetObjectByTeamSlot(TeamNum, Slot));
+    if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
+    if not isnumber(Slot) then error("Paramater Slot must be a number."); end
+    return GameObject.new(ffi.C.GetObjectByTeamSlot(TeamNum, Slot));
 end
+
+--- sin (Network Safe)
+-- @param ang Angle
+-- @return Number, math operation result
 function portable_sin(ang)
-  return ffi.C.portable_sin(ang);
+    if not isnumber(ang) then error("Paramater ang must be a number."); end
+    return ffi.C.portable_sin(ang);
 end
+
+--- cosin (Network Safe)
+-- @param ang Angle
+-- @return Number, math operation result
 function portable_cos(ang)
-  return ffi.C.portable_cos(ang);
+    if not isnumber(ang) then error("Paramater ang must be a number."); end
+    return ffi.C.portable_cos(ang);
 end
+
+--- arctangent (Network Safe)
+-- @param x X
+-- @param y Y
+-- @return Number, math operation result
 function portable_atan2(x, y)
-  return ffi.C.portable_atan2(x, y);
+    if not isnumber(x) then error("Paramater x must be a number."); end
+    if not isnumber(y) then error("Paramater y must be a number."); end
+    return ffi.C.portable_atan2(x, y);
 end
+
+--- arcsin (Network Safe)
+-- @param x X
+-- @return Number, math operation result
 function portable_asin(x)
-  return ffi.C.portable_asin(x);
+    if not isnumber(x) then error("Paramater x must be a number."); end
+    return ffi.C.portable_asin(x);
 end
+
+--- arccosin (Network Safe)
+-- @param x X
+-- @return Number, math operation result
 function portable_acos(x)
-  return ffi.C.portable_acos(x);
+    if not isnumber(x) then error("Paramater x must be a number."); end
+    return ffi.C.portable_acos(x);
 end
+
+--- Is the network on?
+-- @return Boolean
 function IsNetworkOn()
-  return ffi.C.IsNetworkOn();
+    return ffi.C.IsNetworkOn();
 end
+
+--- Is this the server?
+-- @return Boolean
 function ImServer()
-  return ffi.C.ImServer();
+    return ffi.C.ImServer();
 end
+
+--- Is this a dedicated server?
+-- @return Boolean
 function ImDedicatedServer()
-  return ffi.C.ImDedicatedServer();
+    return ffi.C.ImDedicatedServer();
 end
+
+--- Is teamplay on?
+-- @return Boolean
 function IsTeamplayOn()
-  return ffi.C.IsTeamplayOn();
+    return ffi.C.IsTeamplayOn();
 end
+
+--- Get count of active players
+-- @return Count of players active
 function CountPlayers()
-  return ffi.C.CountPlayers()
+    return ffi.C.CountPlayers()
 end
+
+--- Get player handle by team
+-- @param team Team number
+-- @return GameObject of player
 function GetPlayerHandle(team)
-  return GameObject.new(ffi.C.GetPlayerHandle(team));
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    return GameObject.new(ffi.C.GetPlayerHandle(team));
 end
+
+--- Get team race
+-- @param TeamNum Team number
+-- @return Race letter of team
 function GetRaceOfTeam(TeamNum)
-  return ffi.C.GetRaceOfTeam(TeamNum);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    return ffi.C.GetRaceOfTeam(TeamNum);
 end
 
+--- Get teamgroup of given team
+-- @param Team Team number
+-- @return Teamgroup number, nil if the team doesn't fit into any normal group
 function WhichTeamGroup(Team)
-  local retVal = ffi.C.WhichTeamGroup(Team);
-  if retVal == 0xA5A5A5A5 then return nil; end
-  return retVal;
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    local retVal = ffi.C.WhichTeamGroup(Team);
+    if retVal == 0xA5A5A5A5 then return nil; end
+    return retVal;
 end
+
+--- Get count of ally teams (teamgroup based)
+-- @param Team Team number
+-- @return Count of ally teams (or 0 if teamgroups are off)
 function CountAllies(Team)
-  return ffi.C.CountAllies(Team);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    return ffi.C.CountAllies(Team);
 end
+
+--- Get commander team
+-- @para Team
+-- @return Commander's Team
 function GetCommanderTeam(Team)
-  return ffi.C.GetCommanderTeam(Team);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    return ffi.C.GetCommanderTeam(Team);
 end
+
+--- Get first allied team
+-- @para Team
+-- @return First Allied Team
 function GetFirstAlliedTeam(Team)
-  return ffi.C.GetFirstAlliedTeam(Team);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    return ffi.C.GetFirstAlliedTeam(Team);
 end
+
+--- Get last allied team
+-- @para Team
+-- @return Last Allied Team
 function GetLastAlliedTeam(Team)
-  return ffi.C.GetLastAlliedTeam(Team);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    return ffi.C.GetLastAlliedTeam(Team);
 end
+
+--- Get allied team range
+-- @para Team
+-- @return First Allied Team
+-- @return Last Allied Team
 function GetAlliedTeamRange(Team)
-  return GetFirstAlliedTeam(Team),GetLastAlliedTeam(Team);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    return GetFirstAlliedTeam(Team),GetLastAlliedTeam(Team);
 end
+
+--- Get Teamplay Ranges
+-- @para Team
+-- @return DefenseTeamNum
+-- @return OffenseMinTeamNum
+-- @return OffenseMaxTeamNum
 function GetTeamplayRanges(Team)
-  local DefenseTeamNum = ffi.new("int[0]");
-  local OffenseMinTeamNum = ffi.new("int[0]");
-  local OffenseMaxTeamNum = ffi.new("int[0]");
-  return tonumber(DefenseTeamNum),tonumber(OffenseMinTeamNum),tonumber(OffenseMaxTeamNum);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    local DefenseTeamNum = ffi.new("int[0]");
+    local OffenseMinTeamNum = ffi.new("int[0]");
+    local OffenseMaxTeamNum = ffi.new("int[0]");
+    ffi.C.GetTeamplayRanges(Team,DefenseTeamNum,OffenseMinTeamNum,OffenseMaxTeamNum);
+    return tonumber(DefenseTeamNum),tonumber(OffenseMinTeamNum),tonumber(OffenseMaxTeamNum);
 end
 
+--- Clear team colors
 function ClearTeamColors()
-  ffi.C.ClearTeamColors();
+    ffi.C.ClearTeamColors();
 end
+
+--- Set default team colors
 function DefaultTeamColors()
-  ffi.C.DefaultTeamColors();
+    ffi.C.DefaultTeamColors();
 end
+
+--- Set teamplay team colors
 function TeamplayTeamColors()
-  ffi.C.TeamplayTeamColors();
+    ffi.C.TeamplayTeamColors();
 end
+
+--- Set team color
+-- @param team Team Number
+-- @param color Color
 function SetTeamColor(team, color)
-  local r = bit.rshift(bit.band(0x00FF0000,color),16);
-  local g = bit.rshift(bit.band(0x0000FF00,color),8);
-  local b = bit.band(0x000000FF,color);
-  ffi.C.SetTeamColor(team, r, g, b);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    if not iscolor(color) then error("Paramater color must be a Color instance."); end
+    local r;
+    local g;
+    local b;
+    r,g,b = color.GetRGB();
+    ffi.C.SetTeamColor(team, r, g, b);
 end
+
+--- Clear team color on given team
+-- @param team Team Number
 function ClearTeamColor(team)
-  ffi.C.ClearTeamColor(team);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    ffi.C.ClearTeamColor(team);
 end
 
+--- Get a position near
+-- @param Pos Vector location
+-- @param MinRadiusAway Minimum radius
+-- @param MaxRadiusAway Maximum radius
+-- @return Vector location
 function GetPositionNear(Pos, MinRadiusAway, MaxRadiusAway)
-  return ffi.C.GetPositionNear(Pos, MinRadiusAway, MaxRadiusAway);
+    if not isvector(Pos) then error("Paramater Pos must be a Vector."); end
+    if not isnumber(MinRadiusAway) then error("Paramater MinRadiusAway must be a number."); end
+    if not isnumber(MaxRadiusAway) then error("Paramater MaxRadiusAway must be a number."); end
+    return ffi.C.GetPositionNear(Pos, MinRadiusAway, MaxRadiusAway);
 end
---GetPlayerODF
 
+--- Get the player ODF
+-- @param TeamNum Team number
+-- @param RType RandomizeType
+-- @return Player ODF
+function GetPlayerODF(TeamNum, RType)
+    if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
+    if RType == null then RType = RandomizeType.Randomize_None; end
+    if not israndomizetype(RType) then error("Paramater RType must be a RandomizeType."); end
+    return tostring(ffi.C.GetPlayerODF(TeamNum, RType));
+end
+
+--- Get a position at a radius from the given location along an angle
+-- @param CenterPos Vector location
+-- @param Radius Radius
+-- @param Angle Angle
+-- @return Vector location
 function SetCircularPos(CenterPos, Radius, Angle)
-  local NewPos = Vector();
-  ffi.C.SetCircularPos(CenterPos, Radius, Angle, NewPos);
-  return NewPos;
+    if not isvector(CenterPos) then error("Paramater CenterPos must be a Vector."); end
+    if not isnumber(Radius) then error("Paramater Radius must be a number."); end
+    if not isnumber(Angle) then error("Paramater Angle must be a number."); end
+    local NewPos = Vector();
+    ffi.C.SetCircularPos(CenterPos, Radius, Angle, NewPos);
+    return NewPos;
 end
+
+--- Get safest spawnpoint vector
+-- @return Vector location
 function GetSafestSpawnpoint()
-  return ffi.C.GetSafestSpawnpoint();
+    return ffi.C.GetSafestSpawnpoint();
 end
+
+--- Get spawnpoint vector for team
+-- @param TeamNum Team number
+-- @return Vector location
 function GetSpawnpoint(TeamNum)
-  return ffi.C.GetSpawnpoint(TeamNum);
+    if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
+    return ffi.C.GetSpawnpoint(TeamNum);
 end
+
+--- Get spawnpoint handle for team
+-- @param TeamNum Team number
+-- @return Handle spawn point
 function GetSpawnpointHandle(TeamNum)
-  return GameObject.new(ffi.C.GetSpawnpointHandle(TeamNum));
+    if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
+    return GameObject.new(ffi.C.GetSpawnpointHandle(TeamNum));
 end
+
+--- Returns a random spawnpoint that 'looks' safe. [Nobody within 100 meters]
+-- @param TeamNum Team number, -1 default
+-- @return Vector location
 function GetRandomSpawnpoint(TeamNum)
-  if TeamNum == nil then TeamNum = -1; end
-  return ffi.C.GetRandomSpawnpoint(TeamNum);
+    if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
+    if TeamNum == nil then TeamNum = -1; end
+    return ffi.C.GetRandomSpawnpoint(TeamNum);
 end
+
+--- Set the message in the timer box
+-- @param message
 function SetTimerBox(message)
-  ffi.C.SetTimerBox(tocstring(message));
+    if not isstring(message) then error("Paramater message must be a string."); end
+    ffi.C.SetTimerBox(tocstring(message));
 end
+
+--- Add message to the message box
+-- @param msg
 function AddToMessagesBox(msg)
-  ffi.C.AddToMessagesBox(tocstring(msg));
+    if not isstring(msg) then error("Paramater msg must be a string."); end
+    ffi.C.AddToMessagesBox(tocstring(msg));
 end
-
-
-
-
 
 --- Add to score of GameObject
 -- @param team GameObject instance.
@@ -2674,331 +3562,830 @@ function AddScore(team, delta)
     ffi.C.AddScore(team, delta)
 end
 
-
-
+--- Get local player team number
+-- @return Team number
 function GetLocalPlayerTeamNumber()
-  return ffi.C.GetLocalPlayerTeamNumber();
+    return ffi.C.GetLocalPlayerTeamNumber();
 end
+
+--- Get local player's DPID
+-- @return DPID / DWORD / unsigned long
 function GetLocalPlayerDPID()
-  return ffi.C.GetLocalPlayerDPID();
+    return ffi.C.GetLocalPlayerDPID();
 end
 
+--- Note game over by timelimit
 function NoteGameoverByTimelimit()
-  ffi.C.NoteGameoverByTimelimit()
+    ffi.C.NoteGameoverByTimelimit()
 end
+
+--- Note game over by kill limit
+-- @param h GameObject
 function NoteGameoverByKillLimit(h)
-  ffi.C.NoteGameoverByKillLimit(h.handle)
+    if not isgameobject(h) then error("Paramater h must be GameObject instance."); end
+    ffi.C.NoteGameoverByKillLimit(h.handle)
 end
+
+--- Note game over by score
+-- @param h GameObject
 function NoteGameoverByScore(h)
-  ffi.C.NoteGameoverByScore(h.handle)
+    if not isgameobject(h) then error("Paramater h must be GameObject instance."); end
+    ffi.C.NoteGameoverByScore(h.handle)
 end
+
+--- Note game over by last with base
+-- @param h GameObject
 function NoteGameoverByLastWithBase(h)
-  ffi.C.NoteGameoverByLastWithBase(h.handle)
+    if not isgameobject(h) then error("Paramater h must be GameObject instance."); end
+    ffi.C.NoteGameoverByLastWithBase(h.handle)
 end
+
+--- Note game over by last team with base
+-- @param Teamgroup Team number
 function NoteGameoverByLastTeamWithBase(Teamgroup)
-  ffi.C.NoteGameoverByLastTeamWithBase(Teamgroup)
+    if not isnumber(Teamgroup) then error("Paramater Teamgroup must be a number."); end
+    ffi.C.NoteGameoverByLastTeamWithBase(Teamgroup)
 end
+
+--- Note game over by no bases
 function NoteGameoverByNoBases()
-  ffi.C.NoteGameoverByNoBases()
+    ffi.C.NoteGameoverByNoBases()
 end
+
+--- Do gameover after X time
+-- @param SecondsFromNow Seconds from now
 function DoGameover(SecondsFromNow)
-  ffi.C.DoGameover(SecondsFromNow)
+    if not isnumber(SecondsFromNow) then error("Paramater SecondsFromNow must be a number."); end
+    ffi.C.DoGameover(SecondsFromNow)
 end
+
+--- Lock in MP race because someone started that team group
+-- In Teamplay, this is a reporting by the DLL that a teamgroup (0,1) has built a recycler (or otherwise locked in a race) of the given race ('i' or 'f')
+-- @param WhichTeamGroup Teamgroup
+-- @param RaceIdentifier Race character
 function SetMPTeamRace(WhichTeamGroup, RaceIdentifier)
-  ffi.C.SetMPTeamRace(WhichTeamGroup, RaceIdentifier);
+    if not isnumber(WhichTeamGroup) then error("Paramater WhichTeamGroup must be a number."); end
+    if not isstring(RaceIdentifier) then error("Paramater RaceIdentifier must be a string / character."); end
+    ffi.C.SetMPTeamRace(WhichTeamGroup, RaceIdentifier);
 end
+
+--- Get user target
+-- @param TeamNum Team number
+-- @return User on team's target GameObject
 function GetUserTarget(TeamNum)
-  return GameObject.new(ffi.C.GameUserTarget(TeamNum));
+    if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
+    return GameObject.new(ffi.C.GameUserTarget(TeamNum));
 end
 
-
-
-function IFace_ConsoleCmd(pStr, bSquelchOutput)
-  if bSquelchOutput == nil then bSquelchOutput = true; end
-  ffi.C.IFace_ConsoleCmd(tocstring(pStr));
+--- Execute console command
+-- @param pStr Command
+-- @param bShowOutput Show output, optional, default false
+function IFace_ConsoleCmd(pStr, bShowOutput)
+    if not isstring(pStr) then error("Paramater pStr must be a string."); end
+    ffi.C.IFace_ConsoleCmd(tocstring(pStr), not bShowOutput);
 end
+
+--- Print text in chat box with color
+-- @param message Text
+-- @param color Color for text
 function AddToMessagesBox2(message, color)
-  local colorIn = color;
-  if type(color) == "table" and color.ToColorLong ~= nil then
-    colorIn = color:ToColorLong()
-  end
-  colorIn = bit.band(0xFFFFFFFF,colorIn)
-  ffi.C.AddToMessagesBox2(tocstring(message), colorIn)
+    if not isstring(message) then error("Paramater message must be a string."); end
+    if not iscolor(color) then error("Paramater color must be an instance of Color."); end
+    ffi.C.AddToMessagesBox2(tocstring(message), color:ToColorLong())
 end
+
+--- Set string across network
+-- Only has effect on host, could take as long as 150 turns to send data
+-- Do not use this unless you are damn sure you know what you are doing
+-- This might not even work anymore in 1.3
+-- @param name Name of the variable
+-- @param value Value for the variable
 function Network_SetString(name, value)
-  ffi.C.Network_SetString(tocstring(name), tocstring(value));
+    if not isstring(name) then error("Paramater name must be a string."); end
+    if not isstring(value) then error("Paramater value must be a string."); end
+    ffi.C.Network_SetString(tocstring(name), tocstring(value));
 end
+
+--- Set integer across network
+-- Only has effect on host, could take as long as 150 turns to send data
+-- Do not use this unless you are damn sure you know what you are doing
+-- This might not even work anymore in 1.3
+-- @param name Name of the variable
+-- @param value Value for the variable
 function Network_SetInteger(name, value)
-  ffi.C.Network_SetInteger(tocstring(name), value);
+    if not isstring(name) then error("Paramater name must be a string."); end
+    if not isnumber(value) then error("Paramater value must be a number."); end
+    ffi.C.Network_SetInteger(tocstring(name), value);
 end
+
+--- Get the first empty group
+-- @param t Team number
+-- @return Group number
 function GetFirstEmptyGroup(t)
-  return ffi.C.GetFirstEmptyGroup(t);
+    if not isnumber(t) then error("Paramater t must be a number."); end
+    return ffi.C.GetFirstEmptyGroup(t);
 end
 
---GetObjInfo(Handle h, ObjectInfoType type, char pBuffer[64]);
+
+--- Does this odf exist?
+-- @param odf Filename, omit the file extension
+-- @return Boolean
 function DoesODFExist(odf)
-  return ffi.C.DoesODFExist(tocstring(odf));
+    if not isstring(odf) then error("Paramater odf must be a string."); end
+    return ffi.C.DoesODFExist(tocstring(odf));
 end
 
+--- Look up string in localize table
+-- @param Src Localize key
+-- @param size Max size of string, defaults to 1024
+-- @return Lookup result string
 function TranslateString2(Src, size)
-  local passIn;
-  if size == nil then size = 1024; end
-  if size < 1025 then
-    passIn = msgBuffer;
-  else
-    passIn = ffi.new("char[?]",size + 1);
-  end
-  ffi.fill(passIn,size + 1);
-  ffi.C.TranslateString2(passIn, size, tocstring(Src));
-  return tostring(passIn);
+    if not isstring(Src) then error("Paramater Src must be a string."); end
+    local passIn;
+    if size == nil then size = 1024; end
+    if size < 1025 then
+        passIn = msgBuffer;
+    else
+        passIn = ffi.new("char[?]",size + 1);
+    end
+    ffi.fill(passIn,size + 1);
+    ffi.C.TranslateString2(passIn, size, tocstring(Src));
+    return tostring(passIn);
 end
 
+--- We want PlayerEjected messages for all units and not just players
+-- This is for 1.3 Bot DMs
 function WantBotKillMessages()
-  ffi.C.WantBotKillMessages();
+    ffi.C.WantBotKillMessages();
 end
+
+--- Set the TPS of the mission/game
+-- @param newRate New TPS value, accepts 10, 15, 20, or 30
 function EnableHighTPS(newRate)
-  ffi.C.EnableHighTPS(newRate);
+    if not isnumber(newRate) then error("Paramater newRate must be a number."); end
+    if newRate ~= 10 and newRate ~= 15 and newRate ~= 20 and newRate ~= 30 then error("Paramater newRate must be 10, 15, 20, or 30."); end
+    ffi.C.EnableHighTPS(newRate);
 end
+
+--- Get object being inspected by local user
+-- This is not MP safe unless you are very carful with what you are doing
+-- @return GameObject being inspected
 function GetLocalUserInspectHandle()
-  return GameObject.new(ffi.C.GetLocalUserInspectHandle());
+    return GameObject.new(ffi.C.GetLocalUserInspectHandle());
 end
+
+--- Get object being selected by local user
+-- This is not MP safe unless you are very carful with what you are doing
+-- @return GameObject being selected
 function GetLocalUserSelectHandle()
-  return GameObject.new(ffi.C.GetLocalUserSelectHandle());
+    return GameObject.new(ffi.C.GetLocalUserSelectHandle());
 end
---[[DLLEXPORT int DLLAPI GetODFHexInt(const char* file, const char* block, const char* name, int* value = NULL, int defval = 0);
-DLLEXPORT int DLLAPI GetODFInt(const char* file, const char* block, const char* name, int* value = NULL, int defval = 0);
-DLLEXPORT int DLLAPI GetODFLong(const char* file, const char* block, const char* name, long* value = NULL, long defval = 0);
-DLLEXPORT int DLLAPI GetODFFloat(const char* file, const char* block, const char* name, float* value = NULL, float defval = 0.0f);
-DLLEXPORT int DLLAPI GetODFDouble(const char* file, const char* block, const char* name, double* value = NULL, double defval = 0.0);
-DLLEXPORT int DLLAPI GetODFChar(const char* file, const char* block, const char* name, char* value = NULL, char defval = '\0');
-DLLEXPORT int DLLAPI GetODFBool(const char* file, const char* block, const char* name, bool* value = NULL, bool defval = false);
-DLLEXPORT int DLLAPI GetODFString(const char* file, const char* block, const char* name, size_t ValueLen = 0, char* value = NULL, const char* defval = NULL);
-DLLEXPORT int DLLAPI GetODFColor(const char* file, const char* block, const char* name, DWORD* value = NULL, DWORD defval = 0);
-DLLEXPORT int DLLAPI GetODFVector(const char* file, const char* block, const char* name, Vector* value = NULL, Vector defval = Vector(0.0f, 0.0f, 0.0f));
-DLLEXPORT bool DLLAPI OpenODF(char *name);
-DLLEXPORT bool DLLAPI CloseODF(char *name);]]
+
+--- Note gameover with custom message
+-- @param pString Message
 function NoteGameoverWithCustomMessage(pString)
-  ffi.C.NoteGameoverWithCustomMessage(tocstring(pString));
+    if not isstring(pString) then error("Paramater pString must be a string."); end
+    ffi.C.NoteGameoverWithCustomMessage(tocstring(pString));
 end
 
-function GetGroup(team, group, type)
-  local pBuffer = ffi.new("char[64]");
-  ffi.C.GetGroup(team, group, type, pBuffer);
-  return tostring(pBuffer);
-end
+--- Get group count
+-- @param team Team number
+-- @param group Group number
+-- @return Count of items in group
 function GetGroupCount(team, group)
-  return ffi.C.GetGroupCount(team, group);
+    if not isnumber(team) then error("Paramater team must be a number."); end
+    if not isnumber(group) then error("Paramater group must be a number."); end
+    return ffi.C.GetGroupCount(team, group);
 end
 
-
-
-
+--- Does this file exist in loadable assets?
+-- @param filename Filename
+-- @return Boolean does the file exist?
 function DoesFileExist(filename)
-  return ffi.C.DoesFileExist(tocstring(filename));
+    if not isstring(filename) then error("Paramater filename must be a string."); end
+    return ffi.C.DoesFileExist(tocstring(filename));
 end
+
+--- Load a file and return itx text
+-- @param filename Filename
+-- @return File contents as string, nil if not found
 function LoadFile(filename)
-  local filenameC = tocstring(LoadFile);
-  local bufSize = ffi.new("unsigned int[1]");
-  local success = ffi.C.LoadFile(filename, nil, bufSize);
-  if not success then return nil; end
-  local pData = ffi.new("char[?]",tonumber(bufSize) + 1);
-  success = ffi.C.LoadFile(filename, pData, bufSize);
-  if success then
-    return tostring(pData);
-  end
-  return nil;
-end
-function StartAudio3D(name, gameobject, category, loop, stopLast)
-  if category == nil then category = DLLAudioCategory.AUDIO_CAT_UNKNOWN; end
-  if loop == nil then loop = false; end
-  if stopLast == nil then stopLast = false; end
-  return ffi.C.StartAudio3D(tocstring(name), gameobject.GetHandle(), category, loop, stopLast);
-end
-function StartAudio3DV(name, pos, category, loop)
-  if category == nil then category = DLLAudioCategory.AUDIO_CAT_UNKNOWN; end
-  if loop == nil then loop = false; end
-  return ffi.C.StartAudio3DV(tocstring(name), pos.x, post.y, pos.z, category, loop);
-end
-function StartAudio2D(name, volume, pan, rate, loop, isMusic)
-  if loop == nil then loop = false; end
-  if isMusic == nil then isMusic = false; end
-  return ffi.C.StartAudio2D(tocstring(name), volume, pan, rate, loop, isMusic);
-end
-function IsAudioPlaying(h)
-  return ffi.C.IsAudioPlaying(h);
-end
-function StopAudio(h)
-  ffi.C.StopAudio(h);
-end
-function PauseAudio(h)
-  ffi.C.PauseAudio(h);
-end
-function ResumeAudio(h)
-  ffi.C.ResumeAudio(h);
-end
-function SetVolume(h, vol, adjustByVolumes)
-  if adjustByVolumes == nil then adjustByVolumes = true; end
-  ffi.C.SetVolume(h, vol, adjustByVolumes);
-end
-function SetPan(h, pan)
-  ffi.C.SetPan(h, pan);
-end
-function SetRate(h, rate)
-  ffi.C.SetRate(h, rate);
-end
-function GetAudioFileDuration(h)
-  return ffi.C.GetAudioFileDuration(h);
-end
-function IsPlayingLooped(h)
-  return ffi.C.IsPlayingLooped(h);
+    local filenameC = tocstring(LoadFile);
+    local bufSize = ffi.new("unsigned int[1]");
+    local success = ffi.C.LoadFile(filename, nil, bufSize);
+    if not success then return nil; end
+    local pData = ffi.new("char[?]",tonumber(bufSize) + 1);
+    ffi.fill(pData, tonumber(bufSize) + 1);
+    success = ffi.C.LoadFile(filename, pData, bufSize);
+    if success then
+        return tostring(pData);
+    end
+    return nil;
 end
 
+--- Set the map gravity
+-- @param gravity Gravity to set, defaults to 12.5 if nil
 function SetGravity(gravity)
-  if gravity == nil then gravity = 12.5; end
-  ffi.C.SetGravity(gravity);
-end
-function SetAutoGroupUnits(autoGroup)
-  if autoGroup == nil then autoGroup = true; end
-  ffi.C.SetAutoGroupUnits(autoGroup);
+    if gravity == nil then gravity = 12.5; end
+    ffi.C.SetGravity(gravity);
 end
 
+--- Set if objects build from BuildObject are automaticly grouped
+-- @param stopAutoGroup
+function SetAutoGroupUnits(stopAutoGroup)
+  ffi.C.SetAutoGroupUnits(not stopAutoGroup);
+end
+
+--- Is this terrain cell water?
+-- @param posORx Position vector, or X coordinate
+-- @param z Z coordinate if posORx is not a vector
+-- @return Boolean Is this terrain cell water?
 function TerrainIsWater(posORx, z)
-  if z == nil then
-    ffa.C.TerrainIsWaterV(posOrx);
-  else
-    ffa.C.TerrainIsWater(posOrx, z);
-  end
+    if isvector(posORx) then
+        return ffa.C.TerrainIsWaterV(posOrx);
+    elseif isnumber(posORx) and isnumber(z) then
+        return ffa.C.TerrainIsWater(posOrx, z);
+    else
+        error("posORx must be vector or posORx and z must be numbers");
+    end
 end
+
+--- Get various terrain data
+-- @param pos Position vector
+-- @param useWater Use water? defaults to false
+-- @return Terrain (or water if selected) height
+-- @return Normal vector
 function TerrainGetHeightAndNormal(pos, useWater)
-  local outHeight = ffi.new("float[1]");
-  local outNormal = Vector();--ffi.new("Vector[1]");
-  local success = ffi.C.TerrainGetHeightAndNormal(pos, outHeight, outNormal, useWater);
-  if success ~= nil then return nil; end
-  return tonumber(outHeight), outNormal;
+    if not isvector(pos) then error("Paramater pos must be a Vector."); end
+    local outHeight = ffi.new("float[1]");
+    local outNormal = Vector();--ffi.new("Vector[1]");
+    local success = ffi.C.TerrainGetHeightAndNormal(pos, outHeight, outNormal, useWater);
+    if success ~= nil then return nil; end
+    return tonumber(outHeight), outNormal;
 end
+
+--- Get a usable directory for writing files, should be in mydocs
+-- @return Path
 function GetOutputPath()
-  local bufSize = ffi.new("unsigned int[1]");
-  local success = ffi.C.GetOutputPath(bufSize, nil);
-  if not success then return nil; end
-  local pData = ffi.new("char[?]",tonumber(bufSize) + 1);
-  success = ffi.C.GetOutputPath(bufSize, pData);
-  if not success then return nil; end
-  return tostring(pData);
+    local bufSize = ffi.new("unsigned int[1]");
+    local success = ffi.C.GetOutputPath(bufSize, nil);
+    if not success then return nil; end
+    local pData = ffi.new("char[?]",tonumber(bufSize) + 1);
+    success = ffi.C.GetOutputPath(bufSize, pData);
+    if not success then return nil; end
+    return tostring(pData);
 end
+
+--- Get pathpoints
+-- @param path Path name
+-- @return Array of VECTOR_2Ds
 function GetPathPoints(path)
-  local pathC = tocstring(path);
-  local bufSize = ffi.new("int[0]");
-  local sucess = ffi.C.GetPathPoints(pathC, bufSize, nil);
-  if not success then return nil; end
-  local pData = ffi.new("float[?]", tonumber(bufSize) * 2);
-  sucess = ffi.C.GetPathPoints(pathC, bufSize, pData);
-  if not success then return nil; end
-  local paths = {};
-  for itr = 1,tonumber(bufSize) + 1,2 do
-    paths.insert(VECTOR_2D(pData[itr+1],pData[iter+2]));
-  end
-  return paths;
+    if not isstring(path) then error("Paramater path must be a string."); end
+    local pathC = tocstring(path);
+    local bufSize = ffi.new("int[0]");
+    local sucess = ffi.C.GetPathPoints(pathC, bufSize, nil);
+    if not success then return nil; end
+    local pData = ffi.new("float[?]", tonumber(bufSize) * 2);
+    sucess = ffi.C.GetPathPoints(pathC, bufSize, pData);
+    if not success then return nil; end
+    local paths = {};
+    for itr = 1,tonumber(bufSize) + 1,2 do
+        paths.insert(VECTOR_2D(pData[itr+1],pData[iter+2]));
+    end
+    return paths;
 end
 
+--- AllowRandomTracks if music, rather than those listed in the TRN
+-- Must be called immediatly
+-- @param allow Boolean to allow or not, defaults to true in the C++ DLL but here it defaults false
 function AllowRandomTracks(allow)
-  if allow == nil then allow = true end
-  ffi.C.AllowRandomTracks(allow)
+    ffi.C.AllowRandomTracks(allow)
 end
+
+--- Set FFA team colors
+-- @param type TEAMCOLOR_TYPE
 function SetFFATeamColors(type)
-  ffi.C.SetFFATeamColors(type);
+    if not isteamcolortype(type) then error("Paramater type must be a TEAMCOLOR_TYPE."); end
+    ffi.C.SetFFATeamColors(type);
 end
+
+--- Set TeamStrat team colors
+-- @param type TEAMCOLOR_TYPE
 function SetTeamStratColors(type)
-  ffi.C.SetTeamStratColors(type);
+    if not isteamcolortype(type) then error("Paramater type must be a TEAMCOLOR_TYPE."); end
+    ffi.C.SetTeamStratColors(type);
 end
+
+--- Get FFA team colors
+-- @param type TEAMCOLOR_TYPE
+-- @param team Team number
+-- @return Color
 function GetFFATeamColor(type, team)
-  local r = ffi.new("int[1]");
-  local g = ffi.new("int[1]");
-  local b = ffi.new("int[1]");
-  ffi.C.GetFFATeamColor(type, team, r, g, b);
-  return Color.new(tonumber(r),tonumber(g),tonumber(b));
+    if not isteamcolortype(type) then error("Paramater type must be a TEAMCOLOR_TYPE."); end
+    local r = ffi.new("int[1]");
+    local g = ffi.new("int[1]");
+    local b = ffi.new("int[1]");
+    ffi.C.GetFFATeamColor(type, team, r, g, b);
+    return Color.new(tonumber(r),tonumber(g),tonumber(b));
 end
+
+--- Get TeamStrat team colors
+-- @param type TEAMCOLOR_TYPE
+-- @param team Team number
+-- @return Color
 function GetTeamStratColor(type, team)
-  local r = ffi.new("int[1]");
-  local g = ffi.new("int[1]");
-  local b = ffi.new("int[1]");
-  ffi.C.GetTeamStratColor(type, team, r, g, b);
-  return Color.new(tonumber(r),tonumber(g),tonumber(b));
+    if not isteamcolortype(type) then error("Paramater type must be a TEAMCOLOR_TYPE."); end
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    local r = ffi.new("int[1]");
+    local g = ffi.new("int[1]");
+    local b = ffi.new("int[1]");
+    ffi.C.GetTeamStratColor(type, team, r, g, b);
+    return Color.new(tonumber(r),tonumber(g),tonumber(b));
 end
+
+--- Swap TeamStrat colors
 function SwapTeamStratColors()
-  ffi.C.SwapTeamStratColors();
+    ffi.C.SwapTeamStratColors();
 end
+
+--- Are team colors FFA?
+-- @return Boolean
 function GetTeamColorsAreFFA()
-  return ffi.C.GetTeamColorsAreFFA();
+    return ffi.C.GetTeamColorsAreFFA();
 end
+
+--- Set team colors
+-- @param type TEAMCOLOR_TYPE
 function SetTeamColors(type)
-  return ffi.C.SetTeamColors(type);
+    if not isteamcolortype(type) then error("Paramater type must be a TEAMCOLOR_TYPE."); end
+    return ffi.C.SetTeamColors(type);
 end
-function AddPower(team, delta)
-  return ffi.C.AddPower(team, delta)
+
+--- Add power
+-- @param team Team
+-- @param v Add power
+-- @return Power level
+function AddPower(team, v)
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    if not isnumber(v) then error("Paramater v must be a number"); end
+    return ffi.C.AddPower(team, v)
 end
-function SetPower(team, delta)
-  return ffi.C.SetPower(team, delta)
+
+--- Set power
+-- @param team Team
+-- @param v New power
+-- @return Power level
+function SetPower(team, v)
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    if not isnumber(v) then error("Paramater v must be a number"); end
+    return ffi.C.SetPower(team, v)
 end
+
+--- Get power
+-- @param team Team
+-- @return Power level
 function GetPower(team)
-  return ffi.C.GetPower(team)
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    return ffi.C.GetPower(team)
 end
+
+--- Get max power
+-- @param team Team
+-- @return Power level
 function GetMaxPower(team)
-  return ffi.C.GetMaxPower(team)
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    return ffi.C.GetMaxPower(team)
 end
+
+--- Add max scrap
+-- @param team Team
+-- @param ammount Ammount
 function AddMaxScrap(team, ammount)
-  ffi.C.AddMaxScrap(team, ammount)
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    if not isnumber(ammount) then error("Paramater ammount must be a number"); end
+    ffi.C.AddMaxScrap(team, ammount)
 end
+
+--- Add max power
+-- @param team Team
+-- @param ammount Ammount
 function AddMaxPower(team, ammount)
-  ffi.C.AddMaxPower(team, ammount)
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    if not isnumber(ammount) then error("Paramater ammount must be a number"); end
+    ffi.C.AddMaxPower(team, ammount)
 end
+
+--- Set max scrap
+-- @param team Team
+-- @param ammount Ammount
 function SetMaxScrap(team, ammount)
-  ffi.C.SetMaxScrap(team, ammount)
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    if not isnumber(ammount) then error("Paramater ammount must be a number"); end
+    ffi.C.SetMaxScrap(team, ammount)
 end
+
+--- Set max power
+-- @param team Team
+-- @param ammount Ammount
 function SetMaxPower(team, ammount)
-  ffi.C.SetMaxPower(team, ammount)
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    if not isnumber(ammount) then error("Paramater ammount must be a number"); end
+    ffi.C.SetMaxPower(team, ammount)
 end
+
+--- Get TeamStrat Individual Color
+-- @param type TEAMCOLOR_TYPE
+-- @param team Team number
+-- @return Color
 function GetTeamStratIndividualColor(type, team)
-  local r = ffi.new("int[1]");
-  local g = ffi.new("int[1]");
-  local b = ffi.new("int[1]");
-  ffi.C.GetTeamStratIndividualColor(type, team, r, g, b);
-  return Color.new(tonumber(r),tonumber(g),tonumber(b));
+    if not isnumber(team) then error("Paramater team must be a number"); end
+    if not isteamcolortype(type) then error("Paramater type must be a TEAMCOLOR_TYPE."); end
+    local r = ffi.new("int[1]");
+    local g = ffi.new("int[1]");
+    local b = ffi.new("int[1]");
+    ffi.C.GetTeamStratIndividualColor(type, team, r, g, b);
+    return Color.new(tonumber(r),tonumber(g),tonumber(b));
 end
+
+--- Get the map's TRN filename
+-- Useful for reading the ODF format file for custom data
+-- @return TRN Filename
 function GetMapTRNFilename()
-  return tostring(ffi.C.GetMapTRNFilename());
+    return tostring(ffi.C.GetMapTRNFilename());
 end
+
+--- Is this team allied?
+-- @param t1 Team 1
+-- @param t2 Team 2
+-- @return Boolean
 function IsTeamAllied(t1, t2)
-  return ffi.C.IsTeamAllied(t1, t2);
+    if not isnumber(t1) then error("Paramater t1 must be a number"); end
+    if not isnumber(t2) then error("Paramater t2 must be a number"); end
+    return ffi.C.IsTeamAllied(t1, t2);
+end
+
+--- Spawn birds
+-- @param group Group number
+-- @param count Count of birds
+-- @param odf ODF Filename
+-- @param t TeamNum
+-- @param path Path name
+function SpawnBirds(group, count, odf, t, path)
+    if not isnumber(group) then error("Paramater group must be a number"); end
+    if not isnumber(count) then error("Paramater count must be a number"); end
+    if not isstring(odf) then error("Paramater odf must be a string"); end
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    if not isstring(path) then error("Paramater path must be a string"); end
+    ffi.C.SpawnBirds(group, count, tocstring(odf), t, tocstring(path));
+end
+
+--- Spawn birds
+-- @param group Group number
+-- @param count Count of birds
+-- @param odf ODF Filename
+-- @param t TeamNum
+-- @param startObj Starting GameObject
+-- @param destObj Destination GameObject
+function SpawnBirds(group, count, odf, t, startObj, destObj)
+    if not isnumber(group) then error("Paramater group must be a number"); end
+    if not isnumber(count) then error("Paramater count must be a number"); end
+    if not isstring(odf) then error("Paramater odf must be a string"); end
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    if not isgameobject(startObj) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(destObj) then error("Paramater self must be GameObject instance."); end
+    ffi.C.SpawnBirds(group, count, tocstring(odf), t, startObj, destObj);
+end
+
+--- Remove birds
+-- @param group Group number
+function RemoveBirds(group)
+    if not isnumber(group) then error("Paramater group must be a number"); end
+    ffi.C.RemoveBirds(group);
+end
+
+--- Get Camera Position and Heading
+-- @return Camera Position
+-- @return Camera Direction
+function GetCameraPosition()
+    local pos = Vector();
+    local dir = Vector();
+    ffi.C.GetCameraPosition(pos, dir);
+    return pos,dir;
+end
+
+--- Set Camera Position and Heading
+-- @param pos Camera Position
+-- @param dir Camera Direction
+function SetCameraPosition(pos, dir)
+    if not isvector(pos) then error("Paramater pos must be Vector instance."); end
+    if not isvector(dir) then error("Paramater dir must be Vector instance."); end
+    ffi.C.SetCameraPosition(pos, dir);
+end
+ 
+--- Reset camera position
+function ResetCameraPosition()
+    ffi.C.ResetCameraPosition();
+end
+ 
+ --- Is the Camera Ready?
+function CameraReady()
+    return ffi.C.CameraReady();
+end
+
+--- Camera Path
+-- @param path_name Path Name
+-- @param height Height
+-- @param speed Speed
+-- @param target_handle Target GameObject
+-- @return True when done
+function CameraPath(path_name, height, speed, target_handle)
+    if not isstring(path_name) then error("Paramater path_name must be a string"); end
+    if not isnumber(height) then error("Paramater height must be a number"); end
+    if not isnumber(speed) then error("Paramater speed must be a number"); end
+    if not isgameobject(target_handle) then error("Paramater target_handle must be GameObject instance."); end
+    return ffi.C.CameraPath(tocstring(path_name), height, speed, target_handle:GetHandle());
+end
+
+--- Camera Path Dir
+-- @param path_name Path Name
+-- @param height Height
+-- @param speed Speed
+-- @return True when done
+function CameraPathDir(path_name, height, speed, target_handle)
+    if not isstring(path_name) then error("Paramater path_name must be a string"); end
+    if not isnumber(height) then error("Paramater height must be a number"); end
+    if not isnumber(speed) then error("Paramater speed must be a number"); end
+    return ffi.C.CameraPathDir(tocstring(path_name), height, speed);
+end
+
+--- PanDone
+-- @return Boolean
+function PanDone()
+    return ffi.C.PanDone();
+end
+
+--- CameraObject
+-- @param object_handle Object to Camera
+-- @param i offset in centimeters
+-- @param j offset in centimeters
+-- @param k offset in centimeters
+-- @param target_handle Target Object
+-- @return Boolean
+function CameraObject(object_handle, i, j, k, target_handle)
+    if not isgameobject(object_handle) then error("Paramater object_handle must be GameObject instance."); end
+    if not isnumber(i) then error("Paramater i must be a number"); end
+    if not isnumber(j) then error("Paramater j must be a number"); end
+    if not isnumber(k) then error("Paramater k must be a number"); end
+    if not isgameobject(target_handle) then error("Paramater target_handle must be GameObject instance."); end
+    return ffi.C.CameraObject(object_handle, i, j, k, target_handle);
+end
+
+--- CameraFinish
+-- @return Boolean
+function CameraFinish()
+    return ffi.C.CameraFinish();
+end
+
+--- CameraCancelled
+-- @return Boolean
+function CameraCancelled()
+    return ffi.C.CameraCancelled();
+end
+
+--- FreeCamera
+-- @return Boolean
+function FreeCamera()
+    return ffi.C.FreeCamera();
+end
+
+--- FreeFinish
+-- @return Boolean
+function FreeFinish()
+    return ffi.C.FreeFinish();
+end
+
+--- PlayMovie
+-- @param name Name of max 20 characters
+-- @return Boolean
+function PlayMovie(name)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    local nameIn = ffi.new("char[20]");
+    ffi.copy(nameIn, name); -- see if I need to truncate this beforehand
+    return ffi.C.PlayMovie(nameIn);
+end
+
+--- StopMovie
+function StopMovie()
+    ffi.C.StopMovie();
+end
+
+--- PlayMove
+-- @return Boolean
+function PlayMove()
+    return ffi.C.PlayMove();
+end
+
+--- PlayRecording
+-- @param name Name of max 20 characters
+-- @return Boolean
+function PlayRecording(name)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    local nameIn = ffi.new("char[20]");
+    ffi.copy(nameIn, name); -- see if I need to truncate this beforehand
+    return ffi.C.PlayRecording(nameIn);
+end
+
+--- PlayRecordingUpdateCam
+-- @param name Name of max 20 characters
+-- @param updateCam Update Camera
+-- @return Boolean
+function PlayRecordingUpdateCam(name, updateCam)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    local nameIn = ffi.new("char[20]");
+    ffi.copy(nameIn, name); -- see if I need to truncate this beforehand
+    return ffi.C.PlayRecordingU(nameIn, updateCam);
+end
+
+--- PlaybackVehicle
+-- @param name Name of max 20 characters
+-- @return Boolean
+function PlaybackVehicle(name)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    local nameIn = ffi.new("char[20]");
+    ffi.copy(nameIn, name); -- see if I need to truncate this beforehand
+    return ffi.C.PlaybackVehicle(nameIn);
 end
 
 
+--- load an interface definition
+-- @param n String name
+function IFace_Exec(n)
+    if not isstring(n) then error("Paramater n must be a string"); end
+    ffi.C.IFace_Exec(tocstring(n));
+end
 
+--- activate a control
+-- @param n String name
+function IFace_Activate(n)
+    if not isstring(n) then error("Paramater n must be a string"); end
+    ffi.C.IFace_Activate(tocstring(n));
+end
 
+--- deactivate a control
+-- @param n String name
+function IFace_Deactivate(n)
+    if not isstring(n) then error("Paramater n must be a string"); end
+    ffi.C.IFace_Deactivate(tocstring(n));
+end
 
+--- create a mission command
+-- @param n String name
+function IFace_CreateCommand(n)
+    if not isstring(n) then error("Paramater n must be a string"); end
+    ffi.C.IFace_CreateCommand(tocstring(n));
+end
 
+--- create a mission string variable
+-- @param name Var name
+-- @param value Value
+function IFace_CreateString(name, value)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isstring(value) then error("Paramater value must be a string"); end
+    ffi.C.IFace_CreateString(tocstring(name), tocstring(value));
+end
 
+--- set a mission string variable
+-- @param name Var name
+-- @param value Value
+function IFace_SetString(name, value)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isstring(value) then error("Paramater value must be a string"); end
+    ffi.C.IFace_SetString(tocstring(name), tocstring(value));
+end
 
+--- get a mission string variable
+-- @param name Var name
+-- @param maxSize Maximum length of string
+-- @return Value
+function IFace_GetString(name, maxSize)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isnumber(maxSize) then error("Paramater maxSize must be a number"); end
+    local passIn;
+    if size == nil then size = 1024; end
+    if size < 1025 then
+        passIn = msgBuffer;
+    else
+        passIn = ffi.new("char[?]",size + 1);
+    end
+    ffi.fill(passIn,size + 1);
+    ffi.C.IFace_GetString(tocstring(name), passIn, maxSize);
+    return tostring(passIn);
+end
 
+--- create a mission integer variable
+-- @param name Var name
+-- @param value Value
+function IFace_CreateInteger(name, value)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isnumber(value) then error("Paramater value must be a number"); end
+    ffi.C.IFace_CreateInteger(tocstring(name), tocstring(value));
+end
 
+--- set a mission integer variable
+-- @param name Var name
+-- @param value Value
+function IFace_SetInteger(name, value)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isnumber(value) then error("Paramater value must be a number"); end
+    ffi.C.IFace_SetInteger(tocstring(name), tocstring(value));
+end
 
+--- get a mission integer variable
+-- @param name Var name
+-- @return Value
+function IFace_SetInteger(name)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    ffi.C.IFace_GetInteger(tocstring(name));
+end
 
-
-
-
-
-
-
-function Ally(t1,t2)
-  ffi.C.Ally(t1, t2)
+-- set the range of a mission integer variable
+-- @param name Var name
+-- @param low Low
+-- @param high High
+function IFace_SetIntegerRange(name, low, high)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isnumber(low) then error("Paramater low must be a number"); end
+    if not isnumber(high) then error("Paramater high must be a number"); end
+    ffi.C.IFace_SetIntegerRange(tocstring(name), low, high);
 end
 
 
+--- create a mission float variable
+-- @param name Var name
+-- @param value Value
+function IFace_CreateFloat(name, value)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isnumber(value) then error("Paramater value must be a number"); end
+    ffi.C.IFace_CreateFloat(tocstring(name), tocstring(value));
+end
 
+--- set a mission float variable
+-- @param name Var name
+-- @param value Value
+function IFace_SetFloat(name, value)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isnumber(value) then error("Paramater value must be a number"); end
+    ffi.C.IFace_SetFloat(tocstring(name), tocstring(value));
+end
 
+--- get a mission float variable
+-- @param name Var name
+-- @return Value
+function IFace_GetFloat(name)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    ffi.C.IFace_GetFloat(tocstring(name));
+end
 
+--- Clear listbox
+-- @param name Listbox Name
+function IFace_ClearListBox(name)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    ffi.C.IFace_ClearListBox(tocstring(name));
+end
 
+--- Add listbox item
+-- @param name Listbox Name
+-- @param value Listbox Item
+function IFace_AddTextItem(name, value)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isstring(value) then error("Paramater name must be a string"); end
+    ffi.C.IFace_AddTextItem(tocstring(name));
+end
 
+--- Get selected listbox item
+-- @param name Listbox Name
+-- @param maxSize Maximum length of string
+-- @return Value
+function IFace_GetSelectedItem(name, maxSize)
+    if not isstring(name) then error("Paramater name must be a string"); end
+    if not isnumber(maxSize) then error("Paramater maxSize must be a number"); end
+    local passIn;
+    if size == nil then size = 1024; end
+    if size < 1025 then
+        passIn = msgBuffer;
+    else
+        passIn = ffi.new("char[?]",size + 1);
+    end
+    ffi.fill(passIn,size + 1);
+    ffi.C.IFace_GetSelectedItem(tocstring(name), passIn, maxSize);
+    return tostring(passIn);
+end
 
+--ConvertHandles
+--Read
+--Write
+--SaveObjects
+--LoadObjects
 
 function InitialSetup()
 	io.write("InitialSetup, from ",_VERSION,"!\n")
