@@ -690,6 +690,26 @@ __declspec( dllexport ) float __cdecl GetCurLocalAmmo(int,int) asm("?GetCurLocal
 __declspec( dllexport ) void __cdecl AddLocalAmmo(int,float,int) asm("?AddLocalAmmo@@YAXHMH@Z");
 __declspec( dllexport ) float __cdecl GetMaxLocalAmmo(int,int) asm("?GetMaxLocalAmmo@@YAMHH@Z");
 __declspec( dllexport ) void __cdecl SetCurLocalAmmo(int,float,int) asm("?SetCurLocalAmmo@@YAXHMH@Z");
+/*typedef struct MisnImport {
+	float time;
+	void (__cdecl *FailMission)(float t, char* fileName);
+	void (__cdecl *SucceedMission)(float t, char* fileName);
+	void (__cdecl *ChangeSide)(void);
+	int (__cdecl *AddScrap)(int t, int v);
+	int (__cdecl *SetScrap)(int t, int v);
+	int (__cdecl *GetScrap)(int t);
+	int (__cdecl *GetMaxScrap)(int t);
+	int (__cdecl *GetTug)(int h);
+	bool (__cdecl *HasCargo)(int h);
+	float (__cdecl *GetDistanceObject)(int &h1, int &h2);
+	float (__cdecl *GetDistancePath)(int &h1, char* path, int point);
+//	float (__cdecl *GetDistancePathPtr)(int &h1, AiPath *path, int point);
+	int (__cdecl *GetNearestObject)(int h);
+	int (__cdecl *GetNearestVehicleObject)(int h);
+	int (__cdecl *GetNearestVehiclePath)(char* path, int point);
+	int (__cdecl *GetNearestBuilding)(int h);
+	int (__cdecl *GetNearestEnemy)(int h);
+} MisnImport;*/
 ]]
 
 --==============================================================================================================================================================
@@ -4381,6 +4401,167 @@ function IFace_GetSelectedItem(name, maxSize)
     return tostring(passIn);
 end
 
+
+
+--- FailMission
+-- @param t Time of failure
+-- @param fileName Debriefing name (optional)
+function FailMission(t, fileName)
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    if fileName ~= nil and not isstring(fileName) then error("Paramater fileName must be a string or nil"); end
+    MisnImport.FailMission(t, fileName);
+end
+
+--- SucceedMission
+-- @param t Time of success
+-- @param fileName Debriefing name (optional)
+function SucceedMission(t, fileName)
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    if fileName ~= nil and not isstring(fileName) then error("Paramater fileName must be a string or nil"); end
+    MisnImport.SucceedMission(t, fileName);
+end
+
+--- ChangeSide
+function SucceedMission()
+    MisnImport.ChangeSide();
+end
+
+--- SucceedMission
+-- @param t Time of success
+-- @param fileName Debriefing name (optional)
+function SucceedMission(t, fileName)
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    if fileName ~= nil and not isstring(fileName) then error("Paramater fileName must be a string or nil"); end
+    MisnImport.SucceedMission(t, fileName);
+end
+
+--- AddScrap
+-- @param t Team
+-- @param v Ammount
+-- @return Current
+function AddScrap(t, v)
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    if not isnumber(v) then error("Paramater v must be a number"); end
+    return MisnImport.AddScrap(t, v);
+end
+
+--- SetScrap
+-- @param t Team
+-- @param v Ammount
+-- @return Current
+function SetScrap(t, v)
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    if not isnumber(v) then error("Paramater v must be a number"); end
+    return MisnImport.SetScrap(t, v);
+end
+
+--- GetScrap
+-- @param t Team
+-- @return Current
+function GetScrap(t)
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    return MisnImport.GetScrap(t);
+end
+
+--- GetMaxScrap
+-- @param t Team
+-- @return Current
+function GetMaxScrap(t)
+    if not isnumber(t) then error("Paramater t must be a number"); end
+    return MisnImport.GetMaxScrap(t);
+end
+
+--- GetTug
+-- @param self GameObject instance.
+-- @return Tug of GameObject, or nil
+function GameObject.GetTug(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+	local retVal = MisnImport.GetTug(self:GetHandle());
+	if retVal == 0 then return nil; end
+	return GameObject.new(retVal);
+end
+
+--- GetTug
+-- @param self GameObject instance.
+-- @return Tug of GameObject, or nil
+function GameObject.HasCargo(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+	return MisnImport.HasCargo(self:GetHandle());
+end
+
+--- GetDistanceObject
+-- @param self GameObject instance.
+-- @param h2 GameObject instance.
+-- @return distance
+function GameObject.GetDistanceObject(self, h2)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isgameobject(h2) then error("Paramater h2 must be GameObject instance."); end
+	return MisnImport.GetDistanceObject(self:GetHandle(), h2:GetHandle());
+end
+
+--- GetDistancePath
+-- @param self GameObject instance.
+-- @param path Path name.
+-- @param point Path point number.
+-- @return distance
+function GameObject.GetDistancePath(self, path, point)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    if not isstring(path) then error("Paramater path must be a string"); end
+    if not isnumber(point) then error("Paramater point must be a number"); end
+	return MisnImport.GetDistancePath(self:GetHandle(), path, point);
+end
+
+--	float MisnImport.GetDistancePathPtr(int &h1, AiPath *path, int point);
+
+--- GetDistanceObject
+-- @param self GameObject instance.
+-- @return Near Object
+function GameObject.GetNearestObject(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local retVal = MisnImport.GetNearestObject(self:GetHandle());
+    if retVal == 0 then return nil; end
+    return GameObject.new(retVal);
+end
+
+--- GetNearestVehicleObject
+-- @param self GameObject instance.
+-- @return Near Object
+function GameObject.GetNearestVehicleObject(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local retVal = MisnImport.GetNearestVehicleObject(self:GetHandle());
+    if retVal == 0 then return nil; end
+    return GameObject.new(retVal);
+end
+
+--- GetNearestVehiclePath
+-- @param path Path name.
+-- @param point Path point number.
+-- @return Near Object
+function GameObject.GetNearestVehiclePath(path, point)
+    if not isstring(path) then error("Paramater path must be a string"); end
+    if not isnumber(point) then error("Paramater point must be a number"); end
+    local retVal = MisnImport.GetNearestVehiclePath(path, point);
+    if retVal == 0 then return nil; end
+    return GameObject.new(retVal);
+end
+
+--- GetNearestBuilding
+-- @param self GameObject instance.
+-- @return Near Object
+function GameObject.GetNearestBuilding(self)
+    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    local retVal = MisnImport.GetNearestBuilding(self:GetHandle());
+    if retVal == 0 then return nil; end
+    return GameObject.new(retVal);
+end
+	
+function GameObject.GetNearestEnemyH(self)
+	return MisnImport.GetNearestEnemy(self:GetHandle());
+end
+
+
+
+
 --ConvertHandles
 --Read
 --Write
@@ -4438,6 +4619,8 @@ end
 function Update()
 	io.write("Update, from ",_VERSION,"!\n")
   --PrintConsoleMessage("Update, from " .. _VERSION .. "!\n");
+  
+    --PrintConsoleMessage(tostring(MisnImport.GetNearestBuilding(GetPlayerHandle(1):GetHandle())));
 end
 
 function Save(misnSave)

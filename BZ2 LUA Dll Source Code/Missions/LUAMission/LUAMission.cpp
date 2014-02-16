@@ -8,6 +8,7 @@
 //#include "lualib.h"
 //#include "lauxlib.h"
 #include "..\..\Source\fun3d\ScriptUtils.h" // This file does not follow the C/C++ standards, uncompilable in modern compiler
+
 /*typedef char* Name;
 typedef int Handle;
 typedef int TeamNum;
@@ -34,6 +35,189 @@ EjectKillRetCodes convertNumberToEjectKillRetCodes(lua_Number num)
 //#define DLLAPI __cdecl
 //#define DLLAPI __attribute__ ((dllexport))
 //#define DLLAPI
+
+
+
+
+
+
+
+	int Lua_FailMission (lua_State *L) {
+		Time t = static_cast<Time>(luaL_checknumber(L, 1)); // forces abort on fail
+		if (lua_type(L, 2) != LUA_TNONE) // do we have a 2nd param?
+		{
+			size_t len;
+			const char *tmpFileName = luaL_checklstring(L, 2, &len); // forces abort on fail
+			char *fileName = new char[len+1];
+			fileName[len] = 0;
+			memcpy(fileName,tmpFileName,len);
+			misnImport.FailMission(t, fileName);
+			delete [] fileName;
+			return 0;
+		}
+		misnImport.FailMission(t, NULL);
+		return 0;
+	}
+
+	int Lua_SucceedMission (lua_State *L) {
+		Time t = static_cast<Time>(luaL_checknumber(L, 1)); // forces abort on fail
+		if (lua_type(L, 2) != LUA_TNONE) // do we have a 2nd param?
+		{
+			size_t len;
+			const char *tmpFileName = luaL_checklstring(L, 2, &len); // forces abort on fail
+			char *fileName = new char[len+1];
+			fileName[len] = 0;
+			memcpy(fileName,tmpFileName,len);
+			misnImport.SucceedMission(t, fileName);
+			delete [] fileName;
+			return 0;
+		}
+		misnImport.SucceedMission(t, NULL);
+		return 0;
+	}
+
+	int Lua_ChangeSide (lua_State *L) {
+		misnImport.ChangeSide();
+		return 0;
+	}
+
+	int Lua_AddScrap (lua_State *L) {
+		TeamNum t = luaL_checkinteger(L, 1);
+		ScrapValue v = luaL_checkinteger(L, 2);
+		ScrapValue retVal = misnImport.AddScrap(t,v);
+		lua_pushinteger(L, retVal);
+		return 1;
+	}
+
+	int Lua_SetScrap (lua_State *L) {
+		TeamNum t = luaL_checkinteger(L, 1);
+		ScrapValue v = luaL_checkinteger(L, 2);
+		ScrapValue retVal = misnImport.SetScrap(t,v);
+		lua_pushinteger(L, retVal);
+		return 1;
+	}
+
+	int Lua_GetScrap (lua_State *L) {
+		TeamNum t = luaL_checkinteger(L, 1);
+		ScrapValue retVal = misnImport.GetScrap(t);
+		lua_pushinteger(L, retVal);
+		return 1;
+	}
+
+	int Lua_GetMaxScrap (lua_State *L) {
+		TeamNum t = luaL_checkinteger(L, 1);
+		ScrapValue retVal = misnImport.GetMaxScrap(t);
+		lua_pushinteger(L, retVal);
+		return 1;
+	}
+
+	int Lua_GetTug(lua_State *L) {
+			Handle h = luaL_checkinteger(L, 1);
+			Handle tug = misnImport.GetTug(h);
+			lua_pushinteger(L, tug);
+			return 1;
+		}
+
+	int Lua_HasCargo(lua_State *L) {
+		Handle h = luaL_checkinteger(L, 1);
+		bool hasCargo = misnImport.HasCargo(h);
+		lua_pushboolean(L, hasCargo);
+		return 1;
+	}
+
+	int Lua_GetDistanceObject(lua_State *L) {
+		Handle h = luaL_checkinteger(L, 1);
+		Handle h2 = luaL_checkinteger(L, 2);
+		Dist distance = misnImport.GetDistanceObject(h, h2);
+		lua_pushnumber(L, distance);
+		return 1;
+	}
+
+	int Lua_GetDistancePath(lua_State *L) {
+		Handle h = luaL_checkinteger(L, 1);
+		
+		size_t len;
+		const char *tmp_path = luaL_checklstring(L, 2, &len);
+		char *path = new char[len+1];
+		path[len] = 0;
+		memcpy(path,tmp_path,len);
+
+		int point = luaL_checkinteger(L, 2);
+		Dist distance = misnImport.GetDistancePath(h, path, point);
+
+		delete [] path;
+
+		lua_pushnumber(L, distance);
+		return 1;
+	}
+
+	int Lua_GetNearestObject(lua_State *L) {
+		Handle h = luaL_checkinteger(L, 1);
+		Handle h2 = misnImport.GetNearestObject(h);
+		lua_pushinteger(L, h2);
+		return 1;
+	}
+
+	int Lua_GetNearestVehicleObject(lua_State *L) {
+		Handle h = luaL_checkinteger(L, 1);
+		Handle h2 = misnImport.GetNearestVehicleObject(h);
+		lua_pushinteger(L, h2);
+		return 1;
+	}
+
+	int Lua_GetNearestVehiclePath(lua_State *L) {
+		size_t len;
+		const char *tmp_path = luaL_checklstring(L, 1, &len);
+		char *path = new char[len+1];
+		path[len] = 0;
+		memcpy(path,tmp_path,len);
+
+		int point = luaL_checkinteger(L, 2);
+		Handle h2 = misnImport.GetNearestVehiclePath(path, point);
+
+		delete [] path;
+
+		lua_pushinteger(L, h2);
+		return 1;
+	}
+
+	int Lua_GetNearestBuilding(lua_State *L) {
+		Handle h = luaL_checkinteger(L, 1);
+		Handle h2 = misnImport.GetNearestBuilding(h);
+		lua_pushinteger(L, h2);
+		return 1;
+	}
+
+	int Lua_GetNearestEnemy(lua_State *L) {
+		Handle h = luaL_checkinteger(L, 1);
+		Handle h2 = misnImport.GetNearestEnemy(h);
+		lua_pushinteger(L, h2);
+		return 1;
+	}
+
+
+	static const luaL_Reg MisnImportLib[] = {
+		{"FailMission", Lua_FailMission},
+		{"SucceedMission", Lua_SucceedMission},
+		{"ChangeSide", Lua_ChangeSide},
+		{"AddScrap", Lua_AddScrap},
+		{"SetScrap", Lua_SetScrap},
+		{"GetScrap", Lua_GetScrap},
+		{"GetMaxScrap", Lua_GetMaxScrap},
+		{"GetTug", Lua_GetTug},
+		{"HasCargo", Lua_HasCargo},
+		{"GetDistanceObject", Lua_GetDistanceObject},
+		{"GetDistancePath", Lua_GetDistancePath},
+		//{"GetDistancePathPtr", Lua_GetDistancePathPtr},
+		{"GetNearestObject", Lua_GetNearestObject},
+		{"GetNearestVehicleObject", Lua_GetNearestVehicleObject},
+		{"GetNearestVehiclePath", Lua_GetNearestVehiclePath},
+		{"GetNearestBuilding", Lua_GetNearestBuilding},
+		{"GetNearestEnemy", Lua_GetNearestEnemy},
+		{0,0}
+	};
+
+
 
 int report(lua_State *L, int status)
 {
@@ -287,6 +471,7 @@ void DLLAPI InitialSetup(void)
 	if(L == NULL) return;
 	
 	//LuaScriptUtils::luaopen_ScriptUtils(L);
+	luaL_register(L, "MisnImport", MisnImportLib);
 
 	status = lua_cpcall(L, pSetup, NULL);
 
