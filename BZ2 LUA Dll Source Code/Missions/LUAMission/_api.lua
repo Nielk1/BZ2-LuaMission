@@ -1313,6 +1313,10 @@ end
 -- GameObject
 --==============================================================================================================================================================
 
+local GameObjectMetatable = {};
+GameObjectMetatable.__mode = "k";
+local GameObjectWeakList = setmetatable({}, GameObjectMetatable);
+
 --- GameObject
 -- An object containing all functions and data related to a game object.
 -- [future] GameObject will survive postload.
@@ -1323,16 +1327,24 @@ GameObject.__index = GameObject; -- failed table lookups on the instances should
 --- Create new GameObject Intance
 -- @param id Handle from BZ2.
 function GameObject.new(id)
-  local self = setmetatable({}, GameObject);
-  self.id = id;
-  return self;
+    if GameObjectWeakList[id] ~= nil then return GameObjectWeakList[id]; end
+    local self = setmetatable({}, GameObject);
+    self.id = id;
+    GameObjectWeakList[id] = self;
+    return self;
 end
 
 --- Get Handle used by BZ2.
 -- @param self GameObject instance.
 function GameObject.GetHandle(self)
-  return self.id;
+    return self.id;
 end
+
+-- Save data
+-- If this function is present in a table, it will save the return data instead of table elements
+--function GameObject.Save(self)
+--    return self.id;
+--end
 
 --- Remove GameObject from world
 -- @param self GameObject instance.
@@ -4568,6 +4580,9 @@ end
 --SaveObjects
 --LoadObjects
 
+local MissionData = {};
+
+
 function InitialSetup()
 	io.write("InitialSetup, from ",_VERSION,"!\n")
   
@@ -4624,7 +4639,15 @@ function Update()
 end
 
 function Save(misnSave)
-	io.write("Save("..tostring(misnSave).."), from ",_VERSION,"!\n")
+
+    --MissionData
+    
+    --GameObjectWeakList
+    
+    --for k, v in pairs(MissionData) do
+    --    print(k, v)
+    --end
+
 	return true
 end
 
