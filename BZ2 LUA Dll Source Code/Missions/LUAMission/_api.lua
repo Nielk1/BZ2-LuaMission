@@ -130,15 +130,15 @@ __declspec( dllexport ) long __cdecl GetCockpitTimer(void) asm("?GetCockpitTimer
 __declspec( dllexport ) void __cdecl StartEarthQuake(float) asm("?StartEarthQuake@@YAXM@Z");
 __declspec( dllexport ) void __cdecl UpdateEarthQuake(float) asm("?UpdateEarthQuake@@YAXM@Z");
 __declspec( dllexport ) void __cdecl StopEarthQuake(void) asm("?StopEarthQuake@@YAXXZ");
-//__declspec( dllexport ) void __cdecl ConvertHandles(int *,int) asm("?ConvertHandles@@YAXPAHH@Z");
-//__declspec( dllexport ) bool __cdecl Read(void *,int) asm("?Read@@YA_NPAXH@Z");
-//__declspec( dllexport ) bool __cdecl Read(bool *,int) asm("?Read@@YA_NPA_NH@Z");
-//__declspec( dllexport ) bool __cdecl Read(float *,int) asm("?Read@@YA_NPAMH@Z");
-//__declspec( dllexport ) bool __cdecl Read(int *,int) asm("?Read@@YA_NPAHH@Z");
-//__declspec( dllexport ) bool __cdecl Write(void *,int) asm("?Write@@YA_NPAXH@Z");
-//__declspec( dllexport ) bool __cdecl Write(bool *,int) asm("?Write@@YA_NPA_NH@Z");
-//__declspec( dllexport ) bool __cdecl Write(float *,int) asm("?Write@@YA_NPAMH@Z");
-//__declspec( dllexport ) bool __cdecl Write(int *,int) asm("?Write@@YA_NPAHH@Z");
+__declspec( dllexport ) void __cdecl ConvertHandles(int *,int) asm("?ConvertHandles@@YAXPAHH@Z");
+__declspec( dllexport ) bool __cdecl ReadBytes(void *,int) asm("?Read@@YA_NPAXH@Z");
+__declspec( dllexport ) bool __cdecl ReadBool(bool *,int) asm("?Read@@YA_NPA_NH@Z");
+__declspec( dllexport ) bool __cdecl ReadFloat(float *,int) asm("?Read@@YA_NPAMH@Z");
+__declspec( dllexport ) bool __cdecl ReadInt(int *,int) asm("?Read@@YA_NPAHH@Z");
+__declspec( dllexport ) bool __cdecl WriteBytes(void *,int) asm("?Write@@YA_NPAXH@Z");
+__declspec( dllexport ) bool __cdecl WriteBool(bool *,int) asm("?Write@@YA_NPA_NH@Z");
+__declspec( dllexport ) bool __cdecl WriteFloat(float *,int) asm("?Write@@YA_NPAMH@Z");
+__declspec( dllexport ) bool __cdecl WriteInt(int *,int) asm("?Write@@YA_NPAHH@Z");
 __declspec( dllexport ) bool __cdecl IsPerson(int) asm("?IsPerson@@YA_NH@Z");
 __declspec( dllexport ) int __cdecl GetCurWorld(void) asm("?GetCurWorld@@YAHXZ");
 __declspec( dllexport ) char const * __cdecl GetVarItemStr(char *) asm("?GetVarItemStr@@YAPBDPAD@Z");
@@ -750,6 +750,22 @@ function isgameobject(object)
     return (type(object) == "table" and object.GetHandle ~= nil and type(object.GetHandle) == "function");
 end
 
+function isobjectdefinition(object)
+    return (type(object) == "table" 
+      and object.Open ~= nil and type(object.Open) == "function"
+      and object.Close ~= nil and type(object.Close) == "function"
+      and object.GetHexInt ~= nil and type(object.GetHexInt) == "function"
+      and object.GetInt ~= nil and type(object.GetInt) == "function"
+      and object.GetLong ~= nil and type(object.GetLong) == "function"
+      and object.GetFloat ~= nil and type(object.GetFloat) == "function"
+      and object.GetDouble ~= nil and type(object.GetDouble) == "function"
+      and object.GetChar ~= nil and type(object.GetChar) == "function"
+      and object.GetBool ~= nil and type(object.GetBool) == "function"
+      and object.GetString ~= nil and type(object.GetString) == "function"
+      and object.GetColor ~= nil and type(object.GetColor) == "function"
+      and object.GetVector ~= nil and type(object.GetVector) == "function");
+end
+
 --- Is this oject a string?
 -- @param object Object in question
 function isstring(object)
@@ -766,6 +782,12 @@ end
 -- @param object Object in question
 function isvector(object)
     return (type(object) == "cdata" and ffi.istype("Vector", object));
+end
+
+--- Is this oject a VECTOR_2D?
+-- @param object Object in question
+function isvector_2d(object)
+    return (type(object) == "cdata" and ffi.istype("VECTOR_2D", object));
 end
 
 --- Is this oject a Matrix?
@@ -792,7 +814,7 @@ function isobjectinfotype(object)
     return (type(object) == "cdata" and ffi.istype("ObjectInfoType", object));
 end
 
---- Is this object a ObjectInfoType?
+--- Is this object a DLLAudioCategory?
 -- @param object Object in question
 function isaudiocategory(object)
     return (type(object) == "cdata" and ffi.istype("DLLAudioCategory", object));
@@ -920,6 +942,14 @@ Color.__index = Color;
 Color.__add = function(a,b)
     return Color.new((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2, (a.a + b.a) / 2);
 end;
+Color.__newindex = function(table, key, value)
+    if key == "a" or key == "r"  or key == "g"  or key == "b" then
+        rawset(table, key, value);
+    else
+        error("Attempt to modify read-only table")
+    end
+end
+
 
 --- Create new Color Intance
 -- @param r Red or long describing color.
@@ -1029,12 +1059,26 @@ end
 
 local ObjectDefinition_ = {};
 ObjectDefinition_.__index = ObjectDefinition_;
+ObjectDefinition_.__newindex = function(table, key, value)
+    if key == "open" or key == "name" then
+        rawset(table, key, value);
+    else
+        error("Attempt to modify read-only table")
+    end
+end
 
 function ObjectDefinition(name)
     if not isstring(name) then error("Paramater name must be string."); end
     local self = setmetatable({}, ObjectDefinition_)
     self.name = name;
     return self;
+end
+
+function ObjectDefinition_.Save(self)
+    WriteMarker("ObjectDefinition");
+    local length = string.length(self.name);
+    ffi.C.WriteInt(ffi.new("int[1]", length));
+    ffi.C.WriteBytes(tocstring(self.name), length);
 end
 
 function ObjectDefinition_.Open(self)
@@ -1137,7 +1181,7 @@ function ObjectDefinition_.GetString(self, block, name, size, default)
     end
     ffi.fill(passIn,size + 1);
     ffi.C.GetODFString(tocstring(self.name), tocstring(block), tocstring(name), size, passIn, tocstring(default));
-    return tostring(value);
+    return tostring(passIn);
 end
 
 function ObjectDefinition_.GetColor(self, block, name, default)
@@ -1172,6 +1216,9 @@ end
 
 local AudioHandle = {};
 AudioHandle.__index = AudioHandle;
+AudioHandle.__newindex = function(table, key, value)
+    error("Attempt to modify read-only table")
+end
 
 function AudioHandle.new(id)
     local self = setmetatable({}, AudioHandle)
@@ -1181,6 +1228,11 @@ end
 
 function AudioHandle.GetAudioHandle(self)
     return self.handle;
+end
+
+function AudioHandle.Save(self)
+    WriteMarker("AudioHandle");
+    ffi.C.WriteInt(ffi.new("int[1]", self.handle), 1);
 end
 
 --- Start audio in 3D on object
@@ -1316,13 +1368,33 @@ end
 local GameObjectMetatable = {};
 GameObjectMetatable.__mode = "k";
 local GameObjectWeakList = setmetatable({}, GameObjectMetatable);
+local GameObjectAltered = {};
 
 --- GameObject
 -- An object containing all functions and data related to a game object.
 -- [future] GameObject will survive postload.
 -- [future] GameObject will preserve extra data added by serving existing instance for given id.
 local GameObject = {}; -- the table representing the class, which will double as the metatable for the instances
-GameObject.__index = GameObject; -- failed table lookups on the instances should fallback to the class table, to get methods
+--GameObject.__index = GameObject; -- failed table lookups on the instances should fallback to the class table, to get methods
+GameObject.__index = function(table, key)
+    local retVal = rawget(table, key);
+    if retVal ~= nil then return retVal; end
+    if rawget(table, "addonData") ~= nil and rawget(rawget(table, "addonData"), key) ~= nil then return rawget(rawget(table, "addonData"), key); end
+    return rawget(GameObject, key); -- if you fail to get it from the subdata, move on to base (looking for functions)
+end
+GameObject.__newindex = function(table, key, value)
+    if key ~= "id" and key ~= "addonData" then
+        local addonData = rawget(table, "addonData");
+        if addonData == nil then
+            rawset(table, "addonData", {});
+            addonData = rawget(table, "addonData");
+        end
+        rawset(addonData, key, value);
+        GameObjectAltered[table:GetHandle()] = table;
+    else
+        rawset(table, key, value);
+    end
+end
 
 --- Create new GameObject Intance
 -- @param id Handle from BZ2.
@@ -1345,6 +1417,22 @@ end
 --function GameObject.Save(self)
 --    return self.id;
 --end
+
+function GameObject.PostLoad(self)
+    local id = ffi.new("int[1]", self.id);
+    ffi.C.ConvertHandles(id, 1);
+    GameObjectWeakList[self.id] = nil;
+    local AdjustAlteredCache = GameObjectAltered[self.id] ~= nil;
+    if AdjustedAlteredCache then GameObjectAltered[self.id] = nil; end
+    self.id = tonumber(id[0]);
+    GameObjectWeakList[self.id] = self;
+    if AdjustedAlteredCache then GameObjectAltered[self.id] = self; end
+end
+
+function GameObject.Save(self)
+    WriteMarker("GameObject");
+    ffi.C.WriteInt(ffi.new("int[1]", self.id), 1);
+end
 
 --- Remove GameObject from world
 -- @param self GameObject instance.
@@ -3492,7 +3580,7 @@ function SetTeamColor(team, color)
     local r;
     local g;
     local b;
-    r,g,b = color.GetRGB();
+    r,g,b = color.ToRGB();
     ffi.C.SetTeamColor(team, r, g, b);
 end
 
@@ -4582,93 +4670,454 @@ end
 
 local MissionData = {};
 
+local SavableTypes = {};
+local SavableTypeNameToIndex = {};
+
+local LuaTypes = {};
+LuaTypes.Nil = 0;
+LuaTypes.Table = 1;
+LuaTypes.Number = 2;
+LuaTypes.Number_Int = 3;
+LuaTypes.Number_UByte = 4;
+LuaTypes.Boolean = 5;
+LuaTypes.String = 6;
+LuaTypes.COUNT = 7;
+
+function RegisterSavableType(name, save, load, postload)
+    local type = {};
+    type.name = name;
+    type.save = save;
+    type.load = load;
+    type.postload = postload;
+    table.insert(SavableTypes, type);
+    SavableTypeNameToIndex[name] = #SavableTypes;
+end
+
+--- Writes a table to save buffer
+-- Writes the table marker
+-- Writes the count of entries
+-- writes the loop below for each
+-- Writes the length of the key string
+-- Writes the key string
+-- Writes the type marker of the value
+-- writes the value (using its writer function)
+function WriteTable(var)
+    WriteMarker("Table");
+    --Write #var
+    local size = 0;
+    for k, v in pairs(var) do
+        size = size + 1;
+    end
+    
+    PrintDebugMessage("Start Table of " .. tostring(size) .. " items");
+    ffi.C.WriteInt(ffi.new("int[1]", size), 1);
+    for k, v in pairs(var) do
+        local SavedThisVariable = false;
+
+        local length = string.len(k);
+        ffi.C.WriteBytes(ffi.new("uint8_t[1]", length), 1);
+        ffi.C.WriteBytes(tocstring(k), length);
+        PrintDebugMessage("Key: " .. k .. " (" .. tostring(length) .. ")");
+        
+        if type(v) == "number" then
+            if v == math.floor(v) then
+                if v >= 0 and v <= 255 then
+                    WriteMarker("Number_UByte");
+                    ffi.C.WriteBytes(ffi.new("uint8_t[1]", v), 1);
+                    SavedThisVariable = true;
+                else
+                    WriteMarker("Number_Int");
+                    ffi.C.WriteInt(ffi.new("int[1]", v), 1);
+                    SavedThisVariable = true;
+                end
+            else
+                -- lua numbers are doubles but BZ2 never seems to use those
+                -- I am debating inventing a new numeric type for ints, since this also inflates size and lower accuracy
+                -- Maybe I could save it as an INT if it has no decimal?
+                WriteMarker("Number");
+                ffi.C.WriteFloat(ffi.new("float[1]", v), 1);
+                SavedThisVariable = true;
+            end
+        elseif type(v) == "boolean" then
+          WriteMarker("Boolean");
+          ffi.C.WriteBool(ffi.new("bool[1]", v), 1);
+          SavedThisVariable = true;
+        end
+        
+        --do save attempts on all known custom types
+        if not SavedThisVariable then
+            for SaveTypeIndex = #SavableTypes,1,-1 do
+                local SaveTypeData = SavableTypes[SaveTypeIndex];
+                if SaveTypeData.save ~= nil then
+                    if SaveTypeData.save(v) then
+                        SavedThisVariable = true;
+                        break;
+                    end
+                end
+            end
+        end
+        
+        if not SavedThisVariable then
+            if type(v) == "table" then
+                WriteTable(v);
+                SavedThisVariable = true;
+            end
+        end
+        
+        if not SavedThisVariable then
+            PrintConsoleMessage("Failed to save variable \"" .. k .. "\" of LUA type " .. type(v));
+            PrintConsoleMessage("The save is likely unstable");
+            WriteNil();
+        end
+    end
+    PrintDebugMessage("End Table of " .. tostring(size) .. " items");
+end
+
+function ReadTable(var)
+    local size = ffi.new("int[1]");
+    ffi.C.ReadInt(size, 1);
+    size = tonumber(size[0]);
+    
+    PrintDebugMessage("Start Table of " .. tostring(size) .. " items");
+    local keyLength = ffi.new("uint8_t[1]");
+    local keyValue = ffi.new("char[256]");
+    
+    local FloatValue = ffi.new("float[1]");
+    local IntValue = ffi.new("int[1]");
+    local UByteValue = ffi.new("uint8_t[1]");
+    local BoolValue = ffi.new("bool[1]");
+    
+    for k = 1,size,1 do
+        local LoadedThisVariable = false;
+        
+        ffi.fill(keyValue, 256);
+        ffi.C.ReadBytes(keyLength, 1);
+        ffi.C.ReadBytes(keyValue, tonumber(keyLength[0]));
+        
+        PrintDebugMessage("Key: " .. ffi.string(keyValue) .. " (" .. tostring(tonumber(keyLength[0])) .. ")");
+        
+        ffi.C.ReadBytes(keyLength, 1); -- keyLength now holds the type byte,double duty
+        local valueType = tonumber(keyLength[0]);
+        
+        local value = nil;
+        if valueType >= LuaTypes.COUNT then
+            -- type is a custom type
+            local SaveTypeData = SavableTypes[valueType + 1 - LuaTypes.COUNT];
+            PrintDebugMessage("Key is of type " .. SaveTypeData.name .. " (" .. tostring(valueType + 1 - LuaTypes.COUNT) .. ")");
+            if SaveTypeData.load ~= nil then
+                value = SaveTypeData.load();
+            end
+        elseif valueType == LuaTypes.Nil then
+            -- do nothing, nil has no data after the marker
+            PrintDebugMessage("Key is of type is Nil (" .. tostring(LuaTypes.Nil) .. ")");
+        elseif valueType == LuaTypes.Table then
+            PrintDebugMessage("Key is of type Table (" .. tostring(LuaTypes.Table) .. ")");
+            value = {};
+            ReadTable(value);
+        elseif valueType == LuaTypes.Number then
+            PrintDebugMessage("Key is of type Number (" .. tostring(LuaTypes.Number) .. ")");
+            ffi.C.ReadFloat(FloatValue, 1);
+            value = tonumber(FloatValue);
+        elseif valueType == LuaTypes.Number_Int then
+            PrintDebugMessage("Key is of type Number_Int (" .. tostring(LuaTypes.Number_Int) .. ")");
+            ffi.C.ReadInt(IntValue, 1);
+            value = tonumber(IntValue);
+        elseif valueType == LuaTypes.Number_UByte then
+            PrintDebugMessage("Key is of type Number_UByte (" .. tostring(LuaTypes.Number_UByte) .. ")");
+            ffi.C.ReadBytes(UByteValue, 1);
+            value = tonumber(UByteValue);
+        elseif valueType == LuaTypes.Boolean then
+            PrintDebugMessage("Key is of type Boolean (" .. tostring(LuaTypes.Boolean) .. ")");
+            ffi.C.ReadBool(BoolValue, 1);
+            value = tonumber(BoolValue) ~= 0; -- maybe ~= nil?
+        elseif valueType == LuaTypes.String then
+            ffi.C.ReadInt(IntValue, 1);
+            local stringVal = ffi.new("char[?]", tonumber(IntValue) + 1);
+            ffi.fill(stringVal, tonumber(IntValue) + 1);
+            PrintDebugMessage("Key is of type String (" .. tostring(LuaTypes.String) .. ")");
+            ffi.C.ReadBytes(stringVal, tonumber(IntValue));
+            value = ffi.string(stringVal);
+        end
+        
+        var[ffi.string(keyValue)] = value;
+    end
+    PrintDebugMessage("End Table of " .. tostring(size) .. " items");
+end
+
+function WriteNil()
+    WriteMarker("Nil"); -- nill is just a marker, that's all
+end
+
+function WriteMarker(id)
+    if LuaTypes[id] ~= nil then
+        ffi.C.WriteBytes(ffi.new("uint8_t[1]", LuaTypes[id]), 1);
+        PrintDebugMessage("Write marker \"" .. id .. "\" ID: " .. LuaTypes[id]);
+    elseif SavableTypeNameToIndex[id] ~= nil then
+        ffi.C.WriteBytes(ffi.new("uint8_t[1]", LuaTypes.COUNT - 1 + SavableTypeNameToIndex[id]), 1);
+        PrintDebugMessage("Write marker \"" .. id .. "\" ID: " .. LuaTypes.COUNT - 1 + SavableTypeNameToIndex[id]);
+    end
+end
+
+
+
+
+
+function PrintDebugMessage(message)
+    PrintConsoleMessage(message);
+end
+
+
+function SaveGameObject(val)
+    if not isgameobject(val) or val.Save == nil or type(val.Save) ~= "function" then return false; end
+    val:Save();
+    return true;
+end
+
+function LoadGameObject()
+    local id = ffi.new("int[1]");
+    ffi.C.ReadInt(id, 1);
+    return GameObject.new(tonumber(id[0]));
+end
+
+function PostLoadGameObject(val)
+    val:PostLoad();
+end
+
+function SaveColor(val)
+    if not iscolor(val) then return false; end
+    WriteMarker("Color");
+    ffi.C.WriteInt(ffi.new("int[1]", val.ToColorLong()), 1);
+    return true;
+end
+
+function LoadColor()
+    local id = ffi.new("int[1]");
+    ffi.C.ReadInt(id, 1);
+    return Color.new(tonumber(id[0]));
+end
+
+function SaveAudioHandle(val)
+    if not isaudiohandle(val) or val.Save == nil or type(val.Save) ~= "function" then return false; end
+    val:Save();
+    return true;
+end
+
+function LoadAudioHandle()
+    local id = ffi.new("int[1]");
+    ffi.C.ReadInt(id, 1);
+    return AudioHandle.new(tonumber(id[0]));
+end
+
+function SaveVECTOR_2D(val)
+    if not isvector_2d(val) then return false; end
+    WriteMarker("VECTOR_2D");
+    ffi.C.WriteBytes(val, ffi.sizeof(val));
+    return true;
+end
+
+function LoadVECTOR_2D()
+    local retVal = VECTOR_2D();
+    ffi.C.ReadBytes(retVal, ffi.sizeof(retVal));
+    return retVal;
+end
+
+function SaveVector(val)
+    if not isvector(val) then return false; end
+    WriteMarker("Vector");
+    ffi.C.WriteBytes(val, ffi.sizeof(val));
+    return true;
+end
+
+function LoadVector()
+    local retVal = Vector();
+    ffi.C.ReadBytes(retVal, ffi.sizeof(retVal));
+    return retVal;
+end
+
+function SaveMatrix(val)
+    if not ismatrix(val) then return false; end
+    WriteMarker("Matrix");
+    ffi.C.WriteBytes(val, ffi.sizeof(val));
+    return true;
+end
+
+function LoadMatrix()
+    local retVal = Matrix();
+    ffi.C.ReadBytes(retVal, ffi.sizeof(retVal));
+    return retVal;
+end
+
+function SaveObjectDefinition(val)
+    if not isobjectdefinition(val) or val.Save == nil or type(val.Save) ~= "function" then return false; end
+    val:Save();
+    return true;
+end
+
+function LoadObjectDefinition()
+    local length = ffi.new("int[1]");
+    length = tonumber(length[0]);
+    local name = ffi.new("char[?]", length + 1);
+    ffi.fill(name, length + 1)
+    ffi.C.ReadBytes(name, length);
+    return ObjectDefinition(ffi.string(name));
+end
+
+
 
 function InitialSetup()
-	io.write("InitialSetup, from ",_VERSION,"!\n")
+    RegisterSavableType("Color", SaveColor, LoadColor);
+    RegisterSavableType("AudioHandle", SaveAudioHandle, LoadAudioHandle);
+    RegisterSavableType("ObjectDefinition", SaveObjectDefinition, LoadObjectDefinition);
+    RegisterSavableType("GameObject", SaveGameObject, LoadGameObject, PostLoadGameObject);
+    RegisterSavableType("VECTOR_2D", SaveVECTOR_2D, LoadVECTOR_2D);
+    RegisterSavableType("Vector", SaveVector, LoadVector);
+    RegisterSavableType("Matrix", SaveMatrix, LoadMatrix);
   
-  --for k,v in pairs(getmetatable(bzone)) do
-  --for k,v in pairs(getmetatable(ffi.C)) do
-  --  ScriptUtils.PrintConsoleMessage("", k, ", ", v)
-  --end
-  
-  --PrintConsoleMessage("InitialSetup, from " .. _VERSION .. "!\n")
-  
-  --local v0 = Vector()
-  --local v1 = Vector(5,5,5)
-  --local v2 = Vector(1,2,3)
-  --local v3 = v1 + v2
-  
-  --PrintConsoleMessage("v0: " .. v0.x .. ", " .. v0.y .. ", " .. v0.z)
-  --PrintConsoleMessage("v1: " .. v1.x .. ", " .. v1.y .. ", " .. v1.z)
-  --PrintConsoleMessage("v2: " .. v2.x .. ", " .. v2.y .. ", " .. v2.z)
-  --PrintConsoleMessage("v1 + v2: " .. v3.x .. ", " .. v3.y .. ", " .. v3.z)
-  
-  --AddObjective("Color Number",0xFF11CCFF)
-  --AddObjective("Color Class",Color.new(127,255,127))
-  --AddObjective("Color Class",Color.FromRGB(127,255,127))
-  --AddObjective("Color Class",Color.FromRGBA(127,255,127,128))
-  --AddObjective("Color.WHITE",Color.WHITE)
-  --AddObjective("Color.RED",Color.RED)
-  --AddObjective("Color.GREEN",Color.GREEN)
-  --AddObjective("Color.BLUE",Color.BLUE)
-  --AddObjective("Color.TURQUOISE",Color.TURQUOISE)
-  --AddObjective("Color.VIOLET",Color.VIOLET)
-  --AddObjective("Color.YELLOW",Color.YELLOW)
-  
-  --AddToMessagesBox("test")
-  --AddToMessagesBox2("test2",Color.YELLOW)
-  
-  --AllowRandomTracks()
-  --AllowRandomTracks(false)
-  --AllowRandomTracks(true)
-  
-  local friendTank = BuildObject("ivtank",1,Vector());
-  local enemyTank = BuildObject("ivtank",2,Vector(100,100,100));
-  enemyTank:Attack(friendTank);
-  local here;
-  local coming;
-  here,coming = friendTank:CountThreats();
-  PrintConsoleMessage("Here: " .. here .. " Coming: " .. coming);
+    PrintDebugMessage(tostring(#SavableTypes) .. " Custom DataTypes");
+    for k = #SavableTypes,1,-1 do
+        local v = SavableTypes[k];
+        PrintDebugMessage(tostring(SavableTypeNameToIndex[v.name]) .. " " .. tostring(v.name));
+    end
+    
+    --local here;
+    --local coming;
+    --here,coming = friendTank:CountThreats();
+    --PrintConsoleMessage("Here: " .. here .. " Coming: " .. coming);
+    MissionData.TestData = {};
+    MissionData.TestData.Spawned = false;
+    MissionData.TestData.FreshLoad = false;
 end
 
 function Update()
-	io.write("Update, from ",_VERSION,"!\n")
+	--io.write("Update, from ",_VERSION,"!\n")
   --PrintConsoleMessage("Update, from " .. _VERSION .. "!\n");
   
     --PrintConsoleMessage(tostring(MisnImport.GetNearestBuilding(GetPlayerHandle(1):GetHandle())));
+    
+    if not MissionData.TestData.Spawned then
+        MissionData.TestData.friendTank = BuildObject("ivtank",1,Vector());
+        MissionData.TestData.enemyTank = BuildObject("ivtank",2,Vector(100,100,100));
+        MissionData.TestData.enemyTank:Attack(MissionData.TestData.friendTank);
+        MissionData.TestData.Spawned = true;
+    end
+    
+    if MissionData.TestData.FreshLoad then
+        MissionData.TestData.friendTank:EjectPilot();
+        MissionData.TestData.enemyTank:EjectPilot();
+    end
 end
 
 function Save(misnSave)
 
-    --MissionData
-    
-    --GameObjectWeakList
-    
-    --for k, v in pairs(MissionData) do
-    --    print(k, v)
-    --end
+    if misnSave then
+        -- clean var arrays
+        return true;
+    end
 
-	return true
+    local returnValue = true;
+    
+    PrintDebugMessage(tostring(#SavableTypes) .. " types to save");
+    returnValue = returnValue and ffi.C.WriteBytes(ffi.new("uint8_t[1]", #SavableTypes), 1);
+    for k = 1,#SavableTypes,1 do
+        local length = string.len(SavableTypes[k].name);
+        returnValue = returnValue and ffi.C.WriteBytes(ffi.new("uint8_t[1]", length), 1); -- type names can't be longer than 255
+        returnValue = returnValue and ffi.C.WriteBytes(tocstring(SavableTypes[k].name), length);
+        PrintDebugMessage(length .. " " .. SavableTypes[k].name .. " = " .. LuaTypes.COUNT - 1 + k);
+    end
+    
+    -- GameObjectAltered data dump
+    -- this remakes the gameobjects before they are needed with their addon data
+    -- The way GameObject.new works will allow these to be caught
+    local countCustomGameObjects = 0;
+    for k,v in pairs(GameObjectAltered) do
+        countCustomGameObjects = countCustomGameObjects + 1;
+    end
+    ffi.C.WriteInt(ffi.new("int[1]", countCustomGameObjects),1);
+    PrintDebugMessage("Saving " .. countCustomGameObjects .. " Custom Game Objects Handles");
+    for k,v in pairs(GameObjectAltered) do
+        SaveGameObject(v);
+    end
+    PrintDebugMessage("Saving " .. countCustomGameObjects .. " Custom Game Objects Data Extensions");
+    for k,v in pairs(GameObjectAltered) do
+        WriteTable(v.addonData);
+    end
+    
+    WriteTable(MissionData);
+
+    return returnValue
 end
 
 function Load(misnSave)
-	io.write("Load("..tostring(misnSave).."), from ",_VERSION,"!\n")
-	return true
+	--io.write("Load("..tostring(misnSave).."), from ",_VERSION,"!\n")
+  
+    if misnSave then
+        return true;
+    end
+    
+    local returnValue = true;
+    
+    -- dump the weak reference table
+    for k,v in pairs(GameObjectWeakList) do
+        GameObjectWeakList[k] = nil;
+    end
+    
+    local countTypes = ffi.new("uint8_t[1]");
+    returnValue = returnValue and ffi.C.ReadBytes(countTypes, 1);
+    countTypes = tonumber(countTypes[0]);
+    PrintDebugMessage(tostring(countTypes) .. " types to load");
+    local length = ffi.new("uint8_t[1]");
+    local name = ffi.new("char[?]",256);
+    for k = 1,countTypes,1 do
+        returnValue = returnValue and ffi.C.ReadBytes(length, 1);
+        ffi.fill(name,256); -- memset
+        returnValue = returnValue and ffi.C.ReadBytes(name, tonumber(length[0]));
+        PrintDebugMessage(tonumber(length[0]) .. " " .. ffi.string(name) .. " = " .. LuaTypes.COUNT - 1 + k);
+    end
+    
+    -- GameObjectAltered data
+    local countCustomGameObjects = ffi.new("int[1]");
+    ffi.C.ReadInt(countCustomGameObjects, 1);
+    countCustomGameObjects = tonumber(countCustomGameObjects[0]);
+    PrintDebugMessage("Reading " .. countCustomGameObjects .. " Custom Game Objects Handles");
+    local TmpGameObjects = {};
+    for k = 1,countCustomGameObjects,1 do
+        ffi.C.ReadBytes(length, 1); -- useless byte :/
+        TmpGameObjects:insert(LoadGameObject());
+    end
+    PrintDebugMessage("Reading " .. countCustomGameObjects .. " Custom Game Objects Data Extensions");
+    for k = 1,countCustomGameObjects,1 do
+        ffi.C.ReadBytes(length, 1); -- useless byte :/
+        ReadTable(TmpGameObjects[k].addonData);
+    end
+    
+    -- use the length byte we don't need anymore to pull off the table marker
+    -- We know that this first item must be a table
+    ffi.C.ReadBytes(length, 1);
+    ReadTable(MissionData);
+    
+    return returnValue;
 end
 
 function PostLoad(misnSave)
-	io.write("PostLoad("..tostring(misnSave).."), from ",_VERSION,"!\n")
-	return true
+    if misnSave then
+      return true;
+    end
+    
+    -- postload here
+    
+    return true;
 end
 
 function AddObject(h)
-	io.write("AddObject("..tostring(h).."), from ",_VERSION,"!\n")
+	--io.write("AddObject("..tostring(h).."), from ",_VERSION,"!\n")
   --local gameObject = GameObject.new(h)
   --gameObject:AddIdleAnim("test");
 end
 
 function DeleteObject(h)
-	io.write("DeleteObject("..tostring(h).."), from ",_VERSION,"!\n")
+	--io.write("DeleteObject("..tostring(h).."), from ",_VERSION,"!\n")
+    local object = GameObject.new(h);
+    if GameObjectAltered[object:GetHandle()] ~= nil then GameObjectAltered[object:GetHandle()] = nil; end
 end
 
 function PostRun()
