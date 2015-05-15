@@ -77,6 +77,7 @@ EjectKillRetCodes convertNumberToEjectKillRetCodes(lua_Number num)
 	}
 
 	int Lua_ChangeSide (lua_State *L) {
+		(void)(L); /*unused*/
 		misnImport.ChangeSide();
 		return 0;
 	}
@@ -218,6 +219,33 @@ EjectKillRetCodes convertNumberToEjectKillRetCodes(lua_Number num)
 	};
 
 
+static int Lua_LoadFromBZ2(lua_State *L) {
+	size_t len;
+	const char *tmpFileName = luaL_checklstring(L, 1, &len); // forces abort on fail
+	char *fileName = new char[len+1];
+	fileName[len] = 0;
+	memcpy(fileName,tmpFileName,len);
+
+		void *pData;
+		size_t bufSize = 0;
+		LoadFile(fileName, NULL, bufSize);
+		pData = malloc(bufSize+1);
+		((char*)pData)[bufSize] = 0; // null terminator
+		LoadFile(fileName, pData, bufSize);
+		int status = luaL_dostring(L,(char*)pData);
+		free(pData);
+	
+	
+	delete [] fileName;
+	return 0;
+}
+
+
+
+	static const luaL_Reg CoreLib[] = {
+		{"LoadFromBZ2", Lua_LoadFromBZ2},
+		{0,0}
+	};
 
 int report(lua_State *L, int status)
 {
@@ -370,7 +398,7 @@ static int docall(lua_State *L, int narg, int clear)
 	return status;
 }
 
-
+#if 0
 static void stackDump (lua_State *L) {
 	std::ostringstream stringStream;
 	
@@ -384,35 +412,35 @@ static void stackDump (lua_State *L) {
 	
 		case LUA_TSTRING:  /* strings */
 			memset(buffer,0,50);
-			sprintf(buffer,"'%s'", lua_tostring(L, i));
+			sprintf_s(buffer,"'%s'", lua_tostring(L, i));
 			stringStream << buffer;
 			break;
 	
 		case LUA_TBOOLEAN:  /* booleans */
 			memset(buffer,0,50);
-			sprintf(buffer,"%s", lua_toboolean(L, i) ? "true" : "false");
+			sprintf_s(buffer,"%s", lua_toboolean(L, i) ? "true" : "false");
 			stringStream << buffer;
 			break;
 	
 		case LUA_TNUMBER:  /* numbers */
 			memset(buffer,0,50);
-			sprintf(buffer,"%g", lua_tonumber(L, i));
+			sprintf_s(buffer,"%g", lua_tonumber(L, i));
 			stringStream << buffer;
 			break;
 	
 		default:  /* other values */
 			memset(buffer,0,50);
-			sprintf(buffer,"%s", lua_typename(L, t));
+			sprintf_s(buffer,"%s", lua_typename(L, t));
 			stringStream << buffer;
 			break;
 	
 		}
 		memset(buffer,0,50);
-		sprintf(buffer,"  ");  /* put a separator */
+		sprintf_s(buffer,"  ");  /* put a separator */
 		stringStream << buffer;
 	}
 	memset(buffer,0,50);
-	sprintf(buffer,"\n");  /* end the listing */
+	sprintf_s(buffer,"\n");  /* end the listing */
 	stringStream << buffer;
 
 	std::string copyOfStr = stringStream.str();
@@ -421,6 +449,7 @@ static void stackDump (lua_State *L) {
 		strcpy_s(message,1024,copyOfStr.c_str());
 		PrintConsoleMessage(message);
 }
+#endif
 
 static int pSetup(lua_State *L)
 {
@@ -444,9 +473,6 @@ static int pSetup(lua_State *L)
 
 	return docall(L, 0, 1);
 }
-
-
-
 
 lua_State *L = NULL;
 
@@ -472,6 +498,8 @@ void DLLAPI InitialSetup(void)
 	
 	//LuaScriptUtils::luaopen_ScriptUtils(L);
 	luaL_register(L, "MisnImport", MisnImportLib);
+
+	luaL_register(L, "Core", CoreLib);
 
 	status = lua_cpcall(L, pSetup, NULL);
 
