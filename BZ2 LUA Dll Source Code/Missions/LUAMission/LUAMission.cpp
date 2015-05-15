@@ -77,6 +77,7 @@ EjectKillRetCodes convertNumberToEjectKillRetCodes(lua_Number num)
 	}
 
 	int Lua_ChangeSide (lua_State *L) {
+		(void)(L); /*unused*/
 		misnImport.ChangeSide();
 		return 0;
 	}
@@ -397,7 +398,7 @@ static int docall(lua_State *L, int narg, int clear)
 	return status;
 }
 
-
+#if 0
 static void stackDump (lua_State *L) {
 	std::ostringstream stringStream;
 	
@@ -411,35 +412,35 @@ static void stackDump (lua_State *L) {
 	
 		case LUA_TSTRING:  /* strings */
 			memset(buffer,0,50);
-			sprintf(buffer,"'%s'", lua_tostring(L, i));
+			sprintf_s(buffer,"'%s'", lua_tostring(L, i));
 			stringStream << buffer;
 			break;
 	
 		case LUA_TBOOLEAN:  /* booleans */
 			memset(buffer,0,50);
-			sprintf(buffer,"%s", lua_toboolean(L, i) ? "true" : "false");
+			sprintf_s(buffer,"%s", lua_toboolean(L, i) ? "true" : "false");
 			stringStream << buffer;
 			break;
 	
 		case LUA_TNUMBER:  /* numbers */
 			memset(buffer,0,50);
-			sprintf(buffer,"%g", lua_tonumber(L, i));
+			sprintf_s(buffer,"%g", lua_tonumber(L, i));
 			stringStream << buffer;
 			break;
 	
 		default:  /* other values */
 			memset(buffer,0,50);
-			sprintf(buffer,"%s", lua_typename(L, t));
+			sprintf_s(buffer,"%s", lua_typename(L, t));
 			stringStream << buffer;
 			break;
 	
 		}
 		memset(buffer,0,50);
-		sprintf(buffer,"  ");  /* put a separator */
+		sprintf_s(buffer,"  ");  /* put a separator */
 		stringStream << buffer;
 	}
 	memset(buffer,0,50);
-	sprintf(buffer,"\n");  /* end the listing */
+	sprintf_s(buffer,"\n");  /* end the listing */
 	stringStream << buffer;
 
 	std::string copyOfStr = stringStream.str();
@@ -448,6 +449,7 @@ static void stackDump (lua_State *L) {
 		strcpy_s(message,1024,copyOfStr.c_str());
 		PrintConsoleMessage(message);
 }
+#endif
 
 static int pSetup(lua_State *L)
 {

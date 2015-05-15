@@ -8,7 +8,7 @@ You may need to create the folder "Redist" under "BuildMission" depending on you
 
 To create the needed luajit51.dll and lib pull/clone this project:
 
-git clone luajit-2.0.git">http://luajit.org/git/luajit-2.0.git
+git clone luajit-2.0.git">http://luajit.org/git/luajit-2.0.git (repo appears to be offline, download source for 2.0.4)
 
 alter "src\msvcbuild.bat" to use:
 @set LJDLLNAME=luajit51.dll
