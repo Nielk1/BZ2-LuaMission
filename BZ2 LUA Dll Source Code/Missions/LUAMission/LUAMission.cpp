@@ -218,6 +218,33 @@ EjectKillRetCodes convertNumberToEjectKillRetCodes(lua_Number num)
 	};
 
 
+static int Lua_LoadFromBZ2(lua_State *L) {
+	size_t len;
+	const char *tmpFileName = luaL_checklstring(L, 1, &len); // forces abort on fail
+	char *fileName = new char[len+1];
+	fileName[len] = 0;
+	memcpy(fileName,tmpFileName,len);
+
+		void *pData;
+		size_t bufSize = 0;
+		LoadFile(fileName, NULL, bufSize);
+		pData = malloc(bufSize+1);
+		((char*)pData)[bufSize] = 0; // null terminator
+		LoadFile(fileName, pData, bufSize);
+		int status = luaL_dostring(L,(char*)pData);
+		free(pData);
+	
+	
+	delete [] fileName;
+	return 0;
+}
+
+
+
+	static const luaL_Reg CoreLib[] = {
+		{"LoadFromBZ2", Lua_LoadFromBZ2},
+		{0,0}
+	};
 
 int report(lua_State *L, int status)
 {
@@ -445,9 +472,6 @@ static int pSetup(lua_State *L)
 	return docall(L, 0, 1);
 }
 
-
-
-
 lua_State *L = NULL;
 
 // This makes some assumptions, if any of these are false then correct this:
@@ -472,6 +496,8 @@ void DLLAPI InitialSetup(void)
 	
 	//LuaScriptUtils::luaopen_ScriptUtils(L);
 	luaL_register(L, "MisnImport", MisnImportLib);
+
+	luaL_register(L, "Core", CoreLib);
 
 	status = lua_cpcall(L, pSetup, NULL);
 

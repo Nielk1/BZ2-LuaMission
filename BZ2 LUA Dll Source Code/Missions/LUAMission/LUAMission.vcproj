@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="LuaMission"
+	Name="Instant"
 	ProjectGUID="{F2664F57-2E80-431B-A4AD-0A68680DC311}"
 	RootNamespace="LuaMission"
 	TargetFrameworkVersion="131072"

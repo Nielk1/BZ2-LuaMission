@@ -1076,13 +1076,13 @@ end
 
 function ObjectDefinition_.Save(self)
     WriteMarker("ObjectDefinition");
-    local length = string.length(self.name);
+    local length = string.len(self.name);
     ffi.C.WriteInt(ffi.new("int[1]", length));
     ffi.C.WriteBytes(tocstring(self.name), length);
 end
 
 function ObjectDefinition_.Open(self)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not self.open then
        ffi.C.OpenODF(tocstring(self.name)); 
        self.open = true;
@@ -1090,7 +1090,7 @@ function ObjectDefinition_.Open(self)
 end
 
 function ObjectDefinition_.Close(self)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if self.open then
        ffi.C.CloseODF(tocstring(self.name)); 
        self.open = false;
@@ -1098,7 +1098,7 @@ function ObjectDefinition_.Close(self)
 end
 
 function ObjectDefinition_.GetHexInt(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = 0; end
@@ -1108,7 +1108,7 @@ function ObjectDefinition_.GetHexInt(self, block, name, default)
 end
 
 function ObjectDefinition_.GetInt(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = 0; end
@@ -1118,7 +1118,7 @@ function ObjectDefinition_.GetInt(self, block, name, default)
 end
 
 function ObjectDefinition_.GetLong(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = 0; end
@@ -1128,7 +1128,7 @@ function ObjectDefinition_.GetLong(self, block, name, default)
 end
 
 function ObjectDefinition_.GetFloat(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = 0.0; end
@@ -1138,7 +1138,7 @@ function ObjectDefinition_.GetFloat(self, block, name, default)
 end
 
 function ObjectDefinition_.GetDouble(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = 0.0; end
@@ -1148,7 +1148,7 @@ function ObjectDefinition_.GetDouble(self, block, name, default)
 end
 
 function ObjectDefinition_.GetChar(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = '\0'; end
@@ -1158,7 +1158,7 @@ function ObjectDefinition_.GetChar(self, block, name, default)
 end
 
 function ObjectDefinition_.GetBool(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = false; end
@@ -1168,7 +1168,7 @@ function ObjectDefinition_.GetBool(self, block, name, default)
 end
 
 function ObjectDefinition_.GetString(self, block, name, size, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = nil; end
@@ -1180,12 +1180,16 @@ function ObjectDefinition_.GetString(self, block, name, size, default)
         passIn = ffi.new("char[?]",size + 1);
     end
     ffi.fill(passIn,size + 1);
-    ffi.C.GetODFString(tocstring(self.name), tocstring(block), tocstring(name), size, passIn, tocstring(default));
-    return tostring(passIn);
+    if default ~= nil then
+        ffi.C.GetODFString(tocstring(self.name), tocstring(block), tocstring(name), size, passIn, tocstring(default));
+    else
+        ffi.C.GetODFString(tocstring(self.name), tocstring(block), tocstring(name), size, passIn, nil);
+    end
+    return ffi.string(passIn);
 end
 
 function ObjectDefinition_.GetColor(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then
@@ -1199,7 +1203,7 @@ function ObjectDefinition_.GetColor(self, block, name, default)
 end
 
 function ObjectDefinition_.GetVector(self, block, name, default)
-    if not isgameobject(self) then error("Paramater self must be ObjectDefinition instance."); end
+    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
     if not isstring(block) then error("Paramater block must be string."); end
     if not isstring(name) then error("Paramater name must be string."); end
     if default == nil then default = Vector(); end
@@ -3970,7 +3974,7 @@ function GetPathPoints(path)
     if not success then return nil; end
     local paths = {};
     for itr = 1,tonumber(bufSize) + 1,2 do
-        paths.insert(VECTOR_2D(pData[itr+1],pData[iter+2]));
+        table.insert(paths, VECTOR_2D(pData[itr+1],pData[iter+2]));
     end
     return paths;
 end
@@ -4131,7 +4135,7 @@ end
 -- Useful for reading the ODF format file for custom data
 -- @return TRN Filename
 function GetMapTRNFilename()
-    return tostring(ffi.C.GetMapTRNFilename());
+    return ffi.string(ffi.C.GetMapTRNFilename());
 end
 
 --- Is this team allied?
@@ -4962,51 +4966,56 @@ function LoadObjectDefinition()
     return ObjectDefinition(ffi.string(name));
 end
 
-
-
+local Callbacks_InitialSetup = {};
+function RegisterCallback_InitialSetup(func)
+    table.insert(Callbacks_InitialSetup, func);
+end
 function InitialSetup()
-    RegisterSavableType("Color", SaveColor, LoadColor);
-    RegisterSavableType("AudioHandle", SaveAudioHandle, LoadAudioHandle);
-    RegisterSavableType("ObjectDefinition", SaveObjectDefinition, LoadObjectDefinition);
-    RegisterSavableType("GameObject", SaveGameObject, LoadGameObject, PostLoadGameObject);
-    RegisterSavableType("VECTOR_2D", SaveVECTOR_2D, LoadVECTOR_2D);
-    RegisterSavableType("Vector", SaveVector, LoadVector);
-    RegisterSavableType("Matrix", SaveMatrix, LoadMatrix);
-  
-    PrintDebugMessage(tostring(#SavableTypes) .. " Custom DataTypes");
-    for k = #SavableTypes,1,-1 do
-        local v = SavableTypes[k];
-        PrintDebugMessage(tostring(SavableTypeNameToIndex[v.name]) .. " " .. tostring(v.name));
-    end
-    
     --local here;
     --local coming;
     --here,coming = friendTank:CountThreats();
     --PrintConsoleMessage("Here: " .. here .. " Coming: " .. coming);
-    MissionData.TestData = {};
-    MissionData.TestData.Spawned = false;
-    MissionData.TestData.FreshLoad = false;
+    
+    --MissionData.TestData = {};
+    --MissionData.TestData.Spawned = false;
+    --MissionData.TestData.FreshLoad = false;
+    
+    for k,v in pairs(Callbacks_InitialSetup) do
+        v();
+    end
 end
 
+local Callbacks_Update = {};
+function RegisterCallback_Update(func)
+    table.insert(Callbacks_Update, func);
+end
 function Update()
 	--io.write("Update, from ",_VERSION,"!\n")
   --PrintConsoleMessage("Update, from " .. _VERSION .. "!\n");
   
     --PrintConsoleMessage(tostring(MisnImport.GetNearestBuilding(GetPlayerHandle(1):GetHandle())));
     
-    if not MissionData.TestData.Spawned then
-        MissionData.TestData.friendTank = BuildObject("ivtank",1,Vector());
-        MissionData.TestData.enemyTank = BuildObject("ivtank",2,Vector(100,100,100));
-        MissionData.TestData.enemyTank:Attack(MissionData.TestData.friendTank);
-        MissionData.TestData.Spawned = true;
-    end
+    --if not MissionData.TestData.Spawned then
+    --    MissionData.TestData.friendTank = BuildObject("ivtank",1,Vector());
+    --    MissionData.TestData.enemyTank = BuildObject("ivtank",2,Vector(100,100,100));
+    --    MissionData.TestData.enemyTank:Attack(MissionData.TestData.friendTank);
+    --    MissionData.TestData.Spawned = true;
+    --end
     
-    if MissionData.TestData.FreshLoad then
-        MissionData.TestData.friendTank:EjectPilot();
-        MissionData.TestData.enemyTank:EjectPilot();
+    --if MissionData.TestData.FreshLoad then
+    --    MissionData.TestData.friendTank:EjectPilot();
+    --    MissionData.TestData.enemyTank:EjectPilot();
+    --end
+    
+    for k,v in pairs(Callbacks_Update) do
+        v();
     end
 end
 
+local Callbacks_Save = {};
+function RegisterCallback_Save(func)
+    table.insert(Callbacks_Save, func);
+end
 function Save(misnSave)
 
     if misnSave then
@@ -5032,7 +5041,7 @@ function Save(misnSave)
     for k,v in pairs(GameObjectAltered) do
         countCustomGameObjects = countCustomGameObjects + 1;
     end
-    ffi.C.WriteInt(ffi.new("int[1]", countCustomGameObjects),1);
+    returnValue = returnValue and ffi.C.WriteInt(ffi.new("int[1]", countCustomGameObjects),1);
     PrintDebugMessage("Saving " .. countCustomGameObjects .. " Custom Game Objects Handles");
     for k,v in pairs(GameObjectAltered) do
         SaveGameObject(v);
@@ -5044,9 +5053,17 @@ function Save(misnSave)
     
     WriteTable(MissionData);
 
+    for k,v in pairs(Callbacks_Save) do
+        returnValue = returnValue and v(misnSave);
+    end
+    
     return returnValue
 end
 
+local Callbacks_Load = {};
+function RegisterCallback_Load(func)
+    table.insert(Callbacks_Load, func);
+end
 function Load(misnSave)
 	--io.write("Load("..tostring(misnSave).."), from ",_VERSION,"!\n")
   
@@ -5082,7 +5099,7 @@ function Load(misnSave)
     local TmpGameObjects = {};
     for k = 1,countCustomGameObjects,1 do
         ffi.C.ReadBytes(length, 1); -- useless byte :/
-        TmpGameObjects:insert(LoadGameObject());
+        table.insert(TmpGameObjects, LoadGameObject());
     end
     PrintDebugMessage("Reading " .. countCustomGameObjects .. " Custom Game Objects Data Extensions");
     for k = 1,countCustomGameObjects,1 do
@@ -5095,72 +5112,193 @@ function Load(misnSave)
     ffi.C.ReadBytes(length, 1);
     ReadTable(MissionData);
     
+    for k,v in pairs(Callbacks_Load) do
+        v(misnSave);
+    end
+    
     return returnValue;
 end
 
+local Callbacks_PostLoad = {};
+function RegisterCallback_PostLoad(func)
+    table.insert(Callbacks_PostLoad, func);
+end
 function PostLoad(misnSave)
     if misnSave then
       return true;
     end
     
-    -- postload here
+    for k,v in pairs(GameObjectWeakList) do
+        v:PostLoad();
+    end
+    
+    for k,v in pairs(Callbacks_PostLoad) do
+        v(misnSave);
+    end
     
     return true;
 end
 
+local Callbacks_AddObject = {};
+function RegisterCallback_AddObject(func)
+    table.insert(Callbacks_AddObject, func);
+end
 function AddObject(h)
-	--io.write("AddObject("..tostring(h).."), from ",_VERSION,"!\n")
-  --local gameObject = GameObject.new(h)
-  --gameObject:AddIdleAnim("test");
+    for k,v in pairs(Callbacks_AddObject) do
+        v(GameObject.new(h));
+    end
 end
 
+local Callbacks_DeleteObject = {};
+function RegisterCallback_DeleteObject(func)
+    table.insert(Callbacks_DeleteObject, func);
+end
 function DeleteObject(h)
-	--io.write("DeleteObject("..tostring(h).."), from ",_VERSION,"!\n")
     local object = GameObject.new(h);
     if GameObjectAltered[object:GetHandle()] ~= nil then GameObjectAltered[object:GetHandle()] = nil; end
+    for k,v in pairs(RegisterCallback_DeleteObject) do
+        v(GameObject.new(h));
+    end
 end
 
+local Callbacks_PostRun = {};
+function RegisterCallback_PostRun(func)
+    table.insert(Callbacks_PostRun, func);
+end
 function PostRun()
-	io.write("PostRun, from ",_VERSION,"!\n")
+    for k,v in pairs(Callbacks_PostRun) do
+        v(GameObject.new(h));
+    end
 end
 
+local Callbacks_AddPlayer = {};
+function RegisterCallback_AddPlayer(func)
+    table.insert(Callbacks_AddPlayer, func);
+end
 function AddPlayer(id, team, shouldCreateThem)
-	io.write("AddPlayer("..tostring(id)..", "..tostring(team)..", "..tostring(shouldCreateThem).."), from ",_VERSION,"!\n")
-	return true
+    local retVal = true;
+    for k,v in pairs(Callbacks_AddPlayer) do
+        retVal = retVal and v(id, team, shouldCreateThem);
+    end
+    return retVal;
 end
 
+local Callbacks_DeletePlayer = {};
+function RegisterCallback_DeletePlayer(func)
+    table.insert(Callbacks_DeletePlayer, func);
+end
 function DeletePlayer(id)
-	io.write("DeletePlayer("..tostring(id).."), from ",_VERSION,"!\n")
+    for k,v in pairs(Callbacks_DeletePlayer) do
+        retVal = retVal and v(id);
+    end
 end
 
+local Callbacks_PlayerEjected = {};
+function RegisterCallback_PlayerEjected(func)
+    table.insert(Callbacks_PlayerEjected, func);
+end
 function PlayerEjected(deadObjectHandle)
-	io.write("PlayerEjected("..tostring(deadObjectHandle).."), from ",_VERSION,"!\n")
-	return 0
+    local retVal = nil;
+    for k,v in pairs(Callbacks_PlayerEjected) do
+        local tmpRet = v(GameObject.new(deadObjectHandle));
+        if tmpRet ~= nil then retVal = tmpRet; end
+    end
+    if retVal ~= nil then return retVal; else return 0; end
 end
 
+local Callbacks_ObjectKilled = {};
+function RegisterCallback_ObjectKilled(func)
+    table.insert(Callbacks_ObjectKilled, func);
+end
 function ObjectKilled(deadObjectHandle, killersHandle)
-	io.write("ObjectKilled("..tostring(deadObjectHandle)..", "..tostring(killersHandle).."), from ",_VERSION,"!\n")
-	return 1
+    local retVal = nil;
+    for k,v in pairs(Callbacks_ObjectKilled) do
+        local tmpRet = v(GameObject.new(deadObjectHandle), GameObject.new(killersHandle));
+        if tmpRet ~= nil then retVal = tmpRet; end
+    end
+    if retVal ~= nil then return retVal; else return 1; end
 end
 
+local Callbacks_ObjectSniped = {};
+function RegisterCallback_ObjectSniped(func)
+    table.insert(Callbacks_ObjectSniped, func);
+end
 function ObjectSniped(deadObjectHandle, killersHandle)
-	io.write("ObjectSniped("..tostring(deadObjectHandle)..", "..tostring(killersHandle).."), from ",_VERSION,"!\n")
-	return 2
+    local retVal = nil;
+    for k,v in pairs(Callbacks_ObjectSniped) do
+        local tmpRet = v(GameObject.new(deadObjectHandle), GameObject.new(killersHandle));
+        if tmpRet ~= nil then retVal = tmpRet; end
+    end
+    if retVal ~= nil then return retVal; else return 2; end
 end
 
+local Callbacks_GetNextRandomVehicleODF = {};
+function RegisterCallback_GetNextRandomVehicleODF(func)
+    table.insert(Callbacks_GetNextRandomVehicleODF, func);
+end
 function GetNextRandomVehicleODF(team)
-	io.write("GetNextRandomVehicleODF("..tostring(team).."), from ",_VERSION,"!\n")
-	return "someVehicle"
+    for k,v in pairs(Callbacks_GetNextRandomVehicleODF) do
+        local tmpRet = v(team);
+        if tmpRet ~= nil then return tmpRet; end
+    end
+    return "someVehicle"
 end
 
+local Callbacks_SetWorld = {};
+function RegisterCallback_SetWorld(func)
+    table.insert(Callbacks_SetWorld, func);
+end
 function SetWorld(nextWorld)
-	io.write("SetWorld("..tostring(nextWorld).."), from ",_VERSION,"!\n")
+    for k,v in pairs(Callbacks_SetWorld) do
+        v(nextWorld);
+    end
 end
 
+local Callbacks_ProcessCommand = {};
+function RegisterCallback_ProcessCommand(func)
+    table.insert(Callbacks_ProcessCommand, func);
+end
 function ProcessCommand(crc)
-	io.write("ProcessCommand("..tostring(crc).."), from ",_VERSION,"!\n")
+    for k,v in pairs(Callbacks_ProcessCommand) do
+        v(crc);
+    end
 end
 
-function SetRandomSeed(seed)
-	io.write("SetRandomSeed("..tostring(seed).."), from ",_VERSION,"!\n")
+local Callbacks_SetRandomSeed = {};
+function RegisterCallback_SetRandomSeed(func)
+    table.insert(Callbacks_SetRandomSeed, func);
 end
+function SetRandomSeed(seed)
+    for k,v in pairs(Callbacks_SetRandomSeed) do
+        v(seed);
+    end
+end
+
+
+    RegisterSavableType("Color", SaveColor, LoadColor);
+    RegisterSavableType("AudioHandle", SaveAudioHandle, LoadAudioHandle);
+    RegisterSavableType("ObjectDefinition", SaveObjectDefinition, LoadObjectDefinition);
+    RegisterSavableType("GameObject", SaveGameObject, LoadGameObject, PostLoadGameObject);
+    RegisterSavableType("VECTOR_2D", SaveVECTOR_2D, LoadVECTOR_2D);
+    RegisterSavableType("Vector", SaveVector, LoadVector);
+    RegisterSavableType("Matrix", SaveMatrix, LoadMatrix);
+    PrintDebugMessage(tostring(#SavableTypes) .. " Custom DataTypes");
+    for k = #SavableTypes,1,-1 do
+        local v = SavableTypes[k];
+        PrintDebugMessage(tostring(SavableTypeNameToIndex[v.name]) .. " " .. tostring(v.name));
+    end
+    PrintConsoleMessage("Loading TRN Data");
+    local MapDataFile = GetMapTRNFilename();
+    PrintConsoleMessage("TRN File: " .. MapDataFile);
+    local MapData = ObjectDefinition(MapDataFile);
+    MapData:Open();
+    local TRNScriptName = MapData:GetString("DLL","LuaMission");
+    MapData:Close();
+    PrintConsoleMessage("Script File: " .. TRNScriptName);
+    if TRNScriptName ~= nil and string.len(TRNScriptName) > 0 then
+        Core.LoadFromBZ2(TRNScriptName);
+    else
+        PrintConsoleMessage("TRN Script Not Set");
+        Core.LoadFromBZ2("Test.lua");
+        PrintConsoleMessage("Loaded Test.lua");
+    end
