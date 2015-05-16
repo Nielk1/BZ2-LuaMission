@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 
 #include <sstream>
 
@@ -228,16 +229,22 @@ static int Lua_LoadFromBZ2(lua_State *L) {
 
 		void *pData;
 		size_t bufSize = 0;
-		LoadFile(fileName, NULL, bufSize);
-		pData = malloc(bufSize+1);
-		((char*)pData)[bufSize] = 0; // null terminator
-		LoadFile(fileName, pData, bufSize);
-		int status = luaL_dostring(L,(char*)pData);
-		free(pData);
-	
-	
+		bool loadedFile = LoadFile(fileName, NULL, bufSize);
+		if(loadedFile || bufSize > 0) {
+			pData = malloc(bufSize+1);
+			((char*)pData)[bufSize] = 0; // null terminator
+			loadedFile = LoadFile(fileName, pData, bufSize);
+			if(loadedFile) {
+				int status = luaL_dostring(L,(char*)pData);
+			}
+			free(pData);
+		}
+
 	delete [] fileName;
-	return 0;
+
+	lua_pushboolean(L, loadedFile);
+
+	return 1;
 }
 
 
@@ -253,8 +260,21 @@ int report(lua_State *L, int status)
 	{
 		std::cerr << "-- " << lua_tostring(L, -1) << std::endl;
 
-		char *message = new char[1024];
-		strcpy_s(message,1024,lua_tostring(L, -1));
+		size_t len = 0;
+		int startPos = 0;
+		const char *luastring = lua_tolstring(L, -1, &len);
+		char message[1024];
+		for(int i=0;i<len;i++)
+		{
+			if(luastring[i] == '\n') {
+				if (i - startPos > 0) {
+					_snprintf_s(message, std::min(i - startPos + 8, 1024), "[LuaER] %s", luastring + startPos);
+					PrintConsoleMessage(message);
+				}
+				startPos = i+1;
+			}
+		}
+		_snprintf_s(message, 1024, "[LuaER] %s", luastring + startPos);
 		PrintConsoleMessage(message);
 
 		lua_pop(L, 1); // remove error message
@@ -265,7 +285,7 @@ int report(lua_State *L, int status)
 
 
 static lua_State *globalL = NULL;
-static const char *progname = "luajitexamplifying";
+static const char *progname = "luajit_bz2";
 static void lstop(lua_State *L, lua_Debug *ar)
 {
 	(void)ar;  /* unused arg. */
@@ -458,7 +478,9 @@ static int pSetup(lua_State *L)
 	luaL_openlibs(L);  /* open libraries */
 	lua_gc(L, LUA_GCRESTART, -1);
 	
-	int status = luaL_loadfile(L, "_api.lua");
+	
+	int status = luaL_loadfile(L, "lua\\_api.lua");
+	//int status = luaL_dofile(L, "lua\\_api.lua");
 
 	/*void *pData;
 	size_t bufSize = 0;
@@ -471,7 +493,11 @@ static int pSetup(lua_State *L)
 
 	if(report(L, status)) return status;
 
-	return docall(L, 0, 1);
+	status = docall(L, 0, 1);
+
+	report(L, status);
+
+	return status;
 }
 
 lua_State *L = NULL;

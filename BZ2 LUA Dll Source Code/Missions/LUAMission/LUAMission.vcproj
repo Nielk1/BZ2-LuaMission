@@ -393,6 +393,10 @@
 			RelativePath=".\_api.lua"
 			>
 		</File>
+		<File
+			RelativePath=".\hook.lua"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

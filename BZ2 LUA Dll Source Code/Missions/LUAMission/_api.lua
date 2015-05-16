@@ -716,6 +716,15 @@ __declspec( dllexport ) void __cdecl SetCurLocalAmmo(int,float,int) asm("?SetCur
 -- Utility Functions
 --==============================================================================================================================================================
 
+--- Is this oject a function?
+-- Checks that the object is a function
+-- @param object Object in question
+function isfunction(object)
+    return (type(object) == "function");
+end
+
+
+
 --- Message Buffer
 -- Used to avoid extra allocation time when possible.
 -- This API will avoid using this variable twice without first converting to lua strings.
@@ -4966,10 +4975,6 @@ function LoadObjectDefinition()
     return ObjectDefinition(ffi.string(name));
 end
 
-local Callbacks_InitialSetup = {};
-function RegisterCallback_InitialSetup(func)
-    table.insert(Callbacks_InitialSetup, func);
-end
 function InitialSetup()
     --local here;
     --local coming;
@@ -4980,15 +4985,9 @@ function InitialSetup()
     --MissionData.TestData.Spawned = false;
     --MissionData.TestData.FreshLoad = false;
     
-    for k,v in pairs(Callbacks_InitialSetup) do
-        v();
-    end
+    hook.Call( "InitialSetup" );
 end
 
-local Callbacks_Update = {};
-function RegisterCallback_Update(func)
-    table.insert(Callbacks_Update, func);
-end
 function Update()
 	--io.write("Update, from ",_VERSION,"!\n")
   --PrintConsoleMessage("Update, from " .. _VERSION .. "!\n");
@@ -5006,16 +5005,10 @@ function Update()
     --    MissionData.TestData.friendTank:EjectPilot();
     --    MissionData.TestData.enemyTank:EjectPilot();
     --end
-    
-    for k,v in pairs(Callbacks_Update) do
-        v();
-    end
+        
+    hook.Call( "Update" );
 end
 
-local Callbacks_Save = {};
-function RegisterCallback_Save(func)
-    table.insert(Callbacks_Save, func);
-end
 function Save(misnSave)
 
     if misnSave then
@@ -5053,17 +5046,14 @@ function Save(misnSave)
     
     WriteTable(MissionData);
 
-    for k,v in pairs(Callbacks_Save) do
-        returnValue = returnValue and v(misnSave);
+    local hookResults = { hook.CallAll( "Save", misnSave ) };
+    for i in hookResults do
+      returnValue = returnValue and i;
     end
     
     return returnValue
 end
 
-local Callbacks_Load = {};
-function RegisterCallback_Load(func)
-    table.insert(Callbacks_Load, func);
-end
 function Load(misnSave)
 	--io.write("Load("..tostring(misnSave).."), from ",_VERSION,"!\n")
   
@@ -5112,17 +5102,11 @@ function Load(misnSave)
     ffi.C.ReadBytes(length, 1);
     ReadTable(MissionData);
     
-    for k,v in pairs(Callbacks_Load) do
-        v(misnSave);
-    end
+    hook.Call( "Load", misnSave );
     
     return returnValue;
 end
 
-local Callbacks_PostLoad = {};
-function RegisterCallback_PostLoad(func)
-    table.insert(Callbacks_PostLoad, func);
-end
 function PostLoad(misnSave)
     if misnSave then
       return true;
@@ -5132,146 +5116,70 @@ function PostLoad(misnSave)
         v:PostLoad();
     end
     
-    for k,v in pairs(Callbacks_PostLoad) do
-        v(misnSave);
-    end
+    hook.Call( "PostLoad", misnSave );
     
     return true;
 end
 
-local Callbacks_AddObject = {};
-function RegisterCallback_AddObject(func)
-    table.insert(Callbacks_AddObject, func);
-end
 function AddObject(h)
-    for k,v in pairs(Callbacks_AddObject) do
-        v(GameObject.new(h));
-    end
+    hook.Call( "AddObject", GameObject.new(h) );
 end
 
-local Callbacks_DeleteObject = {};
-function RegisterCallback_DeleteObject(func)
-    table.insert(Callbacks_DeleteObject, func);
-end
 function DeleteObject(h)
     local object = GameObject.new(h);
+    hook.Call( "DeleteObject", object );
     if GameObjectAltered[object:GetHandle()] ~= nil then GameObjectAltered[object:GetHandle()] = nil; end
-    for k,v in pairs(RegisterCallback_DeleteObject) do
-        v(GameObject.new(h));
-    end
 end
 
-local Callbacks_PostRun = {};
-function RegisterCallback_PostRun(func)
-    table.insert(Callbacks_PostRun, func);
-end
 function PostRun()
-    for k,v in pairs(Callbacks_PostRun) do
-        v(GameObject.new(h));
-    end
+    hook.Call( "PostRun", GameObject.new(h) );
 end
 
-local Callbacks_AddPlayer = {};
-function RegisterCallback_AddPlayer(func)
-    table.insert(Callbacks_AddPlayer, func);
-end
 function AddPlayer(id, team, shouldCreateThem)
-    local retVal = true;
-    for k,v in pairs(Callbacks_AddPlayer) do
-        retVal = retVal and v(id, team, shouldCreateThem);
+    local returnValue = true;
+    local hookResults = { hook.CallAll( "AddPlayer", id, team, shouldCreateThem ) };
+    for i in hookResults do
+      returnValue = returnValue and i;
     end
-    return retVal;
+    
+    return returnValue;
 end
 
-local Callbacks_DeletePlayer = {};
-function RegisterCallback_DeletePlayer(func)
-    table.insert(Callbacks_DeletePlayer, func);
-end
 function DeletePlayer(id)
-    for k,v in pairs(Callbacks_DeletePlayer) do
-        retVal = retVal and v(id);
-    end
+    hook.Call( "DeletePlayer", id );
 end
 
-local Callbacks_PlayerEjected = {};
-function RegisterCallback_PlayerEjected(func)
-    table.insert(Callbacks_PlayerEjected, func);
-end
 function PlayerEjected(deadObjectHandle)
-    local retVal = nil;
-    for k,v in pairs(Callbacks_PlayerEjected) do
-        local tmpRet = v(GameObject.new(deadObjectHandle));
-        if tmpRet ~= nil then retVal = tmpRet; end
-    end
+    local retVal = hook.Call( "PlayerEjected", GameObject.new(deadObjectHandle));
     if retVal ~= nil then return retVal; else return 0; end
 end
 
-local Callbacks_ObjectKilled = {};
-function RegisterCallback_ObjectKilled(func)
-    table.insert(Callbacks_ObjectKilled, func);
-end
 function ObjectKilled(deadObjectHandle, killersHandle)
-    local retVal = nil;
-    for k,v in pairs(Callbacks_ObjectKilled) do
-        local tmpRet = v(GameObject.new(deadObjectHandle), GameObject.new(killersHandle));
-        if tmpRet ~= nil then retVal = tmpRet; end
-    end
+    local retVal = hook.Call( "ObjectKilled", GameObject.new(deadObjectHandle), GameObject.new(killersHandle));
     if retVal ~= nil then return retVal; else return 1; end
 end
 
-local Callbacks_ObjectSniped = {};
-function RegisterCallback_ObjectSniped(func)
-    table.insert(Callbacks_ObjectSniped, func);
-end
 function ObjectSniped(deadObjectHandle, killersHandle)
-    local retVal = nil;
-    for k,v in pairs(Callbacks_ObjectSniped) do
-        local tmpRet = v(GameObject.new(deadObjectHandle), GameObject.new(killersHandle));
-        if tmpRet ~= nil then retVal = tmpRet; end
-    end
+    local retVal = hook.Call( "ObjectSniped", GameObject.new(deadObjectHandle), GameObject.new(killersHandle));
     if retVal ~= nil then return retVal; else return 2; end
 end
 
-local Callbacks_GetNextRandomVehicleODF = {};
-function RegisterCallback_GetNextRandomVehicleODF(func)
-    table.insert(Callbacks_GetNextRandomVehicleODF, func);
-end
 function GetNextRandomVehicleODF(team)
-    for k,v in pairs(Callbacks_GetNextRandomVehicleODF) do
-        local tmpRet = v(team);
-        if tmpRet ~= nil then return tmpRet; end
-    end
+    local retVal = hook.Call( "GetNextRandomVehicleODF", team );
+    if retVal ~= nil then return retVal; end
     return "someVehicle"
 end
 
-local Callbacks_SetWorld = {};
-function RegisterCallback_SetWorld(func)
-    table.insert(Callbacks_SetWorld, func);
-end
 function SetWorld(nextWorld)
-    for k,v in pairs(Callbacks_SetWorld) do
-        v(nextWorld);
-    end
+    hook.Call( "SetWorld", nextWorld );
 end
 
-local Callbacks_ProcessCommand = {};
-function RegisterCallback_ProcessCommand(func)
-    table.insert(Callbacks_ProcessCommand, func);
-end
 function ProcessCommand(crc)
-    for k,v in pairs(Callbacks_ProcessCommand) do
-        v(crc);
-    end
+    hook.Call( "ProcessCommand", crc );
 end
 
-local Callbacks_SetRandomSeed = {};
-function RegisterCallback_SetRandomSeed(func)
-    table.insert(Callbacks_SetRandomSeed, func);
-end
 function SetRandomSeed(seed)
-    for k,v in pairs(Callbacks_SetRandomSeed) do
-        v(seed);
-    end
+    hook.Call( "SetRandomSeed", seed );
 end
 
 
@@ -5287,18 +5195,29 @@ end
         local v = SavableTypes[k];
         PrintDebugMessage(tostring(SavableTypeNameToIndex[v.name]) .. " " .. tostring(v.name));
     end
-    PrintConsoleMessage("Loading TRN Data");
-    local MapDataFile = GetMapTRNFilename();
-    PrintConsoleMessage("TRN File: " .. MapDataFile);
-    local MapData = ObjectDefinition(MapDataFile);
-    MapData:Open();
-    local TRNScriptName = MapData:GetString("DLL","LuaMission");
-    MapData:Close();
-    PrintConsoleMessage("Script File: " .. TRNScriptName);
-    if TRNScriptName ~= nil and string.len(TRNScriptName) > 0 then
-        Core.LoadFromBZ2(TRNScriptName);
+    --PrintConsoleMessage("Loading TRN Data");
+    --local MapDataFile = GetMapTRNFilename();
+    --PrintConsoleMessage("TRN File: " .. MapDataFile);
+    --local MapData = ObjectDefinition(MapDataFile);
+    --MapData:Open();
+    --local TRNScriptName = MapData:GetString("DLL","LuaMission");
+    --MapData:Close();
+    --PrintConsoleMessage("Script File: " .. TRNScriptName);
+    --if TRNScriptName ~= nil and string.len(TRNScriptName) > 0 then
+    --    Core.LoadFromBZ2(TRNScriptName);
+    --else
+    --    PrintConsoleMessage("TRN Script Not Set");
+    --    Core.LoadFromBZ2("Test.lua");
+    --    PrintConsoleMessage("Loaded Test.lua");
+    --end
+    
+    PrintConsoleMessage("Loading Modules");
+    require("hook");
+    
+    local MapLuaFile = string.gsub(GetMapTRNFilename(),"%.trn$",".lua");
+    PrintConsoleMessage("Loading Lua: " .. MapLuaFile);
+    if Core.LoadFromBZ2(MapLuaFile) then
+      PrintConsoleMessage("Map lua loaded");
     else
-        PrintConsoleMessage("TRN Script Not Set");
-        Core.LoadFromBZ2("Test.lua");
-        PrintConsoleMessage("Loaded Test.lua");
+      PrintConsoleMessage("Failed to load map lua");
     end
