@@ -4989,6 +4989,8 @@ function InitialSetup()
 end
 
 function Update()
+    
+
 	--io.write("Update, from ",_VERSION,"!\n")
   --PrintConsoleMessage("Update, from " .. _VERSION .. "!\n");
   
@@ -5006,7 +5008,8 @@ function Update()
     --    MissionData.TestData.enemyTank:EjectPilot();
     --end
         
-    hook.Call( "Update" );
+    hook.Call( "Update", MissionData.GameTurn );
+    MissionData.GameTurn = MissionData.GameTurn + 1;
 end
 
 function Save(misnSave)
@@ -5047,8 +5050,10 @@ function Save(misnSave)
     WriteTable(MissionData);
 
     local hookResults = { hook.CallAll( "Save", misnSave ) };
-    for i in hookResults do
-      returnValue = returnValue and i;
+    if hookResults ~= nil then
+      for k,v in pairs(hookResults) do
+        returnValue = returnValue and v;
+      end
     end
     
     return returnValue
@@ -5138,8 +5143,10 @@ end
 function AddPlayer(id, team, shouldCreateThem)
     local returnValue = true;
     local hookResults = { hook.CallAll( "AddPlayer", id, team, shouldCreateThem ) };
-    for i in hookResults do
-      returnValue = returnValue and i;
+    if hookResults ~= nil then
+      for k,v in pairs(hookResults) do
+        returnValue = returnValue and v;
+      end
     end
     
     return returnValue;
@@ -5181,8 +5188,8 @@ end
 function SetRandomSeed(seed)
     hook.Call( "SetRandomSeed", seed );
 end
-
-
+    MissionData.GameTurn = 0;
+    
     RegisterSavableType("Color", SaveColor, LoadColor);
     RegisterSavableType("AudioHandle", SaveAudioHandle, LoadAudioHandle);
     RegisterSavableType("ObjectDefinition", SaveObjectDefinition, LoadObjectDefinition);

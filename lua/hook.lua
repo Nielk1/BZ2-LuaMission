@@ -2,9 +2,10 @@
 local PrintConsoleMessage = PrintConsoleMessage;
 PrintConsoleMessage("Loading Hook Module");
 
-local pairs                        = pairs
-local isfunction        = isfunction
-local isstring                = isstring
+local pairs                        = pairs;
+local table = table;
+local isfunction        = isfunction;
+local isstring                = isstring;
 
 module( "hook" )
 
@@ -142,9 +143,9 @@ function CallAll( name, ... )
 			end
 				
 		end
+    
+    if table.getn(ret) > 0 then return unpack(ret) end
 	end
-	
-  if table.getn(ret) > 0 then return unpack(ret) end
   
   return
 	
