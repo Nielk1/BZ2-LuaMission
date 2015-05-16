@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="Instant"
+	Name="LUAMission"
 	ProjectGUID="{F2664F57-2E80-431B-A4AD-0A68680DC311}"
 	RootNamespace="LuaMission"
 	TargetFrameworkVersion="131072"
@@ -70,7 +70,7 @@
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
 				CallingConvention="0"
-				CompileAs="1"
+				CompileAs="2"
 				DisableSpecificWarnings="4530;4800;4251"
 			/>
 			<Tool
@@ -187,7 +187,7 @@
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
 				CallingConvention="0"
-				CompileAs="0"
+				CompileAs="2"
 				DisableSpecificWarnings="4530;4800;4251"
 			/>
 			<Tool
@@ -308,7 +308,7 @@
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
 				CallingConvention="0"
-				CompileAs="1"
+				CompileAs="2"
 				DisableSpecificWarnings="4530;4800;4251"
 			/>
 			<Tool
