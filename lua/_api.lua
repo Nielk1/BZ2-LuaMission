@@ -4681,7 +4681,8 @@ end
 --SaveObjects
 --LoadObjects
 
-local MissionData = {};
+--local MissionData = {};
+MissionData = {};
 
 local SavableTypes = {};
 local SavableTypeNameToIndex = {};
@@ -4755,6 +4756,11 @@ function WriteTable(var)
           WriteMarker("Boolean");
           ffi.C.WriteBool(ffi.new("bool[1]", v), 1);
           SavedThisVariable = true;
+        elseif type(v) == "string" then
+          WriteMarker("String");
+          ffi.C.WriteInt(ffi.new("int[1]", string.len(v)), 1);
+          ffi.C.WriteBytes(tocstring(v), string.len(v));
+          SavedThisVariable = true;
         end
         
         --do save attempts on all known custom types
@@ -4801,7 +4807,7 @@ function ReadTable(var)
     local BoolValue = ffi.new("bool[1]");
     
     for k = 1,size,1 do
-        local LoadedThisVariable = false;
+        --local LoadedThisVariable = false;
         
         ffi.fill(keyValue, 256);
         ffi.C.ReadBytes(keyLength, 1);
@@ -4830,29 +4836,31 @@ function ReadTable(var)
         elseif valueType == LuaTypes.Number then
             PrintDebugMessage("Key is of type Number (" .. tostring(LuaTypes.Number) .. ")");
             ffi.C.ReadFloat(FloatValue, 1);
-            value = tonumber(FloatValue);
+            value = tonumber(FloatValue[0]);
         elseif valueType == LuaTypes.Number_Int then
             PrintDebugMessage("Key is of type Number_Int (" .. tostring(LuaTypes.Number_Int) .. ")");
             ffi.C.ReadInt(IntValue, 1);
-            value = tonumber(IntValue);
+            value = tonumber(IntValue[0]);
         elseif valueType == LuaTypes.Number_UByte then
             PrintDebugMessage("Key is of type Number_UByte (" .. tostring(LuaTypes.Number_UByte) .. ")");
             ffi.C.ReadBytes(UByteValue, 1);
-            value = tonumber(UByteValue);
+            value = tonumber(UByteValue[0]);
         elseif valueType == LuaTypes.Boolean then
             PrintDebugMessage("Key is of type Boolean (" .. tostring(LuaTypes.Boolean) .. ")");
             ffi.C.ReadBool(BoolValue, 1);
-            value = tonumber(BoolValue) ~= 0; -- maybe ~= nil?
+            value = tonumber(BoolValue[0]) ~= 0; -- maybe ~= nil?
         elseif valueType == LuaTypes.String then
             ffi.C.ReadInt(IntValue, 1);
-            local stringVal = ffi.new("char[?]", tonumber(IntValue) + 1);
-            ffi.fill(stringVal, tonumber(IntValue) + 1);
+            local stringLength = tonumber(IntValue[0]);
+            local stringVal = ffi.new("char[?]", stringLength + 1);
+            ffi.fill(stringVal, stringLength + 1);
             PrintDebugMessage("Key is of type String (" .. tostring(LuaTypes.String) .. ")");
-            ffi.C.ReadBytes(stringVal, tonumber(IntValue));
+            ffi.C.ReadBytes(stringVal, stringLength);
             value = ffi.string(stringVal);
         end
         
         var[ffi.string(keyValue)] = value;
+        PrintDebugMessage(ffi.string(keyValue) .. " = " .. value);
     end
     PrintDebugMessage("End Table of " .. tostring(size) .. " items");
 end
@@ -5086,6 +5094,8 @@ function Load(misnSave)
         PrintDebugMessage(tonumber(length[0]) .. " " .. ffi.string(name) .. " = " .. LuaTypes.COUNT - 1 + k);
     end
     
+    -- remap types here
+    
     -- GameObjectAltered data
     local countCustomGameObjects = ffi.new("int[1]");
     ffi.C.ReadInt(countCustomGameObjects, 1);
@@ -5106,6 +5116,8 @@ function Load(misnSave)
     -- We know that this first item must be a table
     ffi.C.ReadBytes(length, 1);
     ReadTable(MissionData);
+    
+    PrintConsoleMessage(type(MissionData) .. " " .. table.getn(MissionData));
     
     hook.Call( "Load", misnSave );
     
