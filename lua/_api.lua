@@ -847,29 +847,32 @@ end
 -- Common Enums, Structs, Types
 --==============================================================================================================================================================
 
-local VECTOR_2D
+--local VECTOR_2D
 VECTOR_2D = ffi.metatype("VECTOR_2D", {
   __add = function(a, b) return VECTOR_2D(a.x+b.x, a.z+b.z) end,
 })
 
-local Vector
+--local Vector
 Vector = ffi.metatype("Vector", {
   __add = function(a, b) return Vector(a.x+b.x, a.y+b.y, a.z+b.z) end,
 })
 
-local Matrix
+--local Matrix
 Matrix = ffi.metatype("Matrix", {})
 
-local AnimationType = {};
+--local AnimationType = {};
+AnimationType = {};
 AnimationType.loop = 0;
 AnimationType.twoway = 1;
 
-local AvoidType = {};
+--local AvoidType = {};
+AvoidType = {};
 AvoidType.AVD_NONE = 0; -- don't avoid collisions
 AvoidType.AVD_FORCE = 1; -- use force avoidance
 AvoidType.AVD_PLAN = 2; -- plan collision avoidance
 
-local Command = {};
+--local Command = {};
+Command = {};
 Command.CMD_NONE = 0;
 Command.CMD_SELECT = 1;
 Command.CMD_STOP = 2;
@@ -925,7 +928,8 @@ Command.CMD_BUILD_ROTATE = 51; -- Update building rotations by 90 degrees.
 Command.CMD_CMDPANEL_SELECT = 52;
 Command.CMD_CMDPANEL_DESELECT = 53;
 
-local Slots = {};
+--local Slots = {};
+Slots = {};
 Slots.DLL_TEAM_SLOT_RECYCLER = 1;
 Slots.DLL_TEAM_SLOT_FACTORY = 2;
 Slots.DLL_TEAM_SLOT_ARMORY = 3;
@@ -946,7 +950,8 @@ Slots.DLL_TEAM_SLOT_BASE9 = 14; -- see above
 -- Color
 --==============================================================================================================================================================
 
-local Color = {};
+--local Color = {};
+Color = {};
 Color.__index = Color;
 Color.__add = function(a,b)
     return Color.new((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2, (a.a + b.a) / 2);
@@ -1692,7 +1697,7 @@ end
 -- @return Position Vector
 function GameObject.GetPositionV(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    local Vector retVal = Vector();
+    local retVal = Vector();
     ffi.C.GetPositionV(self:GetHandle(), retVal);
     return retVal;
 end
@@ -1703,7 +1708,7 @@ end
 -- @return Position Vector
 function GameObject.GetPosition2(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    local Vector retVal = Vector();
+    local retVal = Vector();
     ffi.C.GetPosition2(self:GetHandle(), retVal);
     return retVal;
 end
@@ -1713,7 +1718,7 @@ end
 -- @return Facing Vector
 function GameObject.GetFront(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    local Vector retVal = Vector();
+    local retVal = Vector();
     ffi.C.GetFront(self:GetHandle(), retVal);
     return retVal;
 end
@@ -1723,7 +1728,7 @@ end
 -- @return Position Matrix
 function GameObject.GetPositionM(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    local Matrix retVal = Matrix();
+    local retVal = Matrix();
     ffi.C.GetPositionM(self:GetHandle(), retVal);
     return retVal;
 end
@@ -4997,8 +5002,6 @@ function InitialSetup()
 end
 
 function Update()
-    
-
 	--io.write("Update, from ",_VERSION,"!\n")
   --PrintConsoleMessage("Update, from " .. _VERSION .. "!\n");
   

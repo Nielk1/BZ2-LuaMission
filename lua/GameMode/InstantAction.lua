@@ -20,8 +20,10 @@ end )
 
 hook.Add( "InitialSetup", "Chilli_Custom_InitialSetup", function()
   local player = _G.GetPlayerHandle(0);
-  local vectorLoc = _G.GetPositionNear(player:GetPositionV(), 10, 10);
-  _G.MissionData.TargetTest = _G.BuildObject("ibcrate", 0, vectorLoc);
+  local PlayerLocation = player:GetPositionV();
+  _G.PrintConsoleMessage(PlayerLocation.x .. ", " .. PlayerLocation.y .. ", " .. PlayerLocation.z);
+  local vectorLoc = _G.GetPositionNear(PlayerLocation, 1, 1);
+  _G.MissionData.TargetTest = _G.BuildObject("ibcrat00", 0, vectorLoc);
   _G.MissionData.TargetTestIsObjectified = false;
 end )
 
