@@ -19,5 +19,5 @@ Current Usage:
 @root\luajit51.exp
 @root\lua\_api.lua
 @root\lua\hook.lua
-@root\*assetpath*\chilli.lua
-@root\@assetpath*\missions\LUAMission.dll
+@root\assetpath\chilli.lua
+@root\assetpath\missions\LUAMission.dll
