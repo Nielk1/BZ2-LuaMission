@@ -281,8 +281,8 @@ __declspec( dllexport ) void __cdecl StartEmitter(int,int) asm("?StartEmitter@@Y
 __declspec( dllexport ) void __cdecl StopEmitter(int,int) asm("?StopEmitter@@YAXHH@Z");
 //__declspec( dllexport ) void __cdecl SaveObjects(char * &,unsigned long &) asm("?SaveObjects@@YAXAAPADAAK@Z");
 //__declspec( dllexport ) void __cdecl LoadObjects(char *,unsigned long) asm("?LoadObjects@@YAXPADK@Z");
-__declspec( dllexport ) void __cdecl IgnoreSync(bool) asm("?IgnoreSync@@YAX_N@Z");
-__declspec( dllexport ) bool __cdecl IsRecording(void) asm("?IsRecording@@YA_NXZ");
+//__declspec( dllexport ) void __cdecl IgnoreSync(bool) asm("?IgnoreSync@@YAX_N@Z");
+//__declspec( dllexport ) bool __cdecl IsRecording(void) asm("?IsRecording@@YA_NXZ");
 __declspec( dllexport ) void __cdecl SetObjectiveOn(int) asm("?SetObjectiveOn@@YAXH@Z");
 __declspec( dllexport ) void __cdecl SetObjectiveOff(int) asm("?SetObjectiveOff@@YAXH@Z");
 __declspec( dllexport ) void __cdecl SetObjectiveName(int,char *) asm("?SetObjectiveName@@YAXHPAD@Z");
@@ -3322,15 +3322,15 @@ end
 
 --- Ignore Sync
 -- @param on Boolean, turn on?
-function IgnoreSync(on)
-    ffi.C.IgnoreSync(on);
-end
+--function IgnoreSync(on)
+--    ffi.C.IgnoreSync(on);
+--end
 
 --- Is recording?
 -- @return Boolean
-function IsRecording()
-    return ffi.C.IsRecording();
-end
+--function IsRecording()
+--    return ffi.C.IsRecording();
+--end
 
 --- Clear Text Ojectives
 function ClearObjectives()
