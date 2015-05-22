@@ -682,14 +682,39 @@ __declspec( dllexport ) void __cdecl GetTeamStratIndividualColor(enum TEAMCOLOR_
 __declspec( dllexport ) char const * __cdecl GetMapTRNFilename(void) asm("?GetMapTRNFilename@@YAPBDXZ");
 __declspec( dllexport ) bool __cdecl IsTeamAllied(int,int) asm("?IsTeamAllied@@YA_NHH@Z");
 __declspec( dllexport ) bool __cdecl IsNotDeadAndPilot2(int) asm("?IsNotDeadAndPilot2@@YA_NH@Z");
-__declspec( dllexport ) char const * __cdecl GetLabel(int) asm("?GetName@@YAPBDH@Z");
-__declspec( dllexport ) void __cdecl SetLabel(int,char * const) asm("?SetName@@YAXHQAD@Z");
+//__declspec( dllexport ) char const * __cdecl GetLabel(int) asm("?GetName@@YAPBDH@Z");
+__declspec( dllexport ) char const * __cdecl GetLabel(int) asm("?GetLabel@@YAPBDH@Z");
+//__declspec( dllexport ) void __cdecl SetLabel(int,char * const) asm("?SetName@@YAXHQAD@Z");
+__declspec( dllexport ) void __cdecl SetLabel(int,char * const) asm("?SetLabel@@YAXHQAD@Z");
 __declspec( dllexport ) int __cdecl GetTap(int,int) asm("?GetTap@@YAHHH@Z");
 __declspec( dllexport ) void __cdecl SetTap(int,int,int) asm("?SetTap@@YAXHHH@Z");
 __declspec( dllexport ) float __cdecl GetCurLocalAmmo(int,int) asm("?GetCurLocalAmmo@@YAMHH@Z");
 __declspec( dllexport ) void __cdecl AddLocalAmmo(int,float,int) asm("?AddLocalAmmo@@YAXHMH@Z");
 __declspec( dllexport ) float __cdecl GetMaxLocalAmmo(int,int) asm("?GetMaxLocalAmmo@@YAMHH@Z");
 __declspec( dllexport ) void __cdecl SetCurLocalAmmo(int,float,int) asm("?SetCurLocalAmmo@@YAXHMH@Z");
+
+// NEW ITEMS
+/*
+asm("?GetActualScrapCost@@YAHH@Z");
+asm("?GetAllSpawnpoints@@YAIAAPAUSpawnpointInfo@@H@Z");
+asm("?GetBaseScrapCost@@YAHH@Z");
+asm("?GetNetworkListCount@@YAIW4NETWORK_LIST_TYPE@@@Z");
+asm("?GetNetworkListItem@@YAPBDW4NETWORK_LIST_TYPE@@I@Z");
+asm("?GetPerceivedTeam@@YAHH@Z");
+asm("?GetPilotClass@@YAPBDH@Z");
+asm("?GetRemainingLifespan@@YAMH@Z");
+asm("?GetTeamRelationship@@YA?AW4TEAMRELATIONSHIP@@HH@Z");
+asm("?Goto@@YAXHABUVector@@H@Z");
+asm("?HasPilot@@YA_NH@Z");
+asm("?PetWatchdogThread@@YAXXZ");
+asm("?SetLastCurrentPosition@@YAXHABUMatrix@@0@Z");
+asm("?SetPostTargetChangedCallback@@YAXP6AXHHH@Z@Z");
+asm("?SetPreGetInCallback@@YAXP6A?AW4PreGetInReturnCodes@@HHH@Z@Z");
+asm("?SetPreOrdnanceHitCallback@@YAXP6AXHHHPAD@Z@Z");
+asm("?SetPrePickupPowerupCallback@@YAXP6A?AW4PrePickupPowerupReturnCodes@@HHH@Z@Z");
+asm("?SetPreSnipeCallback@@YAXP6A?AW4PreSnipeReturnCodes@@HHHHPAD@Z@Z");
+*/
+
 /*typedef struct MisnImport {
 	float time;
 	void (__cdecl *FailMission)(float t, char* fileName);
