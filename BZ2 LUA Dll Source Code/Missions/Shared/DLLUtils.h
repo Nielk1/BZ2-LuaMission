@@ -16,6 +16,12 @@ namespace DLLUtils
 	// team (0), which is an ally of all teams by default.
 	int CountAlliedPlayers(int team);
 
+
+	// Sanity wrapper for GetVarItemStr. Reads the specified svar, and
+	// verifies it's present in the specified list. If not found in
+	// there, returns NULL.
+	const char* GetCheckedNetworkSvar(size_t svar, NETWORK_LIST_TYPE listType);
+
 }
 
 #endif

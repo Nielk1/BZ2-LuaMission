@@ -41,3 +41,37 @@ int DLLUtils::CountAlliedPlayers(int team)
 
 	return count;
 }
+
+// Sanity wrapper for GetVarItemStr. Reads the specified svar, and
+// verifies it's present in the specified list. If not found in
+// there, returns NULL.
+const char* DLLUtils::GetCheckedNetworkSvar(size_t svar, NETWORK_LIST_TYPE listType)
+{
+	char svarStr[128];
+	sprintf_s(svarStr, "network.session.svar%d", svar);
+
+	const char* pContents = GetVarItemStr(svarStr);
+	// Error finding? Bail, asap
+	if(pContents == NULL)
+	{
+		return NULL;
+	}
+
+	size_t count = GetNetworkListCount(listType);
+	size_t i;
+	for(i=0; i<count; ++i)
+	{
+		const char* pItem = GetNetworkListItem(listType, i);
+		if(pItem == NULL)
+			continue;
+
+		if(_stricmp(pContents, pItem) == 0)
+		{
+			// Got a good match. Return it
+			return pContents;
+		}
+	}
+
+	// No match found. Report error
+	return NULL;
+}

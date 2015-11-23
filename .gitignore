@@ -3,3 +3,13 @@
 /BZ2 LUA Dll Source Code/Missions/Missions.ncb
 /BZ2 LUA Dll Source Code/Missions/Missions.suo
 lua/generatedocs.bat
+/BZ2 LUA Dll Source Code/BuildMission/LUAMission.dll
+/BZ2 LUA Dll Source Code/BuildMission/LUAMission.pdb
+/BZ2 LUA Dll Source Code/BuildMission/LUAMissiond.dll
+/BZ2 LUA Dll Source Code/BuildMission/LUAMissiond.pdb
+/BZ2 LUA Dll Source Code/BuildMission/Redist/LUAMission.pdb
+/BZ2 LUA Dll Source Code/Missions/Missions.opensdf
+/BZ2 LUA Dll Source Code/Missions/Missions.sdf
+/BZ2 LUA Dll Source Code/Missions/Missions.v12.suo
+/BZ2 LUA Dll Source Code/Missions/Build
+/BZ2 LUA Dll Source Code/Missions/.vs

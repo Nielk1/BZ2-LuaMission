@@ -494,7 +494,7 @@ static const char *RandomTaunts[] = // cat 7
 	"Knowing is half the battle. The other half is violence.",
 	"Let me know when you're bored of dying and I'll come finish you off",
 	"Let's see, how do I get around this object...... Hey now, no laughing at my pathing code!",
-	"Life is tough, but it’s tougher when you’re stupid.",
+	"Life is tough, but it's tougher when you're stupid.",
 	"Look! Behind you! It's Willie Nelson with a perm!",
 	"Look, it's a cyclops --> o^)",
 	"Look, it's a two-faced freak of nature --> (:)",

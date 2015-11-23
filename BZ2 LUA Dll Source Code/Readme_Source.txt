@@ -16,21 +16,21 @@ to work with. However, for multiplayer, C++ is a requirement.
 build Battlezone 2's Deathmatch, Instant Action, MPInstant, StratCTF,
 and Strategy DLLs for version 1.3 public beta 4. Probably the easiest
 way to build the DLLs is to open up the Missions/Missions.sln file
-with VS.NET 2008, and hit build. If you want to access the individual
-DLL projects directly, inside the Missions/Deathmatch01 folder, there
-is a Deathmatch01.vcproj project file for MS Visual Studio .NET (aka
-MSVC). Opening this project in that environment will let you build up
+with Visual Studio 2013, and hit build. If you want to access the
+individual DLL projects directly, inside the Missions/Deathmatch01
+folder, there is a Deathmatch01.vcxproj project file for MS Visual
+Studio. Opening this project in that environment will let you build up
 a DLL to the Debug/Missions folder off the root of this
 archive. Similarly, the Missions/Instant, Missions/StratCTF,
 Missions/Strategy02 and Missions/MPInstant folders contain source code
 for the other DLLs.
 
-   If you do not have VS.NET, there is a free download from
-http://www.microsoft.com/Express/Download/ -- get either the
-all-in-one iso download, or the C++ download. You should also get the
-SP1 update as well. If you want to develop your own games, you may
-want to also download the DirectX SDK from
-http://msdn.microsoft.com/directx/sdk/ 
+   If you do not have Visual Studio 2013, you can get it as a free and
+legal download from Microsoft - try this link
+http://www.visualstudio.com/downloads/download-visual-studio-vs#d-express-windows-desktop
+and if that link has gone bad, look for the "Microsoft Visual Studio
+Express 2013 for Windows Desktop" download from Microsoft. Install it
+after downloading.
 
    Once you have everything unpacked and ready, and the Missions.sln
 is opened, for each project (Deathmatch01, ...) right click on it in
@@ -141,15 +141,6 @@ Breakpoint.  If you don't see the entry for "New Data Breakpoint",
 then go to the main DevStudio Tools -> Options... -> Debugging, and
 check [x] Enable Address-level Debugging. Once address-level debugging
 is enabled, then go back to the breakpoints window.
-
-   Side note: with address-level debugging, DevStudio 2003/2005 has
-the REALLY ANNOYING behavior for me of treating F10 (step over when
-stopped) as a "go into the disassembly window and step one
-instruction" instead. For me, it does that, even if I didn't have the
-disassembly window open, and was staring at the source code.  I have
-to go turn off address-level debugging, and then DevStudio will get a
-clue and *stay* in the source window and step one C/C++ line at a time
-when I hit F10. Very frickin' annoying. Fix it, MS!
 
 c) Anyhow, once you you've selected New Data Breakpoint, in the window
 that appears, enter the address (e.g. 0x12345678) where specified, and

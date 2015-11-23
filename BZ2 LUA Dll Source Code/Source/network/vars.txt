@@ -1,3 +1,24 @@
+Notes on ranges:
+
+- Usable global ivars are network.session.ivar0
+.. network.session.ivar127.  BZ2 has used ivars 0-34 & 63. Modders
+should consider using ivars starting at the top of the range (ivar127,
+ivar126, ivar125, ...) to avoid collisions.
+
+- Usable global svars are network.session.svar0
+.. network.session.svar31. As above, mods should start from the top of
+the range and work down.
+
+- After the global ivar/svars, there are 16 ivars per client (the
+civar0..civar15) and 8 svars per client (csvar0..csvar7). These are
+mapped into the global list automatically by the engine, so that the
+first player's civars are in network.session.ivar128
+.. network.session.ivar143, second player's civars start at
+network.session.ivar144, and so forth. However, reading these directly
+is discouraged, because the number of global ivar/svars may change at
+any time.
+
+
 ivars: [32-bit unsigneds]
 
 0: Kill Limit (0 for unlimited)
@@ -48,11 +69,12 @@ glyph to decimal]
 13: DM only: # of seconds after a respawn for a spawn kill (0=off, 15=
 default).
 
-14: Score (points) for killing AI craft. (Default 1 via code
-now). Negative points are awarded for killing own/ally AI craft.
+14: Score (points) for killing AI craft. Negative points are awarded
+for killing own/ally AI craft. Default: 0 for strat, 1 for DM/MPI
 
 15: If 1, +1 kill is awarded for killing an enemy AI unit (and -1 kill
-for killing ally), No change to kills if this ivar is 0. Default 1.
+for killing ally), No change to kills if this ivar is 0. Default: 0
+for strat, 1 for DM/MPI
 
 16: Strat/MPI: If 1, Strat/MPI players respawn with sniper rifle. Default 0.
 
@@ -121,6 +143,9 @@ point value, so that ivar30 == 25 -> gravity==12.5. Default = 25
 not (==1).  Default value is whatever the server's voice chat setting is.
 
 34: (All) Alt-tab tolerate, in seconds
+
+35: (All) Score limit (0 for unlimited)
+
 
 63: 0= server not launched; 1=server launched. 
 

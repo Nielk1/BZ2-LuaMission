@@ -1,14 +1,64 @@
-#include <iostream>
-#include <stdlib.h>
-#include <signal.h>
+#include "..\..\Source\fun3d\ScriptUtils.h"
+#include "LUAMission.h"
+
+#include <math.h>
 #include <string.h>
+#include <iostream>
+#include <shlobj.h>
 
-#include <sstream>
+LuaMission::LuaMission(void)
+{
+	EnableHighTPS(m_GameTPS);
+	AllowRandomTracks(true);
+	b_count = &b_last - &b_first - 1;
+	b_array = &b_first + 1;
 
-#include "lua.hpp"
+	f_count = &f_last - &f_first - 1;
+	f_array = &f_first + 1;
+
+	h_count = &h_last - &h_first - 1;
+	h_array = &h_first + 1;
+
+	i_count = &i_last - &i_first - 1;
+	i_array = &i_first + 1;
+
+	// Zero things out first off. If you don't assign a default value, then it will be assigned whatever value was in that memory it is assigned to use. Essentially it would be filled with random values. We don't want that. This zero's out everything under each array at the very beginning.
+	if (i_array)
+		memset(i_array, 0, i_count*sizeof(int));
+	if (f_array)
+		memset(f_array, 0, f_count*sizeof(float));
+	if (h_array)
+		memset(h_array, 0, h_count*sizeof(Handle));
+	if (b_array)
+		memset(b_array, 0, b_count*sizeof(bool));
+
+	L = NULL;
+}
+
+LuaMission::~LuaMission()
+{
+	//CloseOpenFiles();
+	/*
+	FileMapIt it = FileNameMap.begin();
+
+	while(it != FileNameMap.end())
+	{
+	if (it->second)
+	fclose(it->second);
+	it = FileNameMap.erase(it);
+	};
+	*/
+
+	if (L)
+		lua_close(L);
+}
+
+
+
+
+
 //#include "lualib.h"
 //#include "lauxlib.h"
-#include "..\..\Source\fun3d\ScriptUtils.h" // This file does not follow the C/C++ standards, uncompilable in modern compiler
 
 /*typedef char* Name;
 typedef int Handle;
@@ -268,7 +318,7 @@ int report(lua_State *L, int status)
 		{
 			if(luastring[i] == '\n') {
 				if (i - startPos > 0) {
-					_snprintf_s(message, std::min(i - startPos + 8, 1024), "[LuaER] %s", luastring + startPos);
+					_snprintf_s(message, std::fminl(i - startPos + 8, 1024), "[LuaER] %s", luastring + startPos);
 					PrintConsoleMessage(message);
 				}
 				startPos = i+1;
@@ -502,10 +552,17 @@ static int pSetup(lua_State *L)
 
 lua_State *L = NULL;
 
+
+DLLBase * BuildMission(void)
+{
+	return new LuaMission();
+}
+
+
 // This makes some assumptions, if any of these are false then correct this:
 // * InitialSetup will only be called once in a mission
 // * It assumes that it is a possible that this DLL is not unloaded between missions
-void DLLAPI InitialSetup(void)
+void LuaMission::InitialSetup(void)
 {
 	IFace_ConsoleCmd("console.log 1");
 
@@ -539,38 +596,38 @@ void DLLAPI InitialSetup(void)
 	report(L, call_void_void(L, "InitialSetup"));
 }
 
-bool DLLAPI Save(bool misnSave)
+bool LuaMission::Save(bool misnSave)
 {
 	bool ret = false;
 	report(L, call_bool_bool(L, "Save", &ret, misnSave));
 	return ret;
 }
 
-bool DLLAPI Load(bool misnSave)
+bool LuaMission::Load(bool misnSave)
 {
 	bool ret = false;
 	report(L, call_bool_bool(L, "Load", &ret, misnSave));
 	return ret;
 }
 
-bool DLLAPI PostLoad(bool misnSave)
+bool LuaMission::PostLoad(bool misnSave)
 {
 	bool ret = false;
 	report(L, call_bool_bool(L, "PostLoad", &ret, misnSave));
 	return ret;
 }
 
-void DLLAPI AddObject(Handle h)
+void LuaMission::AddObject(Handle h)
 {
 	report(L, call_void_number(L, "AddObject", h));
 }
 
-void DLLAPI DeleteObject(Handle h)
+void LuaMission::DeleteObject(Handle h)
 {
 	report(L, call_void_number(L, "DeleteObject", h));
 }
 
-void DLLAPI Update(void)
+void LuaMission::Execute(void)
 {
 	report(L, call_void_void(L, "Update"));
 	/*int status = call_void_void(L, "Update");
@@ -584,46 +641,47 @@ void DLLAPI Update(void)
 	report(L, status);*/
 }
 
-void DLLAPI PostRun(void)
+void LuaMission::PostRun(void)
 {
 	report(L, call_void_void(L, "PostRun"));
 	lua_close(L);
 	L = NULL;
 }
 
-bool DLLAPI AddPlayer(DPID id, int Team, bool ShouldCreateThem)
+bool LuaMission::AddPlayer(DPID id, int Team, bool ShouldCreateThem)
 {
 	bool ret = false;
 	report(L, call_bool_number_number_bool(L, "AddPlayer", &ret, id, Team, ShouldCreateThem));
 	return ret;
 }
 
-void DLLAPI DeletePlayer(DPID id)
+void LuaMission::DeletePlayer(DPID id)
 {
 	report(L, call_void_number(L, "DeletePlayer", id));
 }
 
-EjectKillRetCodes DLLAPI PlayerEjected(Handle DeadObjectHandle)
+EjectKillRetCodes LuaMission::PlayerEjected(Handle DeadObjectHandle)
 {
 	lua_Number ret = 256;
 	report(L, call_number_number(L, "PlayerEjected", &ret, DeadObjectHandle));
 	return convertNumberToEjectKillRetCodes(ret);
 }
 
-EjectKillRetCodes DLLAPI ObjectKilled(int DeadObjectHandle, int KillersHandle)
+EjectKillRetCodes LuaMission::ObjectKilled(int DeadObjectHandle, int KillersHandle)
 {
 	lua_Number ret = 256;
 	report(L, call_number_number_number(L, "ObjectKilled", &ret, DeadObjectHandle, KillersHandle));
 	return convertNumberToEjectKillRetCodes(ret);
 }
 
-EjectKillRetCodes DLLAPI ObjectSniped(int DeadObjectHandle, int KillersHandle)
+EjectKillRetCodes LuaMission::ObjectSniped(int DeadObjectHandle, int KillersHandle)
 {
 	lua_Number ret = 256;
 	report(L, call_number_number_number(L, "ObjectSniped", &ret, DeadObjectHandle, KillersHandle));
 	return convertNumberToEjectKillRetCodes(ret);
 }
 
+/*
 char * DLLAPI GetNextRandomVehicleODF(int Team)
 {
 	char *ret = const_cast<char*>("");
@@ -645,9 +703,9 @@ void DLLAPI SetRandomSeed(unsigned long seed)
 {
 	report(L, call_void_number(L, "SetRandomSeed", seed));
 }
+*/
 
-
- static MisnExport misnExport;
+ /*static MisnExport misnExport;
  MisnImport misnImport;
  
  MisnExport * __cdecl GetMisnAPI(MisnImport *import)
@@ -676,4 +734,4 @@ void DLLAPI SetRandomSeed(unsigned long seed)
  	misnExport.SetRandomSeed = SetRandomSeed;
  	//CurrentWorld = 0;
  	return &misnExport;
- }
+ }*/

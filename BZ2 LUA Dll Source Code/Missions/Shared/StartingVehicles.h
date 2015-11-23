@@ -16,7 +16,7 @@ namespace StartingVehicleManager
 {
 	// Read in and initialize the list of vehicles, from the specified
 	// filename.
-	void Init(const char *Filename);
+	void Init(void);
 
 	// Do any memory cleanups necessary
 	void Cleanup(void);
@@ -26,8 +26,8 @@ namespace StartingVehicleManager
 
 	// Load/save the read-in list of vehicles out to disk
 	void Save(bool MissionSave);
-
 	void Load(bool MissionSave);
+
 } // 	namespace StartingVehicleManager
 
 #endif
