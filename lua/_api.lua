@@ -3041,24 +3041,27 @@ end
 -- @param pos Position as GameObject, Pathpoint Name, AiPath, Vector, or Matrix
 -- @return Newly built GameObject
 function BuildObject(odf, team, pos)
-    if not isstring(odf) then error("Paramater odf must be a string."); end
-    if not isnumber(team) then error("Paramater team must be a number."); end
-    local msg = tocstring(odf); -- convert lua string to cstring
+--    if not isstring(odf) then error("Paramater odf must be a string."); end
+--    if not isnumber(team) then error("Paramater team must be a number."); end
+--    local msg = tocstring(odf); -- convert lua string to cstring
     local handle = 0;
-    if isgameobject(pos) then
-        handle = ffi.C.BuildObject(msg, team, pos:GetHandle());
-    elseif isstring(pos) then
-        handle = ffi.C.BuildObjectP(msg, team, tocstring(pos));
-    --elseif type(pos) == "AiPath" then
-    --  handle = ffi.C.BuildObject(msg, team, pos)
-    elseif isvector(pos) then
-        handle = ffi.C.BuildObjectV(msg, team, pos);
-    elseif ismatrix(pos) then
-        handle = ffi.C.BuildObjectM(msg, team, pos);
-    else
-        error("BuildObject pos paramater is invalid, received " .. type(pos) .. ", expected GameObject, Path Name (string), AiPath, Vector, or Matrix");
-    end
-      
+--    if isgameobject(pos) then
+--        handle = ffi.C.BuildObject(msg, team, pos:GetHandle());
+--    elseif isstring(pos) then
+--        handle = ffi.C.BuildObjectP(msg, team, tocstring(pos));
+--    --elseif type(pos) == "AiPath" then
+--    --  handle = ffi.C.BuildObject(msg, team, pos)
+--    elseif isvector(pos) then
+--        handle = ffi.C.BuildObjectV(msg, team, pos);
+--    elseif ismatrix(pos) then
+--        handle = ffi.C.BuildObjectM(msg, team, pos);
+--    else
+--        error("BuildObject pos paramater is invalid, received " .. type(pos) .. ", expected GameObject, Path Name (string), AiPath, Vector, or Matrix");
+--    end
+    
+    --handle = ScriptUtils.BuildObject(odf, team, pos);
+    handle = BuildObject(odf, team, pos);
+    
     if handle == 0 then return nil end;
     return GameObject.new(handle);
 end
@@ -5167,6 +5170,7 @@ function PostLoad(misnSave)
 end
 
 function AddObject(h)
+    hook.Call( "CreateObject", GameObject.new(h) );
     hook.Call( "AddObject", GameObject.new(h) );
 end
 
@@ -5180,9 +5184,9 @@ function PostRun()
     hook.Call( "PostRun", GameObject.new(h) );
 end
 
-function AddPlayer(id, team, shouldCreateThem)
+function AddPlayer(id, team, isNewPlayer)
     local returnValue = true;
-    local hookResults = { hook.CallAll( "AddPlayer", id, team, shouldCreateThem ) };
+    local hookResults = { hook.CallAll( "AddPlayer", id, team, isNewPlayer ) };
     if hookResults ~= nil then
       for k,v in pairs(hookResults) do
         returnValue = returnValue and v;

@@ -77,7 +77,12 @@ enum PrePickupPowerupReturnCodes
 	PREPICKUPPOWERUP_ALLOW, // Allow the powerup to be picked up
 };
 
-enum PathType;
+enum PathType {
+	ONE_WAY_PATH, // == 0
+	ROUND_TRIP_PATH, // == 1
+	LOOP_PATH, // == 2 
+	BAD_PATH // == 3 -- when it couldn't find a route. Used by HuntTask, Recycle[H]Task
+};
 
 #if MISN_INTERNAL
 #include <stdio.h>
@@ -103,8 +108,6 @@ enum PathType;
 #pragma warning (error : 4431) // 'missing type specifier - int assumed. Note: C no longer supports default-int
 #pragma warning (error : 4806) // unsafe operation: no value of type 'bool' promoted to type 'int' can equal the given constant
 #pragma warning (error : 4150) // deletion of pointer to incomplete type 
-#pragma warning (error : 4029) // Formal parameter types in the function declaration do not agree with those in the function definition. 
-#pragma warning (error : 4113) // A function pointer is assigned to another function pointer, but the formal parameter lists of the functions do not agree.  
 
 class GameObject;
 class AiPath;
@@ -118,13 +121,27 @@ class AiPath;
 #define TRUE 1
 #endif
 
-#define RGB(r,g,b) (0xFF000000|(r)<<16|(g)<<8|(b))
+#define RGBCreate(r,g,b) (0xFF000000|(r)<<16|(g)<<8|(b))
 #define RGBA_MAKE(r, g, b, a) \
 ((unsigned long) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))) 
 
-#define WHITE RGB(255,255,255)
-#define GREEN RGB(0,255,0)
-#define RED RGB(255,0,0)
+#define WHITE RGBCreate(255,255,255)
+#define GREY RGBCreate(127,127,127)
+#define BLACK RGBCreate(0,0,0)
+#define GREEN RGBCreate(0,255,0)
+#define RED RGBCreate(255,0,0)
+#define BLUE RGBCreate(0,0,255)
+#define YELLOW RGBCreate(255,255,0)
+#define PURPLE RGBCreate(255,0,255)
+#define CYAN RGBCreate(0,255,255)
+#define ALLYBLUE RGBCreate(0,127,255)
+#define LAVACOLOR RGBCreate(255,64,0)
+
+#define DKGREY RGBCreate(100,100,100)
+#define DKGREEN RGBCreate(0,127,0)
+#define DKRED RGBCreate(127,0,0)
+#define DKBLUE RGBCreate(0,0,127)
+#define DKYELLOW RGBCreate(127,127,0)
 
 #define SIZEOF(a) (sizeof(a)/sizeof(a[0]))
 
@@ -144,10 +161,17 @@ struct Vector {
 struct VECTOR_2D {
 	float x;
 	float z;
+
+	VECTOR_2D () {}
+
+	VECTOR_2D(const float vx, const float vz)
+		:x(vx), z(vz)
+	{
+	}
 };
 
 typedef float F32;
-struct Matrix
+struct Matrix //__declspec(align(16))
 {
 	Vector right;
 	F32 rightw;
@@ -157,6 +181,26 @@ struct Matrix
 	F32 frontw;
 	Vector posit;
 	F32 positw;
+
+	Matrix () {}
+
+	Matrix(const Vector vr, const Vector vu, const Vector vf, const Vector vp)
+		:right(vr), rightw(0.0f), up(vu), upw(0.0f), front(vf), frontw(0.0f), posit(vp), positw(1.0f)
+	{
+	}
+};
+
+struct Quaternion 
+{
+	F32 s;
+	Vector v;
+
+	Quaternion () {}
+
+	Quaternion(const float vs, const Vector vv)
+		:s(vs), v(vv)
+	{
+	}
 };
 
 #define AVD_NONE 0 // don't avoid collisions
@@ -171,7 +215,7 @@ struct Matrix
 Vector Normalize_Vector (const Vector &A);
 
 // Return values for the GetTeamRelationship() call
-// !! This must be kept in sync with the parallel enum in Entities.h
+// !! This must be kept in sync with the parallel enum in GameObject.h
 enum TEAMRELATIONSHIP 
 {
 	TEAMRELATIONSHIP_INVALIDHANDLE, // One or both handles is invalid
@@ -188,6 +232,7 @@ typedef int TeamNum;
 typedef float Time;
 typedef float Dist;
 typedef int ScrapValue;
+typedef int PilotValue;
 typedef unsigned long DWORD;
 typedef DWORD DPID;
 #define DPID_UNKNOWN 0xFFFFFFFF
@@ -222,7 +267,6 @@ struct VehicleControls {
 	char fire;
 };
 
-
 // Structure for GetAllSpawnpoints
 struct SpawnpointInfo
 {
@@ -242,7 +286,6 @@ struct SpawnpointInfo
 	float	m_DistanceToClosestAlly;
 	float	m_DistanceToClosestEnemy;
 };
-
 
 // Typedef for the PreSnipe callback. Is passed the current world
 // (0=lockstep, 1 or 2 = visual world), two handles (shooter and
@@ -333,7 +376,7 @@ struct MisnExport {
 	// them, and we should use the id for informational purposes only
 	bool (DLLAPI *AddPlayer)(DPID id, int Team, bool ShouldCreateThem);
 
-	// Notification call tht someone's leaving the game
+	// Notification call that someone's leaving the game
 	void (DLLAPI *DeletePlayer)(DPID id);
 
 	// Player's bailing out or getting killed. See definition of EjectKillRetCodes for more info
@@ -488,9 +531,9 @@ inline Handle GetNearestEnemy(Handle h)
 
 // IN GAME DEFINITIONS
 
-void LoadScriptUtils(ILoadSaveVisitor& visitor);
-void PostLoadScriptUtils(ILoadSaveVisitor& visitor);
-void SaveScriptUtils(ILoadSaveVisitor& visitor);
+void LoadScriptUtils(void);
+void PostLoadScriptUtils(void);
+void SaveScriptUtils(void);
 
 void DLLAPI FailMission(Time t, char* fileName = NULL);
 void DLLAPI SucceedMission(Time t, char* fileName = NULL);
@@ -655,7 +698,7 @@ DLLEXPORT bool DLLAPI IsFlying(Handle &h);
 // Handle TempH = SomeHandle; // A sacrificial copy of the handle
 // bool bIsAliveAndPilot = IsAlive(TempH); // SAFE
 //   - or -
-// bool bIsAliveAndPilot = IsAliveAndPilot(SomeHandle); // SAFE
+// bool bIsAliveAndPilot = IsAliveAndPilot2(SomeHandle); // SAFE
 //
 // If bIsAlive is false after the calls, the variable passed in is
 // zero'd out. Most of the time, you can't get any info out of using
@@ -736,11 +779,16 @@ DLLEXPORT void DLLAPI SetVelocity(Handle h, const Vector &vel);
 
 DLLEXPORT void DLLAPI SetControls(Handle h, const VehicleControls &controls, unsigned long whichControls = -1);
 
+// Gets the last handle that shot the target.
 DLLEXPORT Handle DLLAPI GetWhoShotMe(Handle h);
+// Returns the last time, in seconds, that an enemy shot the target.
 DLLEXPORT float DLLAPI GetLastEnemyShot(Handle h);
+// Returns the last time, in seconds, that a friendly shot the target.
 DLLEXPORT float DLLAPI GetLastFriendShot(Handle h);
 
+// Sets the alliances back to Default (Everyone enemy to everyone, except team 0)
 DLLEXPORT void DLLAPI DefaultAllies(void);
+// Sets the alliances to TeamPlay, Allies Team 1-5, and Team 6-10, respectively.
 DLLEXPORT void DLLAPI TeamplayAllies(void);
 DLLEXPORT void DLLAPI Ally(TeamNum t1, TeamNum t2);
 DLLEXPORT void DLLAPI UnAlly(TeamNum t1, TeamNum t2);
@@ -760,6 +808,7 @@ DLLEXPORT void DLLAPI SetMusicIntensity(int intensity);
 
 DLLEXPORT AiPath *DLLAPI FindAiPath(const Vector &start, const Vector &goal);
 DLLEXPORT void DLLAPI FreeAiPath(AiPath *path);
+// Fills the specified int with how many paths are on the map, and the buffer with the path names.
 DLLEXPORT void DLLAPI GetAiPaths(int &pathCount, char* *&pathNames);
 
 // SetPathType("patrol_path", LOOP_PATH);
@@ -775,10 +824,9 @@ DLLEXPORT void DLLAPI SetPathType(Name path, PathType pathType);
 // int low = 0;
 // int high = 1;
 // SetIndependence(friend1, low);
-// Note that this is only successful for items with a UnitProcess
-// (or derived) AIProcess.
 DLLEXPORT void DLLAPI SetIndependence(Handle me, int independence);
 
+// Returns true if the user is inspecting the specified ODF.
 DLLEXPORT bool DLLAPI IsInfo(Name odf);
 
 // start the cockpit timer
@@ -848,6 +896,7 @@ DLLEXPORT void DLLAPI AddPilotByHandle(Handle h);
 // Dumps a string to the console
 DLLEXPORT void DLLAPI PrintConsoleMessage(char* msg);
 
+// Returns a random float, via the random seed generator.
 DLLEXPORT float DLLAPI GetRandomFloat(float range);
 
 DLLEXPORT bool DLLAPI IsDeployed(Handle h);
@@ -867,6 +916,7 @@ DLLEXPORT void DLLAPI GiveWeapon(Handle me, Name weapon);
 DLLEXPORT void DLLAPI FireAt(Handle me, Handle him = 0, bool doAim = false);
 
 DLLEXPORT bool DLLAPI IsFollowing(Handle h);
+// Returns the handle of who h is following.
 DLLEXPORT Handle DLLAPI WhoFollowing(Handle h);
 
 // set and get the user's target
@@ -954,8 +1004,6 @@ DLLEXPORT void DLLAPI IFace_AddTextItem(Name name, Name value);
 //  IFace_GetSelectedItem("MoveManager.MoveList.List", moveName, sizeof(moveName));
 DLLEXPORT void DLLAPI IFace_GetSelectedItem(Name name, Name value, int maxSize);
 
-// Valid values for skill are [0 .. 3]. Invalid values are clamped to
-// this range when setting.
 DLLEXPORT void DLLAPI SetSkill(Handle h,int s);
 
 DLLEXPORT void DLLAPI SetPlan(char* cfg, int team = -1);
@@ -970,7 +1018,7 @@ DLLEXPORT int DLLAPI GetInstantType(void);
 DLLEXPORT int DLLAPI GetInstantFlag(void);
 DLLEXPORT int DLLAPI GetInstantMySide(void);
 
-DLLEXPORT bool DLLAPI StoppedPlayback(void);
+//DLLEXPORT bool DLLAPI StoppedPlayback(void); // Does not exist.
 
 /*
 CameraReady()
@@ -1038,12 +1086,15 @@ DLLEXPORT void DLLAPI StartAnimation(Handle h);
 
 // start/stop emitter effects
 DLLEXPORT void DLLAPI MaskEmitter(Handle h, DWORD mask);
-DLLEXPORT void DLLAPI StartEmitter(Handle h, int slot);
+DLLEXPORT void DLLAPI StartEmitter(Handle h, int slot); // slot starts at 1, incruments.
 DLLEXPORT void DLLAPI StopEmitter(Handle h, int slot);
 
 DLLEXPORT void DLLAPI SaveObjects(char* &buffer, unsigned long &size);
 DLLEXPORT void DLLAPI LoadObjects(char* buffer, unsigned long size);
+
+// Does nothing.
 DLLEXPORT void DLLAPI IgnoreSync(bool on);
+// Does nothing, always returns false.
 DLLEXPORT bool DLLAPI IsRecording(void);
 
 DLLEXPORT void DLLAPI SetObjectiveOn(Handle h);
@@ -1056,9 +1107,12 @@ DLLEXPORT void DLLAPI ClearObjectives(void);
 // add an objective
 DLLEXPORT void DLLAPI AddObjective(char* name, long color, float showTime = 8.0f);
 
+// Returns true if h1 is within the specified dist of h2.
 DLLEXPORT bool DLLAPI IsWithin(Handle &h1, Handle &h2, Dist d);
+// Counts objects near an object. If h is NULL and d is > 10000 it will count all objects on the map. If ODF is NULL, it will count all objects within distance.
 DLLEXPORT int DLLAPI CountUnitsNearObject(Handle h, Dist d, TeamNum t, char* odf);
 
+// Sets the Avoid Type of a unit. 0 = None, ignore collisions, 1 = force; use force-based avoidance, 2 = plan; use plan-based avoidance.
 DLLEXPORT void DLLAPI SetAvoidType(Handle h, int avoidType);
 
 // hit somebody to draw attention
@@ -1070,11 +1124,14 @@ DLLEXPORT void DLLAPI ClearThrust(Handle h);
 // make a unit talkative even if scripted
 DLLEXPORT void DLLAPI SetVerbose(Handle h, bool on);
 
+// Clears and Adds idle anims to CLASS_ANIMAL objects.
 DLLEXPORT void DLLAPI ClearIdleAnims(Handle h);
 DLLEXPORT void DLLAPI AddIdleAnim(Handle h, Name anim);
 
+// Is this unit idle?
 DLLEXPORT bool DLLAPI IsIdle(Handle h);
 
+// Counts the number of enemy units on the map. Fills here with how many are currently < 200.0 meters of h, and coming with how many are on the map total.
 DLLEXPORT void DLLAPI CountThreats(Handle h, int &here, int &coming);
 
 DLLEXPORT void DLLAPI SpawnBirds(int group, int count, Name odf, TeamNum t, Name path);
@@ -1387,7 +1444,7 @@ DLLEXPORT Vector DLLAPI GetVelocity(Handle h);
 enum ObjectInfoType {
 	Get_CFG, // Returns the GameObjectClass's cfg string
 	Get_ODF, // Returns the ODF of the object
-	Get_GOClass_gCfg, // Returns the GameObjectClass's gCfg string (not 100% sure how it differs from the CFG)
+	Get_GOClass_gCfg, // Returns the GameObjectClass's gCfg string (not 100% sure how it differs from the CFG) (It returns the ODF's BaseName. Even reads through ODF inheritence. :) ) -GBD
 	Get_EntityType, // Returns the entity type of the object, one of the follow (though
 	//   not all are possible for objects the DLL knows about). Values will be
 	//	a string from the following list:
@@ -1868,55 +1925,55 @@ DLLEXPORT Handle DLLAPI GetNearestPerson(Handle h, bool skipFriendlies, float ma
 // 	CMD_STOP, // == 2
 // 	CMD_GO, // == 3
 // 	CMD_ATTACK, // == 4
-// 	CMD_FOLLOW, // ... you do the math. Values increase by 1 per line
-// 	CMD_FORMATION, // not used anywhere in code.
-// 	CMD_PICKUP,
-// 	CMD_DROPOFF,
-// 	CMD_UNDEPLOY,
-// 	CMD_DEPLOY,
-// 	CMD_NO_DEPLOY, // Used by crigs, deploybuildings to indicate they can't do that there
-// 	CMD_GET_REPAIR,
-// 	CMD_GET_RELOAD,
-// 	CMD_GET_WEAPON,
-// 	CMD_GET_CAMERA, // Human players only.
-// 	CMD_GET_BOMB,
-// 	CMD_DEFEND,
-// 	CMD_RESCUE,
-// 	CMD_RECYCLE,
-// 	CMD_SCAVENGE,
-// 	CMD_HUNT,
-// 	CMD_BUILD,
-// 	CMD_PATROL,
-// 	CMD_STAGE,
-// 	CMD_SEND,
-// 	CMD_GET_IN,
-// 	CMD_LAY_MINES,
-// 	CMD_LOOK_AT,
+// 	CMD_FOLLOW, // == 5// ... you do the math. Values increase by 1 per line
+// 	CMD_FORMATION, // == 6// not used anywhere in code.
+// 	CMD_PICKUP, // == 7
+// 	CMD_DROPOFF, // == 8
+// 	CMD_UNDEPLOY, // == 9
+// 	CMD_DEPLOY, // == 10
+// 	CMD_NO_DEPLOY, // == 11 // Used by crigs, deploybuildings to indicate they can't do that there
+// 	CMD_GET_REPAIR, // == 12
+// 	CMD_GET_RELOAD, // == 13
+// 	CMD_GET_WEAPON, // == 14
+// 	CMD_GET_CAMERA, // == 15 // Human players only.
+// 	CMD_GET_BOMB, // == 16
+// 	CMD_DEFEND, // == 17
+// 	CMD_RESCUE, // == 18
+// 	CMD_RECYCLE, // == 19
+// 	CMD_SCAVENGE, // == 20
+// 	CMD_HUNT, // == 21
+// 	CMD_BUILD, // == 22
+// 	CMD_PATROL, // == 23
+// 	CMD_STAGE, // == 24
+// 	CMD_SEND, // == 25
+// 	CMD_GET_IN, // == 26
+// 	CMD_LAY_MINES, // == 27
+// 	CMD_LOOK_AT, // == 28
 // 	CMD_SERVICE, // == 29
-// 	CMD_UPGRADE,
-// 	CMD_DEMOLISH,
-// 	CMD_POWER,
-// 	CMD_BACK,
-// 	CMD_DONE,
-// 	CMD_CANCEL,
-// 	CMD_SET_GROUP,
-// 	CMD_SET_TEAM,
-// 	CMD_SEND_GROUP,
-// 	CMD_TARGET,
-// 	CMD_INSPECT,
-// 	CMD_SWITCHTEAM,
-// 	CMD_INTERFACE,
-// 	CMD_LOGOFF,
-// 	CMD_AUTOPILOT,
-// 	CMD_MESSAGE,
-// 	CMD_CLOSE,
-// 	CMD_MORPH_SETDEPLOYED, // For morphtanks
-// 	CMD_MORPH_SETUNDEPLOYED, // For morphtanks
-// 	CMD_MORPH_UNLOCK, // For morphtanks
-// 	CMD_BAILOUT,
-// 	CMD_BUILD_ROTATE, // Update building rotations by 90 degrees.
-// 	CMD_CMDPANEL_SELECT,
-// 	CMD_CMDPANEL_DESELECT,
+// 	CMD_UPGRADE, // == 30
+// 	CMD_DEMOLISH, // == 31
+// 	CMD_POWER, // == 32
+// 	CMD_BACK, // == 33
+// 	CMD_DONE, // == 34
+// 	CMD_CANCEL, // == 35
+// 	CMD_SET_GROUP, // == 36
+// 	CMD_SET_TEAM, // == 37
+// 	CMD_SEND_GROUP, // == 38
+// 	CMD_TARGET, // == 39
+// 	CMD_INSPECT, // == 40
+// 	CMD_SWITCHTEAM, // == 41
+// 	CMD_INTERFACE, // == 42
+// 	CMD_LOGOFF, // == 43
+// 	CMD_AUTOPILOT, // == 44
+// 	CMD_MESSAGE, // == 45
+// 	CMD_CLOSE, // == 46
+// 	CMD_MORPH_SETDEPLOYED, // == 47 // For morphtanks
+// 	CMD_MORPH_SETUNDEPLOYED, // == 48 // For morphtanks
+// 	CMD_MORPH_UNLOCK, // == 49 // For morphtanks
+// 	CMD_BAILOUT, // == 50
+// 	CMD_BUILD_ROTATE, // == 51 // Update building rotations by 90 degrees.
+// 	CMD_CMDPANEL_SELECT, // == 52
+// 	CMD_CMDPANEL_DESELECT, // == 53
 
 DLLEXPORT void DLLAPI SetCommand(Handle me, int cmd, int priority, Handle who, const Vector& where, int param = 0);
 DLLEXPORT void DLLAPI SetCommand(Handle me, int cmd, int priority = 0, Handle who = 0, const Name path = NULL, int param = 0);
@@ -2311,7 +2368,6 @@ DLLEXPORT void DLLAPI SetPrePickupPowerupCallback(PrePickupPowerupCallback callb
 //
 DLLEXPORT void DLLAPI SetPostTargetChangedCallback(PostTargetChangedCallback callback);
 
-
 // For DLLs that are trying to get full control of an object's
 // position, this allows the last and current orientation & positions
 // to be set simultaneously. The caller should take care to set
@@ -2319,7 +2375,6 @@ DLLEXPORT void DLLAPI SetPostTargetChangedCallback(PostTargetChangedCallback cal
 // jittering can occur. Note: repeatedly calling this on tracked
 // vehicles is likely to make the physics system unhappy.
 DLLEXPORT void DLLAPI SetLastCurrentPosition(Handle h, const Matrix &lastMatrix, const Matrix &curMatrix);
-
 
 // Parallel to SetLifespan, a query function to read it back.
 // Returns a floating point value in this pattern:
@@ -2348,8 +2403,8 @@ DLLEXPORT float DLLAPI GetRemainingLifespan(Handle h);
 //
 // Performance note: this function has to do an O(n^2) search of
 // spawnpoints and all GameObjects. This could get expensive if called
-// often. Calling it at the start of the game or when new
-// players/teams join should be relatively unnoticeable.
+// often. Calling it at the start of the game or when new teams join
+// should be relatively unnoticeable.
 //
 // Sample usage to get all spawn points, printf their handles:
 // SpawnpointInfo* pSpawnPointInfo;
@@ -2407,8 +2462,8 @@ float DLLAPI GetLifeSpan(Handle h);
 DLLEXPORT void DLLAPI Mine(Handle me, const Vector& pos, int priority = 1);
 DLLEXPORT void DLLAPI Dropoff(Handle me, const Vector& pos, int priority = 1);
 
-// Note: Retreat(me, him) is implemented as just a Goto. So, to make a
-// Retreat(me, pos), just call Goto(me, pos)
+// Note: Retreat(me, him) is implemented as just a Goto with Independence 0. So, to make a
+// Retreat(me, pos), just call Goto(me, pos) and SetIndependence(me, 0).
 
 // NOT NEEDED : DLLEXPORT void DLLAPI Retreat(Handle me, const Vector& pos, int priority = 1);
 
@@ -2441,3 +2496,4 @@ DLLEXPORT int DLLAPI SecondsToTurns(float timeSeconds);
 DLLEXPORT float DLLAPI TurnsToSeconds(int turns);
 
 #endif
+

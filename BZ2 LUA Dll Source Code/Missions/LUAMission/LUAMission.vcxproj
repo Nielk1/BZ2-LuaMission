@@ -271,12 +271,16 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Shared\BZCScriptUtils.cpp" />
     <ClCompile Include="..\Shared\DllBase.cpp" />
+    <ClCompile Include="..\Shared\MathUtils.cpp" />
     <ClCompile Include="LUAMission.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\fun3d\ScriptUtils.h" />
+    <ClInclude Include="..\Shared\BZCScriptUtils.h" />
     <ClInclude Include="..\Shared\DllBase.h" />
+    <ClInclude Include="..\Shared\MathUtils.h" />
     <ClInclude Include="LUAMission.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

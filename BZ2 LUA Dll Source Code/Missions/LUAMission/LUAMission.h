@@ -18,6 +18,20 @@
 
 #define lua_pushglobaltable(L) lua_pushvalue(L, LUA_GLOBALSINDEX);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 struct lua_State;
 
 class LuaMission : public DLLBase
@@ -99,7 +113,7 @@ public:
 	//virtual PreSnipeReturnCodes PreSnipe(const int curWorld, Handle shooterHandle, Handle victimHandle, int ordnanceTeam, char* pOrdnanceODF);
 	//virtual PreGetInReturnCodes PreGetIn(const int curWorld, Handle pilotHandle, Handle emptyCraftHandle);
 	//virtual PrePickupPowerupReturnCodes PrePickupPowerup(const int curWorld, Handle me, Handle powerupHandle);
-	//virtual void PostTargetChangedCallback(Handle craft, Handle previousTarget, Handle currentTarget);
+	virtual void PostTargetChangedCallback(Handle craft, Handle previousTarget, Handle currentTarget);
 
 private:
 	// Rest of calls are internal functions, thus made private.
