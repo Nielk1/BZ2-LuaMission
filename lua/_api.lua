@@ -1,4 +1,5 @@
 --BZ2LuaMission
+--[
 local ffi = require("ffi")
 ffi.cdef[[
 typedef struct Vector {
@@ -736,7 +737,7 @@ asm("?SetPreSnipeCallback@@YAXP6A?AW4PreSnipeReturnCodes@@HHHHPAD@Z@Z");
 	int (__cdecl *GetNearestEnemy)(int h);
 } MisnImport;*/
 ]]
-
+--]
 --==============================================================================================================================================================
 -- Utility Functions
 --==============================================================================================================================================================
@@ -1529,13 +1530,15 @@ end
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Goto(self, target, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if priority == nil then priority = 1; end
+    --if priority == nil then priority = 1; end
     if isgameobject(target) then
         ffi.C.GotoH(self:GetHandle(), target:GetHandle(), priority);
-    elseif isstring(target) then
-        ffi.C.GotoP(self:GetHandle(), tocstring(target), priority)
+        --ScriptUtils.Goto(self:GetHandle(), target:GetHandle(), priority);
+    --elseif isstring(target) then
+    --    ffi.C.GotoP(self:GetHandle(), tocstring(target), priority)
     else
-        error("Paramater self must be GameObject instance or string");
+        --error("Paramater self must be GameObject instance or string");
+        ScriptUtils.Goto(self:GetHandle(), target, priority);
     end
 end
 
@@ -1546,8 +1549,9 @@ end
 function GameObject.Mine(self, target, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isstring(target) then error("Paramater target must be string."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Mine(self:GetHandle(), tocstring(target), priority)
+    --if priority == nil then priority = 1; end
+    --ffi.C.Mine(self:GetHandle(), tocstring(target), priority);
+    ScriptUtils.Mine(self:GetHandle(), target, priority);
 end
 
 --- Order GameObject to Follow target GameObject
@@ -1557,8 +1561,9 @@ end
 function GameObject.Follow(self, target, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Follow(self:GetHandle(), target:GetHandle(), priority);
+    --if priority == nil then priority = 1; end
+    --ffi.C.Follow(self:GetHandle(), target:GetHandle(), priority);
+    ScriptUtils.Follow(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Defend area
@@ -1566,8 +1571,9 @@ end
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Defend(self, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Defend(self:GetHandle(), priority);
+    --if priority == nil then priority = 1; end
+    --ffi.C.Defend(self:GetHandle(), priority);
+    ScriptUtils.Defend(self:GetHandle(), priority);
 end
 
 --- Order GameObject to Defend2 target GameObject
@@ -1577,8 +1583,9 @@ end
 function GameObject.Defend2(self, target, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Defend2(self:GetHandle(), target:GetHandle(), priority);
+    --if priority == nil then priority = 1; end
+    --ffi.C.Defend2(self:GetHandle(), target:GetHandle(), priority);
+    ScriptUtils.Defend2(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Stop
@@ -1586,8 +1593,9 @@ end
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Stop(self, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Stop(self:GetHandle(), priority);
+    --if priority == nil then priority = 1; end
+    --ffi.C.Stop(self:GetHandle(), priority);
+    ScriptUtils.Stop(self:GetHandle(), priority);
 end
 
 --- Order GameObject to Patrol target path
@@ -1597,8 +1605,9 @@ end
 function GameObject.Patrol(self, target, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isstring(target) then error("Paramater target must be string."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Patrol(self:GetHandle(), tocstring(target), priority);
+    --if priority == nil then priority = 1; end
+    --ffi.C.Patrol(self:GetHandle(), tocstring(target), priority);
+    ScriptUtils.Patrol(self:GetHandle(), target, priority);
 end
 
 --- Order GameObject to Retreat
@@ -1609,11 +1618,13 @@ function GameObject.Retreat(self, target, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if priority == nil then priority = 1; end
     if isgameobject(target) then
-        ffi.C.RetreatH(self:GetHandle(), target:GetHandle(), priority);
-    elseif isstring(target) then
-        ffi.C.RetreatP(self:GetHandle(), tocstring(target), priority)
+        --ffi.C.RetreatH(self:GetHandle(), target:GetHandle(), priority);
+        ScriptUtils.Retreat(self:GetHandle(), target:GetHandle(), priority);
+    --elseif isstring(target) then
+    --    ffi.C.RetreatP(self:GetHandle(), tocstring(target), priority)
     else
-        error("Paramater self must be GameObject instance or string");
+        --error("Paramater self must be GameObject instance or string");
+        ScriptUtils.Retreat(self:GetHandle(), target, priority)
     end
 end
 
@@ -2548,7 +2559,6 @@ end
 function GameObject.IsAround(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     --return ffi.C.IsAround(self:GetHandle());
-    
     return ScriptUtils.IsAround(self:GetHandle());
 end
 

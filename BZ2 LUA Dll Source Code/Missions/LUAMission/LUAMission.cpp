@@ -142,12 +142,13 @@ extern "C" static int LuaPanic(lua_State *L)
 	OutputDebugString("\n");
 	FormatLogMessage("Lua panic: %s", error);
 	FormatConsoleMessage("Lua panic: %s", error);
+
 	return 0;
 }
 
 static bool LuaCheckStatus(int status, lua_State *L, const char *format)
 {
-	if (status)
+	if (status != 0)
 	{
 		// error?
 		const char *error = lua_tostring(L, -1);
@@ -155,9 +156,56 @@ static bool LuaCheckStatus(int status, lua_State *L, const char *format)
 		OutputDebugString("\n");
 		FormatLogMessage(const_cast<char *>(format), error);
 		FormatConsoleMessage(const_cast<char *>(format), error);
+
+
+
+		size_t len = 0;
+		int startPos = 0;
+		const char *luastring = error;// lua_tolstring(L, -1, &len);
+		char message[1024];
+		for (int i = 0; i < len; i++)
+		{
+			if (luastring[i] == '\n' || (i - startPos) > 100) {
+				if (i - startPos > 0) {
+					_snprintf_s(message, std::fminl(i - startPos + 8, 1024), "[LuaER] %s", luastring + startPos);
+					PrintConsoleMessage(message);
+				}
+				startPos = i + 1;
+			}
+		}
+		_snprintf_s(message, 1024, "[LuaER] %s", luastring + startPos);
+		PrintConsoleMessage(message);
+
+		lua_pop(L, 1); // remove error message
+
+
+
 		return false;
 	}
 	return true;
+}
+
+
+static void stackDump(lua_State *L) {
+	int i = lua_gettop(L);
+	FormatLogMessage(" ----------------  Stack Dump ----------------");
+	while (i) {
+		int t = lua_type(L, i);
+		switch (t) {
+		case LUA_TSTRING:
+			FormatLogMessage("%d:`%s'", i, lua_tostring(L, i));
+			break;
+		case LUA_TBOOLEAN:
+			FormatLogMessage("%d: %s", i, lua_toboolean(L, i) ? "true" : "false");
+			break;
+		case LUA_TNUMBER:
+			FormatLogMessage("%d: %g", i, lua_tonumber(L, i));
+			break;
+		default: FormatLogMessage("%d: %s", i, lua_typename(L, t)); break;
+		}
+		i--;
+	}
+	FormatLogMessage("--------------- Stack Dump Finished ---------------");
 }
 
 static void PushHandle(lua_State *L, Handle h)
@@ -209,6 +257,14 @@ static int Handle_ToString(lua_State *L)
 	return 1;
 }
 
+//// create a vector on the lua stack
+//static Vector *NewHandle(lua_State *L)
+//{
+//	Handle *h = static_cast<Handle *>(lua_newuserdata(L, sizeof(Handle)));
+//	luaL_getmetatable(L, "Handle");
+//	lua_setmetatable(L, -2);
+//	return h;
+//}
 
 // get a vector from the lua stack
 // returns NULL if the item is not a vector
@@ -7788,16 +7844,16 @@ static void LoadValue(lua_State *L, bool push)
 				lua_pushboolean(L, value);
 		}
 		break;
-	case LUA_TLIGHTUSERDATA:
-		{
-			Handle value;
-			//in(fp, &value, sizeof(value));
-			Read(&value, 1);
-			ConvertHandles(&value, 1);
-			if (push)
-				lua_pushlightuserdata(L, (void *)value);
-		}
-		break;
+	//case LUA_TLIGHTUSERDATA:
+	//	{
+	//		Handle value;
+	//		//in(fp, &value, sizeof(value));
+	//		Read(&value, 1);
+	//		ConvertHandles(&value, 1);
+	//		if (push)
+	//			lua_pushlightuserdata(L, (void *)value);
+	//	}
+	//	break;
 	case LUA_TNUMBER:
 		{
 			double value;
@@ -7867,6 +7923,16 @@ static void LoadValue(lua_State *L, bool push)
 		//				*NewAiPath(L) = p;
 		//		}
 		//		break;
+			case 0x2e7fcbd3 /* "Handle" */:
+				{
+					Handle h;
+					//in(fp, &value, sizeof(value));
+					Read(&h, 1);
+					ConvertHandles(&h, 1);
+					if (push)
+						PushHandle(L, h);
+				}
+				break;
 			default:
 				break;
 			}
@@ -7892,13 +7958,13 @@ static void SaveValue(lua_State *L, int i)
 			Write(&value, 1);
 		}
 		break;
-	case LUA_TLIGHTUSERDATA:
-		{
-			Handle value = Handle(luaL_testudata(L, i, "Handle"));
-			//out(fp, &value, sizeof(value), "h");
-			Write(&value, 1);
-		}
-		break;
+	//case LUA_TLIGHTUSERDATA:
+	//	{
+	//		Handle value = Handle(luaL_testudata(L, i, "Handle"));
+	//		//out(fp, &value, sizeof(value), "h");
+	//		Write(&value, 1);
+	//	}
+	//	break;
 	case LUA_TNUMBER:
 		{
 			double value = lua_tonumber(L, i);
@@ -7960,6 +8026,13 @@ static void SaveValue(lua_State *L, int i)
 			//	case 0x79fa9618 /* "AiPath" */:
 			//		Write(GetAiPath(L, i), sizeof(AiPath));
 			//		break;
+				case 0x2e7fcbd3 /* "Handle" */:
+					{
+						//out(fp, GetMatrix(L, i), sizeof(Matrix));
+						Handle value = GetHandle(L, i);
+						Write(&value, 1);
+					}
+					break;
 				default:
 					break;
 				}
@@ -8052,6 +8125,8 @@ void LuaMission::InitialSetup(void)
 	// Setup some initial stuff.
 	EnableHighTPS(m_GameTPS);
 
+	IFace_ConsoleCmd("console.log 1");
+
 	// Preload things here.
 	PetWatchdogThread();
 	PreloadRace('s');
@@ -8143,14 +8218,22 @@ void LuaMission::InitialSetup(void)
 	lua_setglobal(L, "ScriptUtils");
 
 	// Create a metatable for handles
-	lua_pushlightuserdata(L, NULL);
-    luaL_newmetatable(L, "Handle");
-    lua_pushstring(L, "Handle");
-    lua_setfield(L, -2, "__type");
-    lua_pushcfunction(L, Handle_ToString);
-    lua_setfield(L, -2, "__tostring");
-    lua_setmetatable(L, -2);
+	//lua_pushlightuserdata(L, NULL);
+    //luaL_newmetatable(L, "Handle");
+    //lua_pushstring(L, "Handle");
+    //lua_setfield(L, -2, "__type");
+    //lua_pushcfunction(L, Handle_ToString);
+    //lua_setfield(L, -2, "__tostring");
+    //lua_setmetatable(L, -2);
 	
+	luaL_newmetatable(L, "Handle");
+	lua_pushstring(L, "Handle");
+	lua_setfield(L, -2, "__type");
+	lua_pushcfunction(L, Handle_ToString);
+	lua_setfield(L, -2, "__tostring");
+	// Handle is a primative typedef so it doesn't need __gc
+	lua_pop(L, 1);
+
 	/*
 	// Create a metatable for ParameterDB
 	luaL_newmetatable(L, "ParameterDB");

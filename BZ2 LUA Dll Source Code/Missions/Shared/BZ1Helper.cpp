@@ -1408,6 +1408,7 @@ void BZ1Helper::Init(void)
 	else
 		m_CloudsDone = true;
 
+#if 0
 //	/*
 	// Check for mod installation. These are several hook files that indicate this DLL is being run with BZC. If somebody tries to steal our DLL, disappoint them. -GBD !! Under no circumstances is this list to be shared in any way!
 	if((!DoesFileExist("bzceditor.txt")) || (!DoesFileExist("bzshell_messgallary.cfg")) || (!DoesFileExist("bzshell_credits.cfg")) || 
@@ -1445,6 +1446,7 @@ void BZ1Helper::Init(void)
 			FailMission(GetTime() + 10.0f, "reinstall.des");
 		}
 	}
+#endif
 
 	// Easter egg, of sorts...
 	const char *PlayerName = GetCVarItemStr(GetLocalPlayerTeamNumber(), 0);

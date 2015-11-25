@@ -124,7 +124,7 @@
       <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)$(ProjectName)d.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <BaseAddress>0x4fC00000</BaseAddress>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>

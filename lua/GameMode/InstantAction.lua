@@ -11,7 +11,6 @@ hook.Add( "Update", "Chilli_Custom_Update", function( GameTurn )
      or not _G.MissionData.TargetTest:IsAround() ) then
     SpawnBox();
   end
-
   if GameTurn % 10 == 0 then
     --_G.PrintConsoleMessage("In Update Turn: " .. GameTurn);
     if _G.MissionData.TargetTestIsObjectified then
