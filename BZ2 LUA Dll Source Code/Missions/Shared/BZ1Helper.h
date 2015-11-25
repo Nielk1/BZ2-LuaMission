@@ -50,7 +50,7 @@ class JammerHelper;
 class CarrierHelper;
 class TransportHelper;
 class DropShipHelper;
-class RecallMineHelper;
+//class RecallMineHelper;
 
 class BZ1Helper : public DLLBase {
 
@@ -437,7 +437,7 @@ private:
 	CarrierHelper *m_CarrierHelper;
 	TransportHelper *m_TransportHelper;
 	DropShipHelper *m_DropShipHelper;
-	RecallMineHelper *m_RecallMineHelper;
+//	RecallMineHelper *m_RecallMineHelper;
 	
 	/*
 	// Consolidate these arrays into one giant array, here in BZ1Helper.

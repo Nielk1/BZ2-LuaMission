@@ -11,30 +11,33 @@
 //
 // Converted to new DLL interface spec by Nathan Mates 2/23/99
 //
+// Re-Written by General BlackDragon, 1/20/15.
 
-// Max # of powerups we can have in the world at once.
-#define MAX_POWERUPS 100
+class BZ1Helper;
 
 struct myprup {
+	Handle pupHandle;
 	float time;
 	float dt;
-	char str[64];
-	char odf[64];
+	int team;
+	char str[MAX_ODF_LENGTH];
+	char odf[MAX_ODF_LENGTH];
+	char label[MAX_ODF_LENGTH];
 	bool waiting;
 };
 
 class PUPMgr {
 private:
-	static struct myprup pup[MAX_POWERUPS];
-	static int pupHandle[MAX_POWERUPS];
-	static int PUPCount; // How many are used in the above list.
+
+	static std::vector<myprup> PUPList;
 
 public:
+
 	// Scan over lists of AIPaths in the world, generate tables for powerups
-	static void Init(void);
+	static void Init(BZ1Helper &m_BZ1Helper);
 
 	// Run occasionally
-	static void Execute(void);
+	static void Execute(BZ1Helper &bz1Helper);
 
 	// Load & save functions
 	static bool Load(bool missionSave);

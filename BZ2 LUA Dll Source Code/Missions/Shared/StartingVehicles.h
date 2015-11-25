@@ -10,13 +10,10 @@
 #ifndef _StartingVehicles_H_
 #define _StartingVehicles_H_
 
-typedef unsigned long U32;
-
 namespace StartingVehicleManager
 {
-	// Read in and initialize the list of vehicles, from the specified
-	// filename.
-	void Init(void);
+	// Read in and initialize the list of vehicles, from the specified filename.
+	void Init(const char *Filename);
 
 	// Do any memory cleanups necessary
 	void Cleanup(void);
@@ -26,8 +23,8 @@ namespace StartingVehicleManager
 
 	// Load/save the read-in list of vehicles out to disk
 	void Save(bool MissionSave);
-	void Load(bool MissionSave);
 
+	void Load(bool MissionSave);
 } // 	namespace StartingVehicleManager
 
 #endif

@@ -8,99 +8,122 @@
 //
 // Converted to new DLL interface spec by Nathan Mates 2/23/99
 //
+// Re-written by General BlackDragon. 1/20/15
 
-#include "..\shared\PUPMgr.h"
-#include "..\Shared\DLLBase.h"
+#include "BZ1Helper.h"
+
+#include "DLLBase.h"
+#include "PUPMgr.h"
 
 #include <string.h>
 
-struct myprup PUPMgr::pup[MAX_POWERUPS];
-int PUPMgr::pupHandle[MAX_POWERUPS];
-int PUPMgr::PUPCount;
+std::vector<myprup> PUPMgr::PUPList;
 
-void PUPMgr::Init(void)
+void PUPMgr::Init(BZ1Helper &m_BZ1Helper)
 {
-	memset(pup, 0, sizeof(pup));
-	PUPCount = 0;
-	memset(pupHandle, 0, sizeof(pupHandle));
+	bool Logging = BZ1Helper::Logging;
 
-	int pathCount;
-	char **pathNames;
-	GetAiPaths(pathCount, pathNames);
-	int i;
-	for (i = 0; i < pathCount; ++i)
+	for (int i = 0; i < m_BZ1Helper.AIpathCount; ++i)
 	{
-		if(PUPCount <MAX_POWERUPS)
+		const char *label = m_BZ1Helper.AIpathNames[i];
+
+		if ((label == NULL) || // Uh Oh...
+			(!strchr(label, ':'))) // No colin, incorrect format.
+		//	(!strchr(label, '_')) || // No underscore, incorrect format.
+		//	(strncmp(label, "edge_path", 9) == 0) ||  // Don't count Edge_Path. 
+		//	(strncmp(label, "spawn_", 6) == 0) ||  // Don't count spawn_ names, that usually means a DLL SP spawn. If you want to use spawn.odf, place it in editor.
+		//	(strncmp(label, "path_", 5) == 0)) // Don't count path_ names.
+			continue; // Skip this path.
+
+		char ODFName[MAX_ODF_LENGTH] = {0};
+		char Label[MAX_ODF_LENGTH] = {0};
+		int Team = 0; // Deafult.
+		float Timer = 10.0f; // Default.
+		//sscanf_s(label, "%[^_]_%f_team%d", ODFName, sizeof(ODFName), &Timer, &Team); // Special note about sscanf_s, a bufsize must be passed in for %s or %c vars, even if it's a fixed-sized buffer.
+		sscanf_s(label, "%s:%f:%d:%s", ODFName, sizeof(ODFName), &Timer, &Team, Label, sizeof(Label)); // Special note about sscanf_s, a bufsize must be passed in for %s or %c vars, even if it's a fixed-sized buffer.
+		GetWorldVariantODF(ODFName); // Apply world letter, if it applies. -GBD
+
+		if(!DoesODFExist(ODFName))
+			continue;
+
+		PUPList.resize(PUPList.size()+1);
+		myprup &sao = PUPList[PUPList.size()-1]; // No temporary being created, *much* faster
+		memset(&sao, 0, sizeof(myprup)); // Zero things out at start.
+
+		if(Logging)
+			FormatLogMessage("PupMgr Path found: %s, odf: %s, Timer: %f, Team: %d, Label: %s", label, ODFName, Timer, Team, Label);
+
+		// Save the info.
+		strcpy_s(sao.odf, sizeof(sao.odf), ODFName);
+		strcpy_s(sao.str, sizeof(sao.str), label);
+		strcpy_s(sao.label, sizeof(sao.label), Label);
+		sao.dt = Timer;
+		sao.team = Team;
+		sao.pupHandle = BuildObject(sao.odf, sao.team, sao.str);
+		sao.waiting = false;
+		if(sao.label[0])
+			SetLabel(sao.pupHandle, sao.label);
+
+		// Remove pilots from vehilces on Team 0, like in BZ1. -GBD
+		if((sao.team == 0) && (IsVehicle(sao.pupHandle)))
+			RemovePilotAI(sao.pupHandle);
+
+		/*
+		char *dst = sao.odf;
+		const char *src = label;
+		while (*src != '_' && *src != '\0' && dst < sao.odf + sizeof(sao.odf) - 1)
+			*dst++ = *src++;
+		*dst++ = '\0';
+
+		if(!DoesODFExist(sao.odf))
+			continue;
+
+		// save the path label
+		strcpy_s(sao.str, sizeof(sao.str), label);
+
+		// if the label contained a '_'...
+		if(*src == '_')
 		{
-			char *label = pathNames[i];
-			if (strncmp(label, "king", 4) == 0)
-				continue;	// king of the hill not implemented yet
-			if (strncmp(label, "edge_path", 9) == 0)
-				continue;	// this is not a powerup
-			if (strncmp(label,"spawntank8",9)==0)
-				continue;
-			if (strncmp(label,"spawnrocket8",11)==0)
-				continue;
-			if (strncmp(label,"base1",5)==0) //Inserted for CTF
-				continue;
-			if (strncmp(label,"base2",5)==0) //Inserted for CTF
-				continue;
-			if (strncmp(label,"path",4)==0) //Inserted to debug
-				continue;
-			_ASSERTE(PUPCount < SIZEOF(pup));
-			if(PUPCount < SIZEOF(pup))
-			{
-				strncpy_s(pup[PUPCount].str, label, sizeof(pup[PUPCount].str)-1);
-				strncpy_s(pup[PUPCount].odf, label, sizeof(pup[PUPCount].odf)-1);
-				char *ptr = strchr(pup[PUPCount].odf, '_');
-				if(!ptr)
-					continue; // Bad format on name. Don't continue
-				if (ptr) *ptr = 0;
-				ptr++;
-				char tmp[64];
-				strcpy_s(tmp, ptr);
-				ptr = strchr(tmp, '_');
-				if (ptr) *ptr = 0;
-				int v = atoi(tmp);
-				if (v > 0)
-					pup[PUPCount].dt = (float) v;
-				else
-					pup[PUPCount].dt = 10.0f;
-				PUPCount++;
-			}
+			++src;
+			// get the respawn period in seconds
+			int t = atoi(src);
+			sao.dt = t > 0 ? (float)t : 10.0f;
 		}
-	}
-
-	for ( i = 0; i < PUPCount; i++)
-	{
-		pupHandle[i] = BuildObject(pup[i].odf, 0, pup[i].str);
-		pup[i].waiting = false;
+		*/
 	}
 }
 
-void PUPMgr::Execute(void)
+void PUPMgr::Execute(BZ1Helper &bz1Helper)
 {
-	int i;
-	Time CurTime=GetTime();
-	LogFloat(CurTime);
-	for(i = 0; i < PUPCount; i++)
+	Time CurTime = GetTime();
+	//LogFloat(CurTime);
+	for (std::vector<myprup>::iterator iter = PUPList.begin(); iter != PUPList.end(); ++iter)
 	{
-		LogFloat(IsAlive(pupHandle[i]));
-		LogFloat(pup[i].waiting);
-		LogFloat(pup[i].dt);
-		if (pup[i].waiting)
-			LogFloat(pup[i].time);
-		if (!IsAlive(pupHandle[i]) && !pup[i].waiting)
+		/*
+		LogFloat(IsAlive(iter->pupHandle));
+		LogFloat(iter->waiting);
+		LogFloat(iter->dt);
+		if (iter->.waiting)
+			LogFloat(iter->time);
+		*/
+
+		if (!IsAlive(iter->pupHandle) && !iter->waiting)
 		{
-			LogFloat(1.1f);
-			pup[i].waiting = true;
-			pup[i].time = CurTime + pup[i].dt;
+		//	LogFloat(1.1f);
+			iter->waiting = true;
+			iter->time = CurTime + iter->dt;
 		}
-		if (pup[i].waiting && (CurTime > pup[i].time))
+		if (iter->waiting && (CurTime > iter->time))
 		{
-			LogFloat(2.2f);
-			pupHandle[i] = BuildObject(pup[i].odf, 0, pup[i].str);
-			pup[i].waiting = false;
+		//	LogFloat(2.2f);
+			iter->pupHandle = BuildObject(iter->odf, iter->team, iter->str);
+			iter->waiting = false;
+
+			if(iter->label[0])
+				SetLabel(iter->pupHandle, iter->label);
+
+			if((iter->team == 0) && (IsVehicle(iter->pupHandle)))
+				RemovePilotAI(iter->pupHandle);
 		}
 	} 
 }
@@ -110,12 +133,24 @@ bool PUPMgr::Load(bool missionSave)
 	if(missionSave)
 		return true;
 
-	Read(&PUPCount,1);
-	_ASSERTE(PUPCount<MAX_POWERUPS);
-	if(PUPCount)
+	int size;
+	Read(&size, 1);
+	PUPList.resize(size);
+	if(size)
+		Read(&PUPList.front(), sizeof(myprup)*size);
+
+	return true;
+}
+
+bool PUPMgr::PostLoad(bool missionSave)
+{
+	if (missionSave)
+		return true;
+
+	for (std::vector<myprup>::iterator iter = PUPList.begin(); iter != PUPList.end(); ++iter)
 	{
-		Read((void*)(&(pup[0])),PUPCount*sizeof(myprup));
-		Read(pupHandle, PUPCount);
+		myprup &sao = *iter;
+		ConvertHandles(&sao.pupHandle, 1);
 	}
 	return true;
 }
@@ -125,20 +160,10 @@ bool PUPMgr::Save(bool missionSave)
 	if(missionSave)
 		return true;
 
-	_ASSERTE(PUPCount<MAX_POWERUPS);
-	Write(&PUPCount,1);
-	if(PUPCount)
-	{
-		Write((void*)(&(pup[0])),PUPCount*sizeof(myprup));
-		Write(pupHandle, PUPCount);
-	}
-	return true;
-}
+	int size = int(PUPList.size());
+	Write(&size, 1);
+	if(size)
+		Write(&PUPList.front(), sizeof(myprup)*size);
 
-bool PUPMgr::PostLoad(bool missionSave)
-{
-	if (missionSave)
-		return true;
-	ConvertHandles(pupHandle, PUPCount);
 	return true;
 }

@@ -121,7 +121,7 @@
     <Link>
       <AdditionalOptions>/DYNAMICBASE %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>..\..\debug\bzone.lib;..\..\debug\luajit51.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(ProjectName)d.dll</OutputFile>
+      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)$(ProjectName)d.pdb</ProgramDatabaseFile>
@@ -271,17 +271,89 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Shared\AIWeaponHelper.cpp" />
+    <ClCompile Include="..\Shared\AmmoDrainHelper.cpp" />
+    <ClCompile Include="..\Shared\AnchorClassHelper.cpp" />
+    <ClCompile Include="..\Shared\APCHelper.cpp" />
+    <ClCompile Include="..\Shared\AttacherHelper.cpp" />
+    <ClCompile Include="..\Shared\AttacherWeaponHelper.cpp" />
+    <ClCompile Include="..\Shared\BuildingHelper.cpp" />
+    <ClCompile Include="..\Shared\BZ1Helper.cpp" />
     <ClCompile Include="..\Shared\BZCScriptUtils.cpp" />
+    <ClCompile Include="..\Shared\CarrierHelper.cpp" />
+    <ClCompile Include="..\Shared\DeployHelper.cpp" />
+    <ClCompile Include="..\Shared\DispatchHelper.cpp" />
     <ClCompile Include="..\Shared\DllBase.cpp" />
+    <ClCompile Include="..\Shared\DropShipHelper.cpp" />
+    <ClCompile Include="..\Shared\EnergyArmorHelper.cpp" />
+    <ClCompile Include="..\Shared\FuryHelper.cpp" />
+    <ClCompile Include="..\Shared\GeyserHelper.cpp" />
+    <ClCompile Include="..\Shared\HQCPHelper.cpp" />
+    <ClCompile Include="..\Shared\JammerHelper.cpp" />
+    <ClCompile Include="..\Shared\LavaDamageHelper.cpp" />
+    <ClCompile Include="..\Shared\LimiterHelper.cpp" />
+    <ClCompile Include="..\Shared\LPadHelper.cpp" />
     <ClCompile Include="..\Shared\MathUtils.cpp" />
+    <ClCompile Include="..\Shared\MorphObjectHelper.cpp" />
+    <ClCompile Include="..\Shared\PilotResourceHelper.cpp" />
+    <ClCompile Include="..\Shared\PortalHelper.cpp" />
+    <ClCompile Include="..\Shared\PowerHelper.cpp" />
+    <ClCompile Include="..\Shared\ProductionClassHelper.cpp" />
+    <ClCompile Include="..\Shared\PUPMgr.cpp" />
+    <ClCompile Include="..\Shared\QuakeHelper.cpp" />
+    <ClCompile Include="..\Shared\RecycleHelper.cpp" />
+    <ClCompile Include="..\Shared\ReplaceOnDeathHelper.cpp" />
+    <ClCompile Include="..\Shared\SatelliteHelper.cpp" />
+    <ClCompile Include="..\Shared\ScrapHelper.cpp" />
+    <ClCompile Include="..\Shared\ShieldHelper.cpp" />
+    <ClCompile Include="..\Shared\SwitchClassHelper.cpp" />
+    <ClCompile Include="..\Shared\TransportHelper.cpp" />
+    <ClCompile Include="..\Shared\UndeployHelper.cpp" />
+    <ClCompile Include="..\Shared\UtilityShipHelper.cpp" />
     <ClCompile Include="LUAMission.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\fun3d\ScriptUtils.h" />
+    <ClInclude Include="..\Shared\AIWeaponHelper.h" />
+    <ClInclude Include="..\Shared\AmmoDrainHelper.h" />
+    <ClInclude Include="..\Shared\AnchorClassHelper.h" />
+    <ClInclude Include="..\Shared\APCHelper.h" />
+    <ClInclude Include="..\Shared\AttacherHelper.h" />
+    <ClInclude Include="..\Shared\AttacherWeaponHelper.h" />
+    <ClInclude Include="..\Shared\BuildingHelper.h" />
+    <ClInclude Include="..\Shared\BZ1Helper.h" />
     <ClInclude Include="..\Shared\BZCScriptUtils.h" />
+    <ClInclude Include="..\Shared\CarrierHelper.h" />
+    <ClInclude Include="..\Shared\DeployHelper.h" />
+    <ClInclude Include="..\Shared\DispatchHelper.h" />
     <ClInclude Include="..\Shared\DllBase.h" />
+    <ClInclude Include="..\Shared\DropShipHelper.h" />
+    <ClInclude Include="..\Shared\EnergyArmorHelper.h" />
+    <ClInclude Include="..\Shared\FuryHelper.h" />
+    <ClInclude Include="..\Shared\GeyserHelper.h" />
+    <ClInclude Include="..\Shared\HQCPHelper.h" />
+    <ClInclude Include="..\Shared\JammerHelper.h" />
+    <ClInclude Include="..\Shared\LavaDamageHelper.h" />
+    <ClInclude Include="..\Shared\LimiterHelper.h" />
+    <ClInclude Include="..\Shared\LPadHelper.h" />
     <ClInclude Include="..\Shared\MathUtils.h" />
-    <ClInclude Include="LUAMission.h" />
+    <ClInclude Include="..\Shared\MorphObjectHelper.h" />
+    <ClInclude Include="..\Shared\PilotResourceHelper.h" />
+    <ClInclude Include="..\Shared\PortalHelper.h" />
+    <ClInclude Include="..\Shared\PowerHelper.h" />
+    <ClInclude Include="..\Shared\ProductionClassHelper.h" />
+    <ClInclude Include="..\Shared\PUPMgr.h" />
+    <ClInclude Include="..\Shared\QuakeHelper.h" />
+    <ClInclude Include="..\Shared\RecycleHelper.h" />
+    <ClInclude Include="..\Shared\ReplaceOnDeathHelper.h" />
+    <ClInclude Include="..\Shared\SatelliteHelper.h" />
+    <ClInclude Include="..\Shared\ScrapHelper.h" />
+    <ClInclude Include="..\Shared\ShieldHelper.h" />
+    <ClInclude Include="..\Shared\SwitchClassHelper.h" />
+    <ClInclude Include="..\Shared\TransportHelper.h" />
+    <ClInclude Include="..\Shared\UndeployHelper.h" />
+    <ClInclude Include="..\Shared\UtilityShipHelper.h" />
+    <ClInclude Include="LuaMission.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

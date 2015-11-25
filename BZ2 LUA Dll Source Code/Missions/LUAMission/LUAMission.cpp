@@ -1,7 +1,6 @@
-#include "..\..\Source\fun3d\ScriptUtils.h"
+#include "..\..\source\fun3d\ScriptUtils.h"
 #include "..\Shared\BZCScriptUtils.h"
-#include "LUAMission.h"
-
+#include "LuaMission.h"
 #include <math.h>
 #include <string.h>
 #include <iostream>
@@ -24,13 +23,13 @@ LuaMission::LuaMission(void)
 	i_array = &i_first + 1;
 
 	// Zero things out first off. If you don't assign a default value, then it will be assigned whatever value was in that memory it is assigned to use. Essentially it would be filled with random values. We don't want that. This zero's out everything under each array at the very beginning.
-	if (i_array)
+	if(i_array)
 		memset(i_array, 0, i_count*sizeof(int));
-	if (f_array)
+	if(f_array)
 		memset(f_array, 0, f_count*sizeof(float));
-	if (h_array)
+	if(h_array)
 		memset(h_array, 0, h_count*sizeof(Handle));
-	if (b_array)
+	if(b_array)
 		memset(b_array, 0, b_count*sizeof(bool));
 
 	L = NULL;
@@ -38,15 +37,15 @@ LuaMission::LuaMission(void)
 
 LuaMission::~LuaMission()
 {
-//	CloseOpenFiles();
+	CloseOpenFiles();
 	/*
 	FileMapIt it = FileNameMap.begin();
 
 	while(it != FileNameMap.end())
 	{
-	if (it->second)
-	fclose(it->second);
-	it = FileNameMap.erase(it);
+		if (it->second)
+			fclose(it->second);
+		it = FileNameMap.erase(it);
 	};
 	*/
 
@@ -57,32 +56,83 @@ LuaMission::~LuaMission()
 
 // Lua Specific things...
 
-extern "C" static void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup) {
-	luaL_checkstack(L, nup, "too many upvalues");
-	for (; l->name != NULL; l++) {  /* fill the table with given functions */
-		int i;
-		for (i = 0; i < nup; i++)  /* copy upvalues to the top */
-			lua_pushvalue(L, -nup);
-		lua_pushstring(L, l->name);
-		lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
-		lua_settable(L, -(nup + 3));
-	}
-	lua_pop(L, nup);  /* remove upvalues */
+extern "C" static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
+  luaL_checkstack(L, nup, "too many upvalues");
+  for (; l->name != NULL; l++) {  /* fill the table with given functions */
+    int i;
+    for (i = 0; i < nup; i++)  /* copy upvalues to the top */
+      lua_pushvalue(L, -nup);
+    lua_pushstring(L, l->name);
+    lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
+    lua_settable(L, -(nup + 3));
+  }
+  lua_pop(L, nup);  /* remove upvalues */
 }
 
-extern "C" void *luaL_testudata(lua_State *L, int ud, const char *tname) {
-	void *p = lua_touserdata(L, ud);
-	if (p != NULL) {  /* value is a userdata? */
-		if (lua_getmetatable(L, ud)) {  /* does it have a metatable? */
-			luaL_getmetatable(L, tname);  /* get correct metatable */
-			if (!lua_rawequal(L, -1, -2))  /* not the same? */
-				p = NULL;  /* value is a userdata with wrong metatable */
-			lua_pop(L, 2);  /* remove both metatables */
-			return p;
-		}
-	}
-	return NULL;  /* value is not a userdata with a metatable */
+extern "C" void *luaL_testudata (lua_State *L, int ud, const char *tname) {
+  void *p = lua_touserdata(L, ud);
+  if (p != NULL) {  /* value is a userdata? */
+    if (lua_getmetatable(L, ud)) {  /* does it have a metatable? */
+      luaL_getmetatable(L, tname);  /* get correct metatable */
+      if (!lua_rawequal(L, -1, -2))  /* not the same? */
+        p = NULL;  /* value is a userdata with wrong metatable */
+      lua_pop(L, 2);  /* remove both metatables */
+      return p;
+    }
+  }
+  return NULL;  /* value is not a userdata with a metatable */
 }
+
+extern "C" static int LuaPrint(lua_State *L)
+{
+	int n = lua_gettop(L);  /* number of arguments */
+	int i;
+	char buffer[4096];
+	int len = 0;
+	lua_getglobal(L, "tostring");
+	for (i=1; i<=n; i++) {
+		const char *s;
+		size_t l;
+		lua_pushvalue(L, -1);  /* function to be called */
+		lua_pushvalue(L, i);   /* value to print */
+		lua_call(L, 1, 1);
+		s = lua_tolstring(L, -1, &l);  /* get result */
+		if (s == NULL)
+			return luaL_error(L, LUA_QL("tostring") " must return a string to " LUA_QL("print"));
+		if (i>1) buffer[len++] = '\t';
+		strcpy_s(buffer + len, sizeof(buffer) - len, s);
+		len += strlen(buffer + len);
+		lua_pop(L, 1);  /* pop result */
+	}
+	PrintConsoleMessage(buffer);
+	return 0;
+}
+
+#if 0
+// output to the debug console
+extern "C" static int LuaPrint(lua_State *L)
+{
+	int n = lua_gettop(L);  /* number of arguments */
+	int i;
+	lua_getglobal(L, "tostring");
+	for (i=1; i<=n; i++) {
+		const char *s;
+		size_t l;
+		lua_pushvalue(L, -1);  /* function to be called */
+		lua_pushvalue(L, i);   /* value to print */
+		lua_call(L, 1, 1);
+		s = lua_tolstring(L, -1, &l);  /* get result */
+		if (s == NULL)
+			return luaL_error(L,
+			LUA_QL("tostring") " must return a string to " LUA_QL("print"));
+		if (i>1) OutputDebugString("\t");
+		PrintConsoleMessage(s); //OutputDebugString(s);
+		lua_pop(L, 1);  /* pop result */
+	}
+	//OutputDebugString("\n");
+	return 0;
+}
+#endif
 
 // panic handler
 extern "C" static int LuaPanic(lua_State *L)
@@ -90,90 +140,39 @@ extern "C" static int LuaPanic(lua_State *L)
 	const char * error = lua_tostring(L, -1);
 	OutputDebugString(error);
 	OutputDebugString("\n");
-//	FormatLogMessage("Lua panic: %s", error);
-//	FormatConsoleMessage("Lua panic: %s", error);
+	FormatLogMessage("Lua panic: %s", error);
+	FormatConsoleMessage("Lua panic: %s", error);
 	return 0;
 }
 
 static bool LuaCheckStatus(int status, lua_State *L, const char *format)
 {
-//	if (status)
-//	{
-//		// error?
-//		const char *error = lua_tostring(L, -1);
-//		OutputDebugString(error);
-//		OutputDebugString("\n");
-////		FormatLogMessage(const_cast<char *>(format), error);
-////		FormatConsoleMessage(const_cast<char *>(format), error);
-//		return false;
-//	}
-//	return true;
-
-
-	if (status != 0)
+	if (status)
 	{
-		std::cerr << "-- " << lua_tostring(L, -1) << std::endl;
-
-		size_t len = 0;
-		int startPos = 0;
-		const char *luastring = lua_tolstring(L, -1, &len);
-		char message[1024];
-		for (int i = 0; i<len; i++)
-		{
-			if (luastring[i] == '\n') {
-				if (i - startPos > 0) {
-					_snprintf_s(message, std::fminl(i - startPos + 9, 1024), "[LuaER2] %s", luastring + startPos);
-					PrintConsoleMessage(message);
-				}
-				startPos = i + 1;
-			}
-		}
-		_snprintf_s(message, 1024, "[LuaER2] %s", luastring + startPos);
-		PrintConsoleMessage(message);
-
-		lua_pop(L, 1); // remove error message
+		// error?
+		const char *error = lua_tostring(L, -1);
+		OutputDebugString(error);
+		OutputDebugString("\n");
+		FormatLogMessage(const_cast<char *>(format), error);
+		FormatConsoleMessage(const_cast<char *>(format), error);
 		return false;
 	}
 	return true;
 }
 
-// Nielk1's old report function
-int report(lua_State *L, int status)
-{
-	if (status != 0)
-	{
-		std::cerr << "-- " << lua_tostring(L, -1) << std::endl;
-
-		size_t len = 0;
-		int startPos = 0;
-		const char *luastring = lua_tolstring(L, -1, &len);
-		char message[1024];
-		for (int i = 0; i<len; i++)
-		{
-			if (luastring[i] == '\n') {
-				if (i - startPos > 0) {
-					_snprintf_s(message, std::fminl(i - startPos + 8, 1024), "[LuaER] %s", luastring + startPos);
-					PrintConsoleMessage(message);
-				}
-				startPos = i + 1;
-			}
-		}
-		_snprintf_s(message, 1024, "[LuaER] %s", luastring + startPos);
-		PrintConsoleMessage(message);
-
-		lua_pop(L, 1); // remove error message
-	}
-	return status;
-}
-
-#pragma region Handle Bindings
-// push a handle onto the lua stack
 static void PushHandle(lua_State *L, Handle h)
 {
 	if (h)
-		lua_pushlightuserdata(L, (void *)(h));
+	{
+		Handle *v = static_cast<Handle *>(lua_newuserdata(L, sizeof(Handle)));
+		luaL_getmetatable(L, "Handle");
+		lua_setmetatable(L, -2);
+		*v = h;
+	}
 	else
+	{
 		lua_pushnil(L);
+	}
 }
 
 // Handle GetHandle(Name n)
@@ -187,8 +186,9 @@ static int GetHandle(lua_State *L)
 // get a handle from the lua stack
 static Handle GetHandle(lua_State *L, int n)
 {
-	return Handle(luaL_testudata(L, n, "Handle"));
+	return *static_cast<Handle *>(luaL_checkudata(L, n, "Handle"));
 }
+
 
 // Require a handle, or warn the player there's not one.
 static Handle RequireHandle(lua_State *L, int n)
@@ -196,7 +196,7 @@ static Handle RequireHandle(lua_State *L, int n)
 	if (lua_isnil(L, n))
 		return NULL;
 
-	return Handle(luaL_checkudata(L, n, "Handle"));
+	return *static_cast<Handle *>(luaL_checkudata(L, n, "Handle"));
 }
 
 // Handle to string
@@ -208,9 +208,8 @@ static int Handle_ToString(lua_State *L)
 	lua_pushstring(L, buf);
 	return 1;
 }
-#pragma endregion
 
-#pragma region Vector Bindings
+
 // get a vector from the lua stack
 // returns NULL if the item is not a vector
 static Vector *GetVector(lua_State *L, int n)
@@ -232,9 +231,7 @@ static Vector *NewVector(lua_State *L)
 	lua_setmetatable(L, -2);
 	return v;
 }
-#pragma endregion
 
-#pragma region Matrix Binding
 // get a matrix from the lua stack
 // returns NULL if the item is not a matrix
 static Matrix *GetMatrix(lua_State *L, int n)
@@ -256,14 +253,12 @@ static Matrix *NewMatrix(lua_State *L)
 	lua_setmetatable(L, -2);
 	return m;
 }
-#pragma endregion
 
-#pragma region Other Lua Shit
 // Optional Boolean.
-static bool luaL_optboolean(lua_State *L, int n, int defval)
-{
-	return luaL_opt(L, lua_toboolean, n, defval);
-}
+static bool luaL_optboolean(lua_State *L, int n, int defval) 
+{ 
+	return luaL_opt(L, lua_toboolean, n, defval); 
+} 
 
 // vector index (read)
 // receives (userdata, key)
@@ -404,7 +399,7 @@ static int Vector_Eq(lua_State *L)
 static int Vector_ToString(lua_State *L)
 {
 	Vector *v = RequireVector(L, 1);
-	char buf[MAX_ODF_LENGTH] = { 0 };
+	char buf[MAX_ODF_LENGTH] = {0};
 	sprintf_s(buf, "{x=%f, y=%f, z=%f}", v->x, v->y, v->z);
 	lua_pushstring(L, buf);
 	return 1;
@@ -569,7 +564,7 @@ static int Matrix_ToString(lua_State *L)
 	char buf[256];
 	sprintf_s(buf, "{right_x=%f, right_y=%f, right_z=%f, up_x=%f, up_y=%f, up_z=%f, front_x=%f, front_y=%f, front_z=%f, posit_x=%f, posit_y=%f, posit_z=%f}",
 		m->right.x, m->right.y, m->right.z,
-		m->up.x, m->up.y, m->up.z,
+		m->up.x,    m->up.y,    m->up.z,
 		m->front.x, m->front.y, m->front.z,
 		m->posit.x, m->posit.y, m->posit.z
 		);
@@ -701,7 +696,7 @@ static int SetMatrix(lua_State *L)
 	float posit_z = float(luaL_optnumber(L, 12, 0.0f));
 	*NewMatrix(L) = Matrix(
 		Vector(right_x, right_y, right_z),
-		Vector(up_x, up_y, up_z),
+		Vector(up_x,    up_y,    up_z),
 		Vector(front_x, front_y, front_z),
 		Vector(posit_x, posit_y, posit_z));
 	return 1;
@@ -786,7 +781,7 @@ static int Make_RGB(lua_State *L)
 	int r = luaL_optinteger(L, 1, 0);
 	int g = luaL_optinteger(L, 2, 0);
 	int b = luaL_optinteger(L, 3, 0);
-	lua_pushinteger(L, RGBCreate(r, g, b));
+	lua_pushinteger(L, RGBCreate(r,g,b));
 	return 1;
 }
 static int Make_RGBA(lua_State *L)
@@ -795,7 +790,7 @@ static int Make_RGBA(lua_State *L)
 	int g = luaL_optinteger(L, 2, 0);
 	int b = luaL_optinteger(L, 3, 0);
 	int a = luaL_optinteger(L, 4, 0);
-	lua_pushinteger(L, RGBA_MAKE(r, g, b, a));
+	lua_pushinteger(L, RGBA_MAKE(r,g,b,a));
 	return 1;
 }
 
@@ -938,7 +933,6 @@ static int GetDistance(lua_State *L)
 //Handle GetNearestObject(Name Path, int Point = 0, float MaxRange = 0.0f, int Team = -1, int TeamFilter = 0, int FilterMask = 0, bool IgnoreInvincible = true, int MatchMask = 0, char *ObjClass = NULL, char *ODFName = NULL);
 //Handle GetNearestObject(Handle h, float MaxRange = 0.0f, int Team = -1, int TeamFilter = 0, int FilterMask = 0, bool IgnoreInvincible = true, int MatchMask = 0, char *ObjClass = NULL, char *ODFName = NULL);
 //Handle GetNearestObject(Matrix Position, float MaxRange = 0.0f, int Team = -1, int TeamFilter = 0, int FilterMask = 0, bool IgnoreInvincible = true, int MatchMask = 0, char *ObjClass = NULL, char *ODFName = NULL);
-#if 0
 static int GetNearestObject(lua_State *L)
 {
 	Vector pos = Vector(0, 0, 0);
@@ -966,7 +960,7 @@ static int GetNearestObject(lua_State *L)
 		pos = GetPosition(h);
 	}
 
-	float maxrange = float(luaL_optnumber(L, StartArg++, 0.0f));
+	float maxrange = float(luaL_optnumber(L,StartArg++, 0.0f));
 	int team = luaL_optinteger(L, StartArg++, -1);
 	int teamfilter = luaL_optinteger(L, StartArg++, 0);
 	int typefilter = luaL_optinteger(L, StartArg++, 0);
@@ -977,45 +971,43 @@ static int GetNearestObject(lua_State *L)
 	PushHandle(L, BZ1Helper::Get().GetNearestObject(pos, maxrange, team, teamfilter, typefilter, ignoreinv, h, matchmask, objclass, odfname));
 	return 1;
 }
-#endif
 /* // Above Function modified to behave the same.
 //Handle GetNearestObject(const Vector &pos);
 //Handle GetNearestObject(Handle h);
 //Handle GetNearestObect(Name path,int point);
 static int GetNearestObject(lua_State *L)
 {
-Handle n;
-if (Matrix *mat = GetMatrix(L, 1))
-{
-//n = GetNearestObject(mat->posit);
-n = BZ1Helper::Get().GetNearestObject(*mat, 0, -1, 0, 0, false);
-}
-else if (Vector *pos = GetVector(L, 1))
-{
-//n = GetNearestObject(*pos);
-n = BZ1Helper::Get().GetNearestObject(*pos, 0, -1, 0, 0, false);
-}
-else if (lua_isstring(L, 1))
-{
-Name path = Name(lua_tostring(L, 1));
-int point = luaL_optinteger(L, 2, 0);
-//n = GetNearestObject(path, point);
-n = BZ1Helper::Get().GetNearestObject(path, point, 0, -1, 0, 0, false);
-}
-else
-{
-Handle h = RequireHandle(L, 1);
-n = GetNearestObject(h);
-}
-PushHandle(L, n);
-return 1;
+	Handle n;
+	if (Matrix *mat = GetMatrix(L, 1))
+	{
+		//n = GetNearestObject(mat->posit);
+		n = BZ1Helper::Get().GetNearestObject(*mat, 0, -1, 0, 0, false);
+	}
+	else if (Vector *pos = GetVector(L, 1))
+	{
+		//n = GetNearestObject(*pos);
+		n = BZ1Helper::Get().GetNearestObject(*pos, 0, -1, 0, 0, false);
+	}
+	else if (lua_isstring(L, 1))
+	{
+		Name path = Name(lua_tostring(L, 1));
+		int point = luaL_optinteger(L, 2, 0);
+		//n = GetNearestObject(path, point);
+		n = BZ1Helper::Get().GetNearestObject(path, point, 0, -1, 0, 0, false);
+	}
+	else
+	{
+		Handle h = RequireHandle(L, 1);
+		n = GetNearestObject(h);
+	}
+	PushHandle(L, n);
+	return 1;
 }
 */
 
 //Handle GetNearestVehicle(const Vector &pos);
 //Handle GetNearestVehicle(Handle h);
 //Handle GetNearestVehicle(Name path,int point);
-#if 0
 static int GetNearestVehicle(lua_State *L)
 {
 	Handle n;
@@ -1043,12 +1035,10 @@ static int GetNearestVehicle(lua_State *L)
 	PushHandle(L, n);
 	return 1;
 }
-#endif
 
 //Handle GetNearestBuilding(const Vector &pos);
 //Handle GetNearestBuilding(Handle h);
 //Handle GetNearestBuilding(Name path,int point);
-#if 0
 static int GetNearestBuilding(lua_State *L)
 {
 	Handle n;
@@ -1077,13 +1067,11 @@ static int GetNearestBuilding(lua_State *L)
 	PushHandle(L, n);
 	return 1;
 }
-#endif
 
 //Handle GetNearestEnemy(const Vector &pos);
 //Handle GetNearestEnemy(Handle h);
 //Handle GetNearestEnemy(Name path,int point);
 //DLLEXPORT Handle DLLAPI GetNearestEnemy(Handle h, bool ignorePilots, bool ignoreScavs, float maxDist = 450.0f);
-#if 0
 static int GetNearestEnemy(lua_State *L)
 {
 	Handle n;
@@ -1091,13 +1079,13 @@ static int GetNearestEnemy(lua_State *L)
 	{
 		//n = GetNearestEnemy(mat->posit);
 		int team = luaL_optinteger(L, 2, 0);
-		n = BZ1Helper::Get().GetNearestObject(*mat, 0, team, Enemies, Vehicle + Person);
+		n = BZ1Helper::Get().GetNearestObject(*mat, 0, team, Enemies, Vehicle+Person);
 	}
 	else if (Vector *pos = GetVector(L, 1))
 	{
 		int team = luaL_optinteger(L, 2, 0);
 		//n = GetNearestEnemy(*pos);
-		n = BZ1Helper::Get().GetNearestObject(*pos, 0, team, Enemies, Vehicle + Person);
+		n = BZ1Helper::Get().GetNearestObject(*pos, 0, team, Enemies, Vehicle+Person);
 	}
 	else if (lua_isstring(L, 1))
 	{
@@ -1105,9 +1093,9 @@ static int GetNearestEnemy(lua_State *L)
 		int point = luaL_optinteger(L, 2, 0);
 		int team = luaL_optinteger(L, 3, 0);
 		//n = GetNearestEnemy(path, point);
-		n = BZ1Helper::Get().GetNearestObject(path, point, 0, team, Enemies, Vehicle + Person);
+		n = BZ1Helper::Get().GetNearestObject(path, point, 0, team, Enemies, Vehicle+Person);
 	}
-	else if (lua_isboolean(L, 2))
+	else if(lua_isboolean(L, 2))
 	{
 		Handle h = RequireHandle(L, 1);
 		bool ignorepilot = lua_toboolean(L, 2);
@@ -1123,7 +1111,6 @@ static int GetNearestEnemy(lua_State *L)
 	PushHandle(L, n);
 	return 1;
 }
-#endif
 
 //Handle BuildObject(char *odf, int team, Handle h);
 //Handle BuildObject(char *odf, int team, Name path, int point = 0)
@@ -1146,7 +1133,7 @@ static int BuildObject(lua_State *L)
 	{
 		Name path = Name(lua_tostring(L, 3));
 		int point = luaL_optinteger(L, 4, 0);
-		if (point)
+		if(point)
 		{
 			Vector pos = GetVectorFromPath(path, point);
 			o = BuildObject(odf, team, pos);
@@ -1276,7 +1263,7 @@ static int Mine(lua_State *L)
 	}
 	else if (lua_isstring(L, 2))
 	{
-		//	*/
+//	*/
 		Name path = Name(lua_tostring(L, 2));
 
 		if (lua_isnumber(L, 4))
@@ -1423,7 +1410,7 @@ static int Dropoff(lua_State *L)
 	}
 	else if (lua_isstring(L, 2))
 	{
-		//*/
+	//*/
 		Name path = Name(luaL_checkstring(L, 2));
 
 		if (lua_isnumber(L, 4))
@@ -1617,7 +1604,7 @@ static int SetPosition(lua_State *L)
 	{
 		Name path = Name(luaL_checkstring(L, 2));
 		int point = luaL_optinteger(L, 3, 0);
-		if (point)
+		if(point)
 			SetPositionPath(h, path, point);
 		else
 			SetPosition(h, path);
@@ -2469,7 +2456,7 @@ static int IFace_GetString(lua_State *L)
 {
 	Name n = Name(luaL_checkstring(L, 1));
 	int size = luaL_checkinteger(L, 2);
-	Name v = Name(alloca(size + 1));
+	Name v = Name(alloca(size+1));
 	IFace_GetString(n, v, size);
 	v[size] = '\0';
 	lua_pushstring(L, v);
@@ -2575,13 +2562,13 @@ static int SetSkill(lua_State *L)
 }
 
 //void SetAIP(Name n, TeamNum team = 2);
-//static int SetAIP(lua_State *L)
-//{
-//	Name n = Name(luaL_checkstring(L, 1));
-//	TeamNum team = TeamNum(luaL_optinteger(L, 2, 2));
-//	BZ1Helper::Get().SetAIPFile(n, team); // Special BZC version. :)
-//	return 0;
-//}
+static int SetAIP(lua_State *L)
+{
+	Name n = Name(luaL_checkstring(L, 1));
+	TeamNum team = TeamNum(luaL_optinteger(L, 2, 2));
+	BZ1Helper::Get().SetAIPFile(n, team); // Special BZC version. :)
+	return 0;
+}
 
 //DLLEXPORT void DLLAPI LogFloat(float v);
 static int LogFloat(lua_State *L)
@@ -2638,8 +2625,8 @@ static int GetInstantMySide(lua_State *L)
 //DLLEXPORT bool DLLAPI StoppedPlayback(void);
 static int StoppedPlayback(lua_State *L)
 {
-lua_pushboolean(L, StoppedPlayback());
-return 1;
+	lua_pushboolean(L, StoppedPlayback());
+	return 1;
 }
 */
 
@@ -2754,7 +2741,7 @@ static int PlayMove(lua_State *L)
 static int PlayRecording(lua_State *L)
 {
 	Name n = Name(luaL_checkstring(L, 1));
-	if (lua_isboolean(L, 2))
+	if(lua_isboolean(L, 2))
 		lua_pushboolean(L, PlayRecording(n, lua_toboolean(L, 2)));
 	else
 		lua_pushboolean(L, PlayRecording(n));
@@ -2827,28 +2814,28 @@ static int StopEmitter(lua_State *L)
 //DLLEXPORT void DLLAPI SaveObjects(char* &buffer, unsigned long &size);
 static int SaveObjects(lua_State *L)
 {
-return 0;
+	return 0;
 }
 
 //DLLEXPORT void DLLAPI LoadObjects(char* buffer, unsigned long size);
 static int LoadObjects(lua_State *L)
 {
-return 0;
+	return 0;
 }
 
 //DLLEXPORT void DLLAPI IgnoreSync(bool on);
 static int IgnoreSync(lua_State *L)
 {
-bool on = lua_toboolean(L, 1);
-IgnoreSync(on);
-return 0;
+	bool on = lua_toboolean(L, 1);
+	IgnoreSync(on);
+	return 0;
 }
 
 //DLLEXPORT bool DLLAPI IsRecording(void);
 static int IsRecording(lua_State *L)
 {
-lua_pushboolean(L, IsRecording());
-return 1;
+	lua_pushboolean(L, IsRecording());
+	return 1;
 }
 */
 
@@ -2886,7 +2873,7 @@ static int ClearObjectives(lua_State *L)
 
 static long GetColor(const char * const colorname)
 {
-	switch (Hash(colorname))
+	switch(Hash(colorname))
 	{
 	case 0x568f4ba4 /* "BLACK" */: return BLACK;
 	case 0x3657edc3 /* "DKGREY" */: return DKGREY;
@@ -2901,7 +2888,7 @@ static long GetColor(const char * const colorname)
 	case 0x7de4f740 /* "DKYELLOW" */: return DKYELLOW;
 	case 0x40f480dc /* "RED" */: return RED;
 	case 0x23dbfbcf /* "DKRED" */: return DKRED;
-		// BZC additions.
+	// BZC additions.
 	case 0x9a6e02ff /* "PURPLE" */: return PURPLE;
 	case 0x4961533a /* "CYAN" */: return CYAN;
 	case 0xd8e26163 /* "ALLYBLUE" */: return ALLYBLUE;
@@ -3417,8 +3404,8 @@ static int AddToMessagesBox(lua_State *L)
 	}
 	else if (lua_isnumber(L, 2))
 	{
-		unsigned long color = unsigned long(luaL_checklong(L, 2));
-		AddToMessagesBox2(msg, color);
+	  unsigned long color = unsigned long(luaL_checklong(L, 2));
+	  AddToMessagesBox2(msg, color);
 	}
 	else
 	{
@@ -3691,49 +3678,49 @@ static int GetVelocity(lua_State *L)
 
 //DLLEXPORT bool DLLAPI GetObjInfo(Handle h, ObjectInfoType type, char pBuffer[64]);
 /*
-Get_CFG, // Returns the GameObjectClass's cfg string
-Get_ODF, // Returns the ODF of the object
-Get_GOClass_gCfg, // Returns the GameObjectClass's gCfg string (not 100% sure how it differs from the CFG) (It returns the ODF's BaseName. Even reads through ODF inheritence. :) ) -GBD
-Get_EntityType,
-Get_GOClass,
+	Get_CFG, // Returns the GameObjectClass's cfg string
+	Get_ODF, // Returns the ODF of the object
+	Get_GOClass_gCfg, // Returns the GameObjectClass's gCfg string (not 100% sure how it differs from the CFG) (It returns the ODF's BaseName. Even reads through ODF inheritence. :) ) -GBD
+	Get_EntityType,
+	Get_GOClass, 
 
-Get_Weapon0Config,
-Get_Weapon1Config,
-Get_Weapon2Config,
-Get_Weapon3Config,
-Get_Weapon4Config,
+	Get_Weapon0Config, 
+	Get_Weapon1Config,
+	Get_Weapon2Config,
+	Get_Weapon3Config,
+	Get_Weapon4Config,
 
-Get_Weapon0ODF,
-Get_Weapon1ODF,
-Get_Weapon2ODF,
-Get_Weapon3ODF,
-Get_Weapon4ODF,
+	Get_Weapon0ODF, 
+	Get_Weapon1ODF,
+	Get_Weapon2ODF,
+	Get_Weapon3ODF,
+	Get_Weapon4ODF,
 
-Get_Weapon0GOClass,
-Get_Weapon1GOClass,
-Get_Weapon2GOClass,
-Get_Weapon3GOClass,
-Get_Weapon4GOClass,
+	Get_Weapon0GOClass, 
+	Get_Weapon1GOClass,
+	Get_Weapon2GOClass,
+	Get_Weapon3GOClass,
+	Get_Weapon4GOClass,
 */
 static int GetObjInfo_CFG(lua_State *L)
 {
 	Handle h = GetHandle(L, 1);
-	char buffer[MAX_ODF_LENGTH] = { 0 };
+	char buffer[MAX_ODF_LENGTH] = {0};
 	GetObjInfo(h, Get_CFG, buffer);
-	if (h)
+	if(h)
 		lua_pushstring(L, buffer);
 	else
 		lua_pushnil(L);
 	return 1;
 }
-
+	
 // char *GetOdf(Handle h)
 static int GetObjInfo_ODF(lua_State *L)
 {
 	Handle h = GetHandle(L, 1);
-	char buffer[MAX_ODF_LENGTH] = { 0 };
+	char buffer[MAX_ODF_LENGTH] = {0};
 	GetObjInfo(h, Get_ODF, buffer);
-	if (h)
+	if(h)
 		lua_pushstring(L, buffer);
 	else
 		lua_pushnil(L);
@@ -3744,9 +3731,9 @@ static int GetObjInfo_ODF(lua_State *L)
 static int GetObjInfo_GOClass_gCfg(lua_State *L)
 {
 	Handle h = GetHandle(L, 1);
-	char buffer[MAX_ODF_LENGTH] = { 0 };
+	char buffer[MAX_ODF_LENGTH] = {0};
 	GetObjInfo(h, Get_GOClass_gCfg, buffer);
-	if (h)
+	if(h)
 		lua_pushstring(L, buffer);
 	else
 		lua_pushnil(L);
@@ -3757,9 +3744,9 @@ static int GetObjInfo_GOClass_gCfg(lua_State *L)
 static int GetObjInfo_EntityType(lua_State *L)
 {
 	Handle h = GetHandle(L, 1);
-	char buffer[MAX_ODF_LENGTH] = { 0 };
+	char buffer[MAX_ODF_LENGTH] = {0};
 	GetObjInfo(h, Get_EntityType, buffer);
-	if (h)
+	if(h)
 		lua_pushstring(L, buffer);
 	else
 		lua_pushnil(L);
@@ -3770,9 +3757,9 @@ static int GetObjInfo_EntityType(lua_State *L)
 static int GetObjInfo_GOClass(lua_State *L)
 {
 	Handle h = GetHandle(L, 1);
-	char buffer[MAX_ODF_LENGTH] = { 0 };
+	char buffer[MAX_ODF_LENGTH] = {0};
 	GetObjInfo(h, Get_GOClass, buffer);
-	if (h)
+	if(h)
 		lua_pushstring(L, buffer);
 	else
 		lua_pushnil(L);
@@ -3788,9 +3775,9 @@ static int Get_WeaponConfig(lua_State *L)
 
 	int slot = luaL_optinteger(L, 2, 0);
 	if (slot < 0 || slot > 4)
-		return 0;
+	return 0;
 
-	char buffer[MAX_ODF_LENGTH] = { 0 };
+	char buffer[MAX_ODF_LENGTH] = {0};
 	GetObjInfo(h, ObjectInfoType(Get_Weapon0Config + slot), buffer);
 	lua_pushstring(L, buffer);
 
@@ -3806,9 +3793,9 @@ static int Get_WeaponODF(lua_State *L)
 
 	int slot = luaL_optinteger(L, 2, 0);
 	if (slot < 0 || slot > 4)
-		return 0;
+	return 0;
 
-	char buffer[MAX_ODF_LENGTH] = { 0 };
+	char buffer[MAX_ODF_LENGTH] = {0};
 	GetObjInfo(h, ObjectInfoType(Get_Weapon0ODF + slot), buffer);
 	lua_pushstring(L, buffer);
 
@@ -3824,9 +3811,9 @@ static int Get_WeaponGOClass(lua_State *L)
 
 	int slot = luaL_optinteger(L, 2, 0);
 	if (slot < 0 || slot > 4)
-		return 0;
+	return 0;
 
-	char buffer[MAX_ODF_LENGTH] = { 0 };
+	char buffer[MAX_ODF_LENGTH] = {0};
 	GetObjInfo(h, ObjectInfoType(Get_Weapon0GOClass + slot), buffer);
 	lua_pushstring(L, buffer);
 
@@ -3870,7 +3857,7 @@ static int TranslateString2(lua_State *L)
 {
 	const char *src = luaL_checkstring(L, 1);
 	size_t size = size_t(luaL_checkinteger(L, 2));
-	char *dst = static_cast<char *>(alloca(size + 1));
+	char *dst = static_cast<char *>(alloca(size+1));
 	TranslateString2(dst, size, const_cast<char *>(src));
 	dst[size] = '\0';
 	lua_pushstring(L, dst);
@@ -3988,7 +3975,7 @@ static int GetODFHexInt(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFHexInt(file, section, label, &value, value);
 	}
 	else
@@ -4015,7 +4002,7 @@ static int GetODFInt(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFInt(file, section, label, &value, value);
 	}
 	else
@@ -4042,7 +4029,7 @@ static int GetODFLong(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFLong(file, section, label, &value, value);
 	}
 	else
@@ -4069,7 +4056,7 @@ static int GetODFFloat(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFFloat(file, section, label, &value, value);
 	}
 	else
@@ -4096,7 +4083,7 @@ static int GetODFDouble(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFDouble(file, section, label, &value, value);
 	}
 	else
@@ -4123,7 +4110,7 @@ static int GetODFChar(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFChar(file, section, label, &value, value);
 	}
 	else
@@ -4150,7 +4137,7 @@ static int GetODFBool(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFBool(file, section, label, &value, value);
 	}
 	else
@@ -4173,12 +4160,12 @@ static int GetODFString(lua_State *L)
 	bool found = false;
 	// Data Type stuff.
 	const char *defval = luaL_optstring(L, 4, NULL);
-	char value[MAX_ODF_LENGTH] = { 0 };
+	char value[MAX_ODF_LENGTH] = {0};
 
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFString(file, section, label, MAX_ODF_LENGTH, value, defval);
 	}
 	else
@@ -4205,7 +4192,7 @@ static int GetODFColor(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFColor(file, section, label, &value, value);
 	}
 	else
@@ -4233,7 +4220,7 @@ static int GetODFVector(lua_State *L)
 	if (lua_isstring(L, 1))
 	{
 		const char *file = luaL_checkstring(L, 1);
-		if (OpenODF2(file))
+		if(OpenODF2(file))
 			found = GetODFVector(file, section, label, &value, value);
 	}
 	else
@@ -4252,17 +4239,17 @@ static int GetODFVector(lua_State *L)
 //DLLEXPORT bool DLLAPI OpenODF(char *name);
 static int OpenODF(lua_State *L)
 {
-const char *file = luaL_checkstring(L, 1);
-lua_pushboolean(L, OpenODF(file));
-return 1;
+	const char *file = luaL_checkstring(L, 1);
+	lua_pushboolean(L, OpenODF(file));
+	return 1;
 }
 
 //DLLEXPORT bool DLLAPI CloseODF(char *name);
 static int CloseODF(lua_State *L)
 {
-const char *file = luaL_checkstring(L, 1);
-lua_pushboolean(L, CloseODF(file));
-return 1;
+	const char *file = luaL_checkstring(L, 1);
+	lua_pushboolean(L, CloseODF(file));
+	return 1;
 }
 */
 
@@ -4292,7 +4279,7 @@ static int GetGroup(lua_State *L)
 		int group = luaL_checkinteger(L, 2);
 		ObjectInfoType type = ObjectInfoType(luaL_checkinteger(L, 3));
 
-		char pBuffer[MAX_ODF_LENGTH] = { 0 };
+		char pBuffer[MAX_ODF_LENGTH] = {0};
 		GetGroup(team, group, type, pBuffer);
 		lua_pushstring(L, pBuffer);
 	}
@@ -4339,7 +4326,7 @@ static int LoadFile(lua_State *L)
 	size_t bufSize = 0;
 	char* FileBuffer = NULL;
 	LoadFile(filename, NULL, bufSize);
-	FileBuffer = static_cast<char *>(malloc(bufSize + 1));
+	FileBuffer = static_cast<char *>(malloc(bufSize+1));
 	LoadFile(filename, FileBuffer, bufSize);
 	FileBuffer[bufSize] = '\0';
 
@@ -4358,7 +4345,7 @@ static int StartAudio3D(lua_State *L)
 {
 	const char *msg = luaL_checkstring(L, 1);
 
-	if (lua_isboolean(L, 4))
+	if(lua_isboolean(L, 4))
 	{
 		Handle h = RequireHandle(L, 2);
 		DLLAudioCategory cat = DLLAudioCategory(luaL_checkinteger(L, 3));
@@ -4620,8 +4607,7 @@ static int GetTerrainHeightAndNormal(lua_State *L)
 	{
 		Name path = Name(lua_tostring(L, 1));
 		int point = luaL_optinteger(L, 2, 0);
-		TerrainGetHeightAndNormal(path, point, height, normal, usewater);
-	}
+		TerrainGetHeightAndNormal(path, point, height, normal, usewater);	}
 	else
 	{
 		Handle h = RequireHandle(L, 1);
@@ -4643,7 +4629,7 @@ static int GetPathPoints(lua_State *L)
 	size_t bufSize = 0;
 	GetPathPoints(path, bufSize, NULL);
 	float *pData = static_cast<float *>(_alloca(sizeof(float) * 2 * bufSize));
-	if (GetPathPoints(path, bufSize, pData))
+	if(GetPathPoints(path, bufSize, pData))
 	{
 		lua_createtable(L, bufSize, 0);
 		for (size_t i = 0; i < bufSize; ++i)
@@ -4875,10 +4861,10 @@ static int IsNotDeadAndPilot2(lua_State *L)
 static int GetLabel(lua_State *L)
 {
 	Handle h = RequireHandle(L, 1);
-	if (const char *label = GetLabel(h))
+	if ( const char *label = GetLabel(h) )
 	{
-		lua_pushstring(L, label);
-		return 1;
+	   lua_pushstring(L, label);
+	   return 1;
 	}
 	return 0;
 }
@@ -4988,10 +4974,10 @@ static int HasPilot(lua_State *L)
 static int GetPilotClass(lua_State *L)
 {
 	Handle h = RequireHandle(L, 1);
-	if (const char *pilotclass = GetPilotClass(h))
+	if ( const char *pilotclass = GetPilotClass(h) )
 	{
-		lua_pushstring(L, pilotclass);
-		return 1;
+	   lua_pushstring(L, pilotclass);
+	   return 1;
 	}
 	return 0;
 }
@@ -5060,10 +5046,10 @@ static int GetAllSpawnpoints(lua_State *L)
 
 	lua_createtable(L, count, 0);
 
-	for (size_t i = 0; i < count; i++)
+	for(size_t i = 0; i < count; i++)
 	{
 		lua_createtable(L, 0, 7);
-		*NewVector(L) = info[i].m_Position;
+		*NewVector( L )  = info[i].m_Position;
 		lua_setfield(L, -2, "Position");
 		lua_pushinteger(L, info[i].m_Team);
 		lua_setfield(L, -2, "Team");
@@ -5087,10 +5073,10 @@ static int GetAllSpawnpoints(lua_State *L)
 static int GetPlan(lua_State *L)
 {
 	int team = luaL_checkinteger(L, 1);
-	if (const char *aipname = GetPlan(team))
+	if ( const char *aipname = GetPlan(team) )
 	{
-		lua_pushstring(L, aipname);
-		return 1;
+	   lua_pushstring(L, aipname);
+	   return 1;
 	}
 	return 0;
 }
@@ -5115,10 +5101,10 @@ static int GetSkill(lua_State *L)
 static int GetObjectiveName(lua_State *L)
 {
 	Handle h = RequireHandle(L, 1);
-	if (const char *objectivename = GetObjectiveName(h))
+	if ( const char *objectivename = GetObjectiveName(h) )
 	{
-		lua_pushstring(L, objectivename);
-		return 1;
+	   lua_pushstring(L, objectivename);
+	   return 1;
 	}
 	return 0;
 }
@@ -5153,7 +5139,7 @@ static int SetInterpolablePosition(lua_State *L)
 			SetInterpolablePosition(h, mat1, mat2, setpos);
 		else
 			SetInterpolablePosition(h, mat1, NULL, setpos);
-
+		
 	}
 	else if (Vector *pos1 = GetVector(L, 2))
 	{
@@ -5165,7 +5151,7 @@ static int SetInterpolablePosition(lua_State *L)
 	/*
 	else
 	{
-	SetInterpolablePosition(h); //error C2668: 'SetInterpolablePosition' : ambiguous call to overloaded function
+		SetInterpolablePosition(h); //error C2668: 'SetInterpolablePosition' : ambiguous call to overloaded function
 	}
 	*/
 
@@ -5180,7 +5166,6 @@ static int SetInterpolablePosition(lua_State *L)
 // BZC Specific Functions:
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#if 0
 //int GetTurnCount(void) {return m_TurnCounter;}
 static int GetTurnCount(lua_State *L)
 {
@@ -5715,7 +5700,7 @@ static int ClearScrapAround(lua_State *L)
 		percent = float(luaL_optnumber(L, 4, 1.0f));
 		BZ1Helper::Get().ClearScrapAround(d, path, point, percent);
 	}
-	else
+	else 
 	{
 		Handle h = RequireHandle(L, 2);
 		BZ1Helper::Get().ClearScrapAround(d, h, percent);
@@ -5755,7 +5740,7 @@ static int LoadMapObjectsFromFile(lua_State *L)
 	BZ1Helper::Get().LoadMapObjectsFromFile(const_cast<char *>(file));
 	return 0;
 }
-#endif
+
 //extern bool IsRecycler(Handle h);
 static int IsRecycler(lua_State *L)
 {
@@ -6699,7 +6684,7 @@ static int WriteToFile(lua_State *L)
 {
 	size_t fileNameSize = 0;
 	const char* filename = luaL_checklstring(L, 1, &fileNameSize);
-
+	
 	size_t writeSize = 0;
 	const char* writeStr = luaL_checklstring(L, 2, &writeSize);
 
@@ -6714,44 +6699,44 @@ static int WriteToFile(lua_State *L)
 	wchar_t *pData = static_cast<wchar_t *>(alloca(bufSize*sizeof(wchar_t)));
 	if(GetOutputPath(bufSize, pData))
 	{
-	wchar_t outPath[MAX_MESSAGE_LENGTH] = {0};
-	wchar_t MyDocumentsPath[MAX_MESSAGE_LENGTH] = {0};
-	SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, MyDocumentsPath);
+		wchar_t outPath[MAX_MESSAGE_LENGTH] = {0};
+		wchar_t MyDocumentsPath[MAX_MESSAGE_LENGTH] = {0};
+		SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, MyDocumentsPath);
 
-	swprintf_s(outPath, (_wcsnicmp(pData, MyDocumentsPath, wcslen(MyDocumentsPath)) == 0) ? L"%slogs/%S" : L"%sBZCaddon/%S", pData, Filename);
+		swprintf_s(outPath, (_wcsnicmp(pData, MyDocumentsPath, wcslen(MyDocumentsPath)) == 0) ? L"%slogs/%S" : L"%sBZCaddon/%S", pData, Filename);
 
 	//	if(_wcsnicmp(pData, MyDocumentsPath, wcslen(MyDocumentsPath)) == 0)
 	//		swprintf_s(outPath, L"%slogs/%S", pData, filename);
 	//	else
 	//		swprintf_s(outPath, L"%sBZCaddon/%S", pData, filename);
+		
+		FILE* pFile = NULL;
+		if(FileNameMap.find(filename) == FileNameMap.end())
+		{
+			pFile = _wfsopen(outPath, append ? L"a+" : L"w+", _SH_DENYWR);
 
-	FILE* pFile = NULL;
-	if(FileNameMap.find(filename) == FileNameMap.end())
-	{
-	pFile = _wfsopen(outPath, append ? L"a+" : L"w+", _SH_DENYWR);
+		//	if(append)
+		//		pFile = _wfsopen(outPath, L"a", _SH_DENYWR);
+		//	else
+		//		pFile = _wfsopen(outPath, L"w", _SH_DENYWR);
 
-	//	if(append)
-	//		pFile = _wfsopen(outPath, L"a", _SH_DENYWR);
-	//	else
-	//		pFile = _wfsopen(outPath, L"w", _SH_DENYWR);
+			if(pFile)
+				FileNameMap[filename] = pFile;
+			else
+				FormatLogMessage("ERROR: Could not open File: %S", outPath);
+		}
+		else
+		{
+			pFile = FileNameMap[filename];
+		}
 
-	if(pFile)
-	FileNameMap[filename] = pFile;
-	else
-	FormatLogMessage("ERROR: Could not open File: %S", outPath);
+		if(pFile)
+		{
+			lua_pushboolean(L, fwrite(writeStr, writeSize, 1, pFile));
+			return 1;
+		}
 	}
-	else
-	{
-	pFile = FileNameMap[filename];
-	}
-
-	if(pFile)
-	{
-	lua_pushboolean(L, fwrite(writeStr, writeSize, 1, pFile));
-	return 1;
-	}
-	}
-
+	
 	lua_pushboolean(L, 0);
 	*/
 
@@ -6784,7 +6769,7 @@ static int IsNullVector(lua_State *L)
 	lua_pushboolean(L, IsNullVector(*v1));
 	return 1;
 }
-#if 0
+
 // Inner function used by GetObjectsInRange?
 static int ObjectInRangeInner(lua_State *L)
 {
@@ -7042,7 +7027,7 @@ static int GetBZCVersion(lua_State *L)
 	lua_pushnumber(L, GetBZCVersion());
 	return 1;
 }
-#endif
+
 //extern void SaveGame(char* filename);
 static int SaveGame(lua_State *L)
 {
@@ -7120,16 +7105,13 @@ static int SetAmmo(lua_State *L)
 	SetAmmo(me, percent);
 	return 0;
 }
-#pragma endregion
-
-
 
 // Lua script utils functions
-static const luaL_Reg sLuaScriptUtils[] = {
+static const luaL_Reg sLuaScriptUtils [] = {
 	{ "GetHandle", GetHandle },
 	{ "Make_RGB", Make_RGB },
 	{ "Make_RGBA", Make_RGBA },
-	// BZ2 Script Utils Inlines.
+// BZ2 Script Utils Inlines.
 	{ "FailMission", FailMission },
 	{ "SucceedMission", SucceedMission },
 	{ "ChangeSide", ChangeSide },
@@ -7141,11 +7123,11 @@ static const luaL_Reg sLuaScriptUtils[] = {
 	{ "GetTug", GetTug },
 	{ "HasCargo", HasCargo },
 	{ "GetDistance", GetDistance },
-//	{ "GetNearestObject", GetNearestObject },
-//	{ "GetNearestVehicle", GetNearestVehicle },
-//	{ "GetNearestBuilding", GetNearestBuilding },
-//	{ "GetNearestEnemy", GetNearestEnemy },
-	// BZ2 Script Utils Functions.
+	{ "GetNearestObject", GetNearestObject },
+	{ "GetNearestVehicle", GetNearestVehicle },
+	{ "GetNearestBuilding", GetNearestBuilding },
+	{ "GetNearestEnemy", GetNearestEnemy },
+// BZ2 Script Utils Functions.
 	{ "BuildObject", BuildObject },
 	{ "RemoveObject", RemoveObject },
 	{ "GetFirstEmptyGroup", GetFirstEmptyGroup },
@@ -7275,7 +7257,7 @@ static const luaL_Reg sLuaScriptUtils[] = {
 	{ "IFace_AddTextItem", IFace_AddTextItem },
 	{ "IFace_GetSelectedItem", IFace_GetSelectedItem },
 	{ "SetSkill", SetSkill },
-//	{ "SetAIP", SetAIP },
+	{ "SetAIP", SetAIP },
 	{ "LogFloat", LogFloat },
 	{ "GetInstantMyForce", GetInstantMyForce },
 	{ "GetInstantCompForce", GetInstantCompForce },
@@ -7374,7 +7356,7 @@ static const luaL_Reg sLuaScriptUtils[] = {
 	{ "GetBase", GetObjInfo_GOClass_gCfg, },
 	{ "GetClassSig", GetObjInfo_EntityType },
 	{ "GetClassLabel", GetObjInfo_GOClass },
-	{ "GetWeaponConfig ", Get_WeaponConfig },
+	{ "GetWeaponConfig ", Get_WeaponConfig  },
 	{ "GetWeaponODF", Get_WeaponODF },
 	{ "GetWeaponGOClass", Get_WeaponGOClass },
 	{ "DoesODFExist", DoesODFExist },
@@ -7488,56 +7470,56 @@ static const luaL_Reg sLuaScriptUtils[] = {
 	{ "SetInterpolablePosition", SetInterpolablePosition },
 	//{ "SecondsToTurns", SecondsToTurns }, // Pointless since Lua uses all Doubles.
 	//{ "TurnsToSeconds", TurnsToSeconds },
-	//BZC Functions.
-//	{ "GetTurnCount", GetTurnCount },
-//	{ "DeleteAfterDelay", DeleteAfterDelay },
-//	{ "AddPilot", AddPilot },
-//	{ "SetPilot", SetPilot },
-//	{ "GetPilot", GetPilot },
-//	{ "AddMaxPilot", AddMaxPilot },
-//	{ "SetMaxPilot", SetMaxPilot },
-//	{ "GetMaxPilot", GetMaxPilot },
-//	{ "SetHullGauge", SetHullGauge },
-//	{ "SetAmmoGauge", SetAmmoGauge },
-//	{ "SetAuxGauge", SetAuxGauge },
-//	{ "GetRecyclerHandle", GetRecy },
-//	{ "GetFactoryHandle", GetMuf },
-//	{ "GetArmoryHandle", GetSlf },
-//	{ "GetConstructorHandle", GetCnst },
-//	{ "GetUsePilots", GetUsePilots },
-//	{ "SetUsePilots", SetUsePilots },
-//	{ "SetAIPFile", SetAIPFile },
-//	{ "AddToDispatch", AddToDispatch },
-//	{ "Cloak", Cloak },
-//	{ "Decloak", Decloak },
-//	{ "IsCloaked", IsCloaked },
-//	{ "SetCloakAllowed", SetCloakAllowed },
-//	{ "DLLHunt", DLLHunt },
-//	{ "SetUseService", SetUseService },
-//	{ "GetEscortTarget", GetEscortTarget },
-//	{ "DLLStartEarthQuake", DLLStartEarthQuake },
-//	{ "DLLUpdateEarthQuake", DLLUpdateEarthQuake },
-//	{ "DLLStopEarthQuake", DLLStopEarthQuake },
-//	{ "SetPortalChannel", SetPortalChannel },
-//	{ "GetPortalChannel", GetPortalChannel },
-//	{ "SetPortalEffectStart", SetPortalEffectStart },
-//	{ "SetPortalEffectOn", SetPortalEffectOn },
-//	{ "SetPortalEffectEnd", SetPortalEffectEnd },
-//	{ "IsPortalEffectActive", IsPortalEffectActive },
-//	{ "SetPilotIndependence", SetPilotIndependence },
-//	{ "IsBuildingPowered", IsBuildingPowered },
-//	{ "SetBuildingPowered", SetBuildingPowered },
-//	{ "ReplaceOnDeath", ReplaceOnDeath },
-//	{ "ReplaceObject", ReplaceObject },
-//	{ "GetRandomObject", GetRandomObject },
-//	{ "GetNumObjects", GetNumObjects },
-//	{ "BuildAngleObject", BuildAngleObject },
-//	{ "BuildTransportObject", BuildTransportObject },
-//	{ "SetCPUPlan", SetCPUPlan },
-//	{ "IsBlockedByBuilding", IsBlockedByBuilding },
-//	{ "SaveMapObjectsToFile", SaveMapObjectsToFile },
-//	{ "LoadMapObjectsFromFile", LoadMapObjectsFromFile },
-	// BZC Script Util functions.
+//BZC Functions.
+	{ "GetTurnCount", GetTurnCount },
+	{ "DeleteAfterDelay", DeleteAfterDelay },
+	{ "AddPilot", AddPilot },
+	{ "SetPilot", SetPilot },
+	{ "GetPilot", GetPilot },
+	{ "AddMaxPilot", AddMaxPilot },
+	{ "SetMaxPilot", SetMaxPilot },
+	{ "GetMaxPilot", GetMaxPilot },
+	{ "SetHullGauge", SetHullGauge },
+	{ "SetAmmoGauge", SetAmmoGauge },
+	{ "SetAuxGauge", SetAuxGauge },
+	{ "GetRecyclerHandle", GetRecy },
+	{ "GetFactoryHandle", GetMuf },
+	{ "GetArmoryHandle", GetSlf },
+	{ "GetConstructorHandle", GetCnst },
+	{ "GetUsePilots", GetUsePilots },
+	{ "SetUsePilots", SetUsePilots },
+	{ "SetAIPFile", SetAIPFile },
+	{ "AddToDispatch", AddToDispatch },
+	{ "Cloak", Cloak },
+	{ "Decloak", Decloak },
+	{ "IsCloaked", IsCloaked },
+	{ "SetCloakAllowed", SetCloakAllowed },
+	{ "DLLHunt", DLLHunt },
+	{ "SetUseService", SetUseService },
+	{ "GetEscortTarget", GetEscortTarget },
+	{ "DLLStartEarthQuake", DLLStartEarthQuake },
+	{ "DLLUpdateEarthQuake", DLLUpdateEarthQuake },
+	{ "DLLStopEarthQuake", DLLStopEarthQuake },
+	{ "SetPortalChannel", SetPortalChannel },
+	{ "GetPortalChannel", GetPortalChannel },
+	{ "SetPortalEffectStart", SetPortalEffectStart },
+	{ "SetPortalEffectOn", SetPortalEffectOn },
+	{ "SetPortalEffectEnd", SetPortalEffectEnd },
+	{ "IsPortalEffectActive", IsPortalEffectActive },
+	{ "SetPilotIndependence", SetPilotIndependence },
+	{ "IsBuildingPowered", IsBuildingPowered },
+	{ "SetBuildingPowered", SetBuildingPowered },
+	{ "ReplaceOnDeath", ReplaceOnDeath },
+	{ "ReplaceObject", ReplaceObject },
+	{ "GetRandomObject", GetRandomObject },
+	{ "GetNumObjects", GetNumObjects },
+	{ "BuildAngleObject", BuildAngleObject },
+	{ "BuildTransportObject", BuildTransportObject },
+	{ "SetCPUPlan", SetCPUPlan },
+	{ "IsBlockedByBuilding", IsBlockedByBuilding },
+	{ "SaveMapObjectsToFile", SaveMapObjectsToFile },
+	{ "LoadMapObjectsFromFile", LoadMapObjectsFromFile },
+// BZC Script Util functions.
 	{ "IsRecycler", IsRecycler },
 	{ "CountAlliedPlayers", CountAlliedPlayers },
 	{ "GetCheckedNetworkSvar", GetCheckedNetworkSvar },
@@ -7638,22 +7620,22 @@ static const luaL_Reg sLuaScriptUtils[] = {
 	{ "WriteToFile", WriteToFile },
 	{ "GetRandomInt", GetRandomInt },
 	{ "IsNullVector", IsNullVector },
-//	{ "Get13Version", Get13Version },
-//	{ "GetBZCVersion", GetBZCVersion },
+	{ "Get13Version", Get13Version },
+	{ "GetBZCVersion", GetBZCVersion },
 	{ "SaveGame", SaveGame },
 	{ "LoadGame", LoadGame },
 	{ "DeleteGame", DeleteGame },
 	{ "IsOdf2", IsOdf2 },
 
 
-	//BZ1 Functions/Backwards Compatability.
+//BZ1 Functions/Backwards Compatability.
 	{ "IsValid", IsAround },
-//	{ "MissionAudioMessage", MissionAudioMessage }, // Must be used to use the below functions.
-//	{ "RepeatAudioMessage", RepeatAudioMessage },
-//	{ "IsAudioMessagePlaying", IsAudioMessagePlaying },
+	{ "MissionAudioMessage", MissionAudioMessage }, // Must be used to use the below functions.
+	{ "RepeatAudioMessage", RepeatAudioMessage },
+	{ "IsAudioMessagePlaying", IsAudioMessagePlaying },
 	//{ "IsCraft", IsCraft },
-//	{ "GetRidOfSomeScrap", GetRidOfSomeScrap },
-//	{ "ClearScrapAround", ClearScrapAround },
+	{ "GetRidOfSomeScrap", GetRidOfSomeScrap },
+	{ "ClearScrapAround", ClearScrapAround },
 	{ "SetPathOneWay", SetPathOneWay },
 	{ "SetPathRoundTrip", SetPathRoundTrip },
 	{ "SetPathLoop", SetPathLoop },
@@ -7661,7 +7643,7 @@ static const luaL_Reg sLuaScriptUtils[] = {
 	{ "SetTransform", SetTransform },
 	{ "GetTransform", GetTransform },
 	{ "GetWeaponClass", Get_WeaponConfig },
-//	{ "ObjectsInRange", ObjectsInRange },
+	{ "ObjectsInRange", ObjectsInRange },
 	{ "SetVector", SetVector },
 	{ "DotProduct", DotProduct },
 	{ "CrossProduct", CrossProduct },
@@ -7678,7 +7660,7 @@ static const luaL_Reg sLuaScriptUtils[] = {
 	{ "BuildOrthogonalMatrix", BuildOrthogonalMatrix },
 	{ "BuildDirectionalMatrix", BuildDirectionalMatrix },
 
-	//	{ "print", LuaPrint },
+//	{ "print", LuaPrint },
 
 	/* // Functions not supported by BZ2. :(
 	{ "LockAllies", LockAllies },
@@ -7692,9 +7674,94 @@ static const luaL_Reg sLuaScriptUtils[] = {
 	{ NULL, NULL }
 };
 
-
-
+// Functions not available in BZ2. -GBD
 #if 0
+
+// int GetClassId(Handle h)
+static int GetClassId(lua_State *L)
+{
+	Handle h = GetHandle(L, 1);
+	if (GameObject *gameObj = GameObjectHandle::GetObj(h))
+	{
+		lua_pushinteger(L, gameObj->GetClass()->class_id);
+		return 1;
+	}
+	return 0;
+}
+
+//void LockAllies(void);
+static int LockAllies(lua_State *L)
+{
+	LockAllies(lua_toboolean(L, 1) != 0);
+	return 0;
+}
+
+//void SetAIControl(TeamNum team, bool control);
+static int SetAIControl(lua_State *L)
+{
+	TeamNum team = TeamNum(luaL_checkinteger(L, 1));
+	int control = luaL_opt(L, lua_toboolean, 2, TRUE);
+	SetAIControl(team, control != 0);
+	return 0;
+}
+
+//bool CanCommand(Handle me);
+static int CanCommand(lua_State *L)
+{
+	Handle me = GetHandle(L, 1);
+	lua_pushboolean(L, CanCommand(me));
+	return 1;
+}
+
+//bool CanBuild(Handle me);
+static int CanBuild(lua_State *L)
+{
+	Handle me = GetHandle(L, 1);
+	lua_pushboolean(L, CanBuild(me));
+	return 1;
+}
+
+//bool IsBusy(Handle me);
+static int IsBusy(lua_State *L)
+{
+	Handle me = GetHandle(L, 1);
+	lua_pushboolean(L, IsBusy(me));
+	return 1;
+}
+
+//void BuildAt(Handle me, char *odf, const Matrix &mat, int priority = 1);
+//void BuildAt(Handle me, char *odf, const Vector &pos, int priority = 1);
+//void BuildAt(Handle me, char *odf, Name path, int priority = 1);
+//void BuildAt(Handle me, char *odf, Handle him, int priority = 1);
+static int BuildAt(lua_State *L)
+{
+	Handle me = GetHandle(L, 1);
+	char *odf = const_cast<char *>(luaL_checkstring(L, 2));
+	int priority = luaL_optinteger(L, 4, 1);
+	if (Matrix *mat = GetMatrix(L, 3))
+	{
+		BuildAt(me, odf, *mat, priority);
+	}
+	else if (Vector *pos = GetVector(L, 3))
+	{
+		BuildAt(me, odf, *pos, priority);
+	}
+	else if (lua_isstring(L, 3))
+	{
+		Name path = Name(lua_tostring(L, 3));
+		BuildAt(me, odf, path, priority);
+	}
+	else
+	{
+		Handle him = GetHandle(L, 3);
+		BuildAt(me, odf, him, priority);
+	}
+	return 0;
+}
+*/
+
+#endif
+
 // read a lua value from the file
 static void LoadValue(lua_State *L, bool push)
 {
@@ -7707,91 +7774,91 @@ static void LoadValue(lua_State *L, bool push)
 	{
 	default:
 	case LUA_TNIL:
-	{
-		if (push)
-			lua_pushnil(L);
-	}
-	break;
+		{
+			if (push)
+				lua_pushnil(L);
+		}
+		break;
 	case LUA_TBOOLEAN:
-	{
-		bool value;
-		//in(fp, &value, sizeof(value));
-		Read(&value, 1);
-		if (push)
-			lua_pushboolean(L, value);
-	}
-	break;
+		{
+			bool value;
+			//in(fp, &value, sizeof(value));
+			Read(&value, 1);
+			if (push)
+				lua_pushboolean(L, value);
+		}
+		break;
 	case LUA_TLIGHTUSERDATA:
-	{
-		Handle value;
-		//in(fp, &value, sizeof(value));
-		Read(&value, 1);
-		ConvertHandles(&value, 1);
-		if (push)
-			lua_pushlightuserdata(L, (void *)value);
-	}
-	break;
+		{
+			Handle value;
+			//in(fp, &value, sizeof(value));
+			Read(&value, 1);
+			ConvertHandles(&value, 1);
+			if (push)
+				lua_pushlightuserdata(L, (void *)value);
+		}
+		break;
 	case LUA_TNUMBER:
-	{
-		double value;
-		//in(fp, &value, sizeof(value));
-		Read(&value, sizeof(value));
-		if (push)
-			lua_pushnumber(L, value);
-	}
-	break;
+		{
+			double value;
+			//in(fp, &value, sizeof(value));
+			Read(&value, sizeof(value));
+			if (push)
+				lua_pushnumber(L, value);
+		}
+		break;
 	case LUA_TSTRING:
-	{
-		size_t len;
-		//in(fp, &len, sizeof(len));
-		Read(&len, sizeof(len));
-		char *buf = static_cast<char *>(_alloca(len));
-		//in(fp, buf, len);
-		Read(buf, len);
-		if (push)
-			lua_pushlstring(L, buf, len);
-	}
-	break;
+		{
+			size_t len;
+			//in(fp, &len, sizeof(len));
+			Read(&len, sizeof(len));
+			char *buf = static_cast<char *>(_alloca(len));
+			//in(fp, buf, len);
+			Read(buf, len);
+			if (push)
+				lua_pushlstring(L, buf, len);
+		}
+		break;
 	case LUA_TTABLE:
-	{
-		int count;
-		//in(fp, &count, sizeof(count));
-		Read(&count, 1);
-		lua_newtable(L);
-		for (int i = 0; i < count; ++i)
 		{
-			LoadValue(L, push);	// key
-			LoadValue(L, push);	// value
-			if (push)
-				lua_settable(L, -3);
+			int count;
+			//in(fp, &count, sizeof(count));
+			Read(&count, 1);
+			lua_newtable(L);
+			for (int i = 0; i < count; ++i)
+			{
+				LoadValue(L, push);	// key
+				LoadValue(L, push);	// value
+				if (push)
+					lua_settable(L, -3);
+			}
 		}
-	}
-	break;
+		break;
 	case LUA_TUSERDATA:
-	{
-		unsigned long type;
-		//in(fp, &type, sizeof(type));
-		Read(&type, sizeof(type));
-		switch (type)
 		{
-		case 0x8f89e802 /* "Vector" */:
-		{
-			Vector v;
-			//in(fp, &v, sizeof(v));
-			Read(&v, sizeof(v));
-			if (push)
-				*NewVector(L) = v;
-		}
-		break;
-		case 0x15c2f8ec /* "Matrix" */:
-		{
-			Matrix m;
-			//in(fp, &m, sizeof(m));
-			Read(&m, sizeof(m));
-			if (push)
-				*NewMatrix(L) = m;
-		}
-		break;
+			unsigned long type;
+			//in(fp, &type, sizeof(type));
+			Read(&type, sizeof(type));
+			switch (type)
+			{
+			case 0x8f89e802 /* "Vector" */:
+				{
+					Vector v;
+					//in(fp, &v, sizeof(v));
+					Read(&v, sizeof(v));
+					if (push)
+						*NewVector(L) = v;
+				}
+				break;
+			case 0x15c2f8ec /* "Matrix" */:
+				{
+					Matrix m;
+					//in(fp, &m, sizeof(m));
+					Read(&m, sizeof(m));
+					if (push)
+						*NewMatrix(L) = m;
+				}
+				break;
 		//	case 0x79fa9618 /* "AiPath" */:
 		//		{
 		//			AiPath *p;
@@ -7800,11 +7867,11 @@ static void LoadValue(lua_State *L, bool push)
 		//				*NewAiPath(L) = p;
 		//		}
 		//		break;
-		default:
-			break;
+			default:
+				break;
+			}
 		}
-	}
-	break;
+		break;
 	}
 }
 
@@ -7819,92 +7886,137 @@ static void SaveValue(lua_State *L, int i)
 	switch (type)
 	{
 	case LUA_TBOOLEAN:
-	{
-		bool value = lua_toboolean(L, i) != 0;
-		//out(fp, &value, sizeof(value), "b");
-		Write(&value, 1);
-	}
-	break;
+		{
+			bool value = lua_toboolean(L, i) != 0;
+			//out(fp, &value, sizeof(value), "b");
+			Write(&value, 1);
+		}
+		break;
 	case LUA_TLIGHTUSERDATA:
-	{
-		Handle value = Handle(luaL_testudata(L, i, "Handle"));
-		//out(fp, &value, sizeof(value), "h");
-		Write(&value, 1);
-	}
-	break;
+		{
+			Handle value = Handle(luaL_testudata(L, i, "Handle"));
+			//out(fp, &value, sizeof(value), "h");
+			Write(&value, 1);
+		}
+		break;
 	case LUA_TNUMBER:
-	{
-		double value = lua_tonumber(L, i);
-		//out(fp, &value, sizeof(value), "f");
-		Write(&value, sizeof(value));
-	}
-	break;
+		{
+			double value = lua_tonumber(L, i);
+			//out(fp, &value, sizeof(value), "f");
+			Write(&value, sizeof(value));
+		}
+		break;
 	case LUA_TSTRING:
-	{
-		size_t len;
-		const char *value = lua_tolstring(L, i, &len);
-		//out(fp, reinterpret_cast<int *>(&len), sizeof(len), "l");
-		//out(fp, const_cast<char *>(value), len, "s");
-		Write(&len, sizeof(len));
-		Write(const_cast<char *>(value), len);
-	}
-	break;
+		{
+			size_t len;
+			const char *value = lua_tolstring(L, i, &len);
+			//out(fp, reinterpret_cast<int *>(&len), sizeof(len), "l");
+			//out(fp, const_cast<char *>(value), len, "s");
+			Write(&len, sizeof(len));
+			Write(const_cast<char *>(value), len);
+		}
+		break;
 	case LUA_TTABLE:
-	{
-		int count = 0;
-		lua_pushnil(L);
-		while (lua_next(L, i))
 		{
-			++count;
-			lua_pop(L, 1);
-		}
-		//out(fp, &count, sizeof(count), "count");
-		Write(&count, 1);
-
-		lua_pushnil(L);
-		while (lua_next(L, i))
-		{
-			SaveValue(L, -2);	// key
-			SaveValue(L, -1);	// value
-			lua_pop(L, 1);
-		}
-	}
-	break;
-	case LUA_TUSERDATA:
-	{
-		if (lua_getmetatable(L, i))
-		{
-			lua_getfield(L, -1, "__type");
-			unsigned long type = Hash(luaL_checkstring(L, -1));
-			lua_pop(L, 2);
-
-			//out(fp, &type, sizeof(type));
-			Write(&type, sizeof(type));
-			switch (type)
+			int count = 0;
+			lua_pushnil(L);
+			while (lua_next(L, i))
 			{
-			case 0x8f89e802 /* "Vector" */:
-				//out(fp, GetVector(L, i), sizeof(Vector));
-				Write(GetVector(L, i), sizeof(Vector));
-				break;
-			case 0x15c2f8ec /* "Matrix" */:
-				//out(fp, GetMatrix(L, i), sizeof(Matrix));
-				Write(GetMatrix(L, i), sizeof(Matrix));
-				break;
-				//	case 0x79fa9618 /* "AiPath" */:
-				//		Write(GetAiPath(L, i), sizeof(AiPath));
-				//		break;
-			default:
-				break;
+				++count;
+				lua_pop(L, 1);
+			}
+			//out(fp, &count, sizeof(count), "count");
+			Write(&count, 1);
+
+			lua_pushnil(L);
+			while (lua_next(L, i))
+			{
+				SaveValue(L, -2);	// key
+				SaveValue(L, -1);	// value
+				lua_pop(L, 1);
 			}
 		}
-	}
-	break;
+		break;
+	case LUA_TUSERDATA:
+		{
+			if (lua_getmetatable(L, i))
+			{
+				lua_getfield(L, -1, "__type");
+				unsigned long type = Hash(luaL_checkstring(L, -1));
+				lua_pop(L, 2);
+
+				//out(fp, &type, sizeof(type));
+				Write(&type, sizeof(type));
+				switch (type)
+				{
+				case 0x8f89e802 /* "Vector" */:
+					//out(fp, GetVector(L, i), sizeof(Vector));
+					Write(GetVector(L, i), sizeof(Vector));
+					break;
+				case 0x15c2f8ec /* "Matrix" */:
+					//out(fp, GetMatrix(L, i), sizeof(Matrix));
+					Write(GetMatrix(L, i), sizeof(Matrix));
+					break;
+			//	case 0x79fa9618 /* "AiPath" */:
+			//		Write(GetAiPath(L, i), sizeof(AiPath));
+			//		break;
+				default:
+					break;
+				}
+			}
+		}
+		break;
 
 	default:
 		break;
 	}
 }
-#endif
+
+
+// Nielk1
+static int Lua_LoadFromBZ2(lua_State *L) {
+	size_t len;
+	const char *tmpFileName = luaL_checklstring(L, 1, &len); // forces abort on fail
+	char *fileName = new char[len + 1];
+	fileName[len] = 0;
+	memcpy(fileName, tmpFileName, len);
+
+	void *pData;
+	size_t bufSize = 0;
+	bool loadedFile = LoadFile(fileName, NULL, bufSize);
+	if (loadedFile || bufSize > 0) {
+		pData = malloc(bufSize + 1);
+		((char*)pData)[bufSize] = 0; // null terminator
+		loadedFile = LoadFile(fileName, pData, bufSize);
+		if (loadedFile) {
+			int status = luaL_dostring(L, (char*)pData);
+		}
+		free(pData);
+	}
+
+	delete[] fileName;
+
+	lua_pushboolean(L, loadedFile);
+
+	return 1;
+}
+
+static const luaL_Reg CoreLib[] = {
+	{ "LoadFromBZ2", Lua_LoadFromBZ2 },
+	{ 0, 0 }
+};
+
+static lua_State *globalL = NULL;
+static const char *progname = "luajit_bz2";
+// End Nielk1
+
+
+
+
+
+
+
+
 
 
 
@@ -7913,450 +8025,6 @@ DLLBase * BuildMission(void)
 {
 	return new LuaMission();
 }
-
-
-
-
-
-
-//#include "lualib.h"
-//#include "lauxlib.h"
-
-/*typedef char* Name;
-typedef int Handle;
-typedef int TeamNum;
-typedef float Time;
-typedef float Dist;
-typedef int ScrapValue;
-typedef unsigned long DWORD;
-typedef DWORD DPID;
-enum EjectKillRetCodes {
-	DoEjectPilot, // Do 'standard' eject
-	DoRespawnSafest, // Respawn a 'PLAYER' at safest spawnpoint
-	DLLHandled, // DLL handled actions. Do nothing ingame
-	DoGameOver, // Game over, man.
-};*/
-
-EjectKillRetCodes convertNumberToEjectKillRetCodes(lua_Number num)
-{
-	if(num <= 0.1) return DoEjectPilot;
-	if(num <= 1.1) return DoRespawnSafest;
-	if(num <= 2.1) return DLLHandled;
-	return DoGameOver;
-}
-
-//#define DLLAPI __cdecl
-//#define DLLAPI __attribute__ ((dllexport))
-//#define DLLAPI
-
-
-
-
-
-#if 0
-
-	int Lua_FailMission (lua_State *L) {
-		Time t = static_cast<Time>(luaL_checknumber(L, 1)); // forces abort on fail
-		if (lua_type(L, 2) != LUA_TNONE) // do we have a 2nd param?
-		{
-			size_t len;
-			const char *tmpFileName = luaL_checklstring(L, 2, &len); // forces abort on fail
-			char *fileName = new char[len+1];
-			fileName[len] = 0;
-			memcpy(fileName,tmpFileName,len);
-			misnImport.FailMission(t, fileName);
-			delete [] fileName;
-			return 0;
-		}
-		misnImport.FailMission(t, NULL);
-		return 0;
-	}
-
-	int Lua_SucceedMission (lua_State *L) {
-		Time t = static_cast<Time>(luaL_checknumber(L, 1)); // forces abort on fail
-		if (lua_type(L, 2) != LUA_TNONE) // do we have a 2nd param?
-		{
-			size_t len;
-			const char *tmpFileName = luaL_checklstring(L, 2, &len); // forces abort on fail
-			char *fileName = new char[len+1];
-			fileName[len] = 0;
-			memcpy(fileName,tmpFileName,len);
-			misnImport.SucceedMission(t, fileName);
-			delete [] fileName;
-			return 0;
-		}
-		misnImport.SucceedMission(t, NULL);
-		return 0;
-	}
-
-	int Lua_ChangeSide (lua_State *L) {
-		(void)(L); /*unused*/
-		misnImport.ChangeSide();
-		return 0;
-	}
-
-	int Lua_AddScrap (lua_State *L) {
-		TeamNum t = luaL_checkinteger(L, 1);
-		ScrapValue v = luaL_checkinteger(L, 2);
-		ScrapValue retVal = misnImport.AddScrap(t,v);
-		lua_pushinteger(L, retVal);
-		return 1;
-	}
-
-	int Lua_SetScrap (lua_State *L) {
-		TeamNum t = luaL_checkinteger(L, 1);
-		ScrapValue v = luaL_checkinteger(L, 2);
-		ScrapValue retVal = misnImport.SetScrap(t,v);
-		lua_pushinteger(L, retVal);
-		return 1;
-	}
-
-	int Lua_GetScrap (lua_State *L) {
-		TeamNum t = luaL_checkinteger(L, 1);
-		ScrapValue retVal = misnImport.GetScrap(t);
-		lua_pushinteger(L, retVal);
-		return 1;
-	}
-
-	int Lua_GetMaxScrap (lua_State *L) {
-		TeamNum t = luaL_checkinteger(L, 1);
-		ScrapValue retVal = misnImport.GetMaxScrap(t);
-		lua_pushinteger(L, retVal);
-		return 1;
-	}
-
-	int Lua_GetTug(lua_State *L) {
-			Handle h = luaL_checkinteger(L, 1);
-			Handle tug = misnImport.GetTug(h);
-			lua_pushinteger(L, tug);
-			return 1;
-		}
-
-	int Lua_HasCargo(lua_State *L) {
-		Handle h = luaL_checkinteger(L, 1);
-		bool hasCargo = misnImport.HasCargo(h);
-		lua_pushboolean(L, hasCargo);
-		return 1;
-	}
-
-	int Lua_GetDistanceObject(lua_State *L) {
-		Handle h = luaL_checkinteger(L, 1);
-		Handle h2 = luaL_checkinteger(L, 2);
-		Dist distance = misnImport.GetDistanceObject(h, h2);
-		lua_pushnumber(L, distance);
-		return 1;
-	}
-
-	int Lua_GetDistancePath(lua_State *L) {
-		Handle h = luaL_checkinteger(L, 1);
-		
-		size_t len;
-		const char *tmp_path = luaL_checklstring(L, 2, &len);
-		char *path = new char[len+1];
-		path[len] = 0;
-		memcpy(path,tmp_path,len);
-
-		int point = luaL_checkinteger(L, 2);
-		Dist distance = misnImport.GetDistancePath(h, path, point);
-
-		delete [] path;
-
-		lua_pushnumber(L, distance);
-		return 1;
-	}
-
-	int Lua_GetNearestObject(lua_State *L) {
-		Handle h = luaL_checkinteger(L, 1);
-		Handle h2 = misnImport.GetNearestObject(h);
-		lua_pushinteger(L, h2);
-		return 1;
-	}
-
-	int Lua_GetNearestVehicleObject(lua_State *L) {
-		Handle h = luaL_checkinteger(L, 1);
-		Handle h2 = misnImport.GetNearestVehicleObject(h);
-		lua_pushinteger(L, h2);
-		return 1;
-	}
-
-	int Lua_GetNearestVehiclePath(lua_State *L) {
-		size_t len;
-		const char *tmp_path = luaL_checklstring(L, 1, &len);
-		char *path = new char[len+1];
-		path[len] = 0;
-		memcpy(path,tmp_path,len);
-
-		int point = luaL_checkinteger(L, 2);
-		Handle h2 = misnImport.GetNearestVehiclePath(path, point);
-
-		delete [] path;
-
-		lua_pushinteger(L, h2);
-		return 1;
-	}
-
-	int Lua_GetNearestBuilding(lua_State *L) {
-		Handle h = luaL_checkinteger(L, 1);
-		Handle h2 = misnImport.GetNearestBuilding(h);
-		lua_pushinteger(L, h2);
-		return 1;
-	}
-
-	int Lua_GetNearestEnemy(lua_State *L) {
-		Handle h = luaL_checkinteger(L, 1);
-		Handle h2 = misnImport.GetNearestEnemy(h);
-		lua_pushinteger(L, h2);
-		return 1;
-	}
-
-#endif
-	static const luaL_Reg MisnImportLib[] = {
-//		{"FailMission", Lua_FailMission},
-//		{"SucceedMission", Lua_SucceedMission},
-//		{"ChangeSide", Lua_ChangeSide},
-//		{"AddScrap", Lua_AddScrap},
-//		{"SetScrap", Lua_SetScrap},
-//		{"GetScrap", Lua_GetScrap},
-//		{"GetMaxScrap", Lua_GetMaxScrap},
-//		{"GetTug", Lua_GetTug},
-//		{"HasCargo", Lua_HasCargo},
-//		{"GetDistanceObject", Lua_GetDistanceObject},
-//		{"GetDistancePath", Lua_GetDistancePath},
-//		//{"GetDistancePathPtr", Lua_GetDistancePathPtr},
-//		{"GetNearestObject", Lua_GetNearestObject},
-//		{"GetNearestVehicleObject", Lua_GetNearestVehicleObject},
-//		{"GetNearestVehiclePath", Lua_GetNearestVehiclePath},
-//		{"GetNearestBuilding", Lua_GetNearestBuilding},
-//		{"GetNearestEnemy", Lua_GetNearestEnemy},
-		{0,0}
-	};
-
-	
-static int Lua_LoadFromBZ2(lua_State *L) {
-	size_t len;
-	const char *tmpFileName = luaL_checklstring(L, 1, &len); // forces abort on fail
-	char *fileName = new char[len+1];
-	fileName[len] = 0;
-	memcpy(fileName,tmpFileName,len);
-
-		void *pData;
-		size_t bufSize = 0;
-		bool loadedFile = LoadFile(fileName, NULL, bufSize);
-		if(loadedFile || bufSize > 0) {
-			pData = malloc(bufSize+1);
-			((char*)pData)[bufSize] = 0; // null terminator
-			loadedFile = LoadFile(fileName, pData, bufSize);
-			if(loadedFile) {
-				int status = luaL_dostring(L,(char*)pData);
-			}
-			free(pData);
-		}
-
-	delete [] fileName;
-
-	lua_pushboolean(L, loadedFile);
-
-	return 1;
-}
-
-
-
-	static const luaL_Reg CoreLib[] = {
-		{"LoadFromBZ2", Lua_LoadFromBZ2},
-		{0,0}
-	};
-
-
-
-
-
-static lua_State *globalL = NULL;
-static const char *progname = "luajit_bz2";
-static void lstop(lua_State *L, lua_Debug *ar)
-{
-	(void)ar;  /* unused arg. */
-	lua_sethook(L, NULL, 0, 0);
-	/* Avoid luaL_error -- a C hook doesn't add an extra frame. */
-	luaL_where(L, 0);
-	lua_pushfstring(L, "%sinterrupted!", lua_tostring(L, -1));
-	lua_error(L);
-}
-static void __cdecl laction(int i)
-{
-	signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
-	terminate process (default action) */
-	lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
-}
-static int traceback(lua_State *L)
-{
-	if (!lua_isstring(L, 1)) { /* Non-string error object? Try metamethod. */
-		if (lua_isnoneornil(L, 1) ||
-			!luaL_callmeta(L, 1, "__tostring") ||
-			!lua_isstring(L, -1))
-			return 1;  /* Return non-string error object. */
-			lua_remove(L, 1);  /* Replace object by result of __tostring metamethod. */
-	}
-	luaL_traceback(L, L, lua_tostring(L, 1), 1);
-	return 1;
-}
-
-
-static int call_void_void(lua_State *L, const char *fname)
-{
-	lua_getglobal(L, fname);
-	return lua_pcall(L, 0, 0, 0);
-}
-
-static int call_void_number(lua_State *L, const char *fname, lua_Number arg0)
-{
-	lua_getglobal(L, fname);
-	lua_pushnumber(L, arg0);
-	return lua_pcall(L, 1, 0, 0);
-}
-
-static int call_number_number(lua_State *L, const char *fname, lua_Number *ret, lua_Number arg0)
-{
-	lua_getglobal(L, fname);
-	lua_pushnumber(L, arg0);
-	int status = lua_pcall(L, 1, 1, 0);
-	if(status==0)
-	{
-		*ret = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
-	return status;
-}
-
-static int call_number_number_number(lua_State *L, const char *fname, lua_Number *ret, lua_Number arg0, lua_Number arg1)
-{
-	lua_getglobal(L, fname);
-	lua_pushnumber(L, arg0);
-	lua_pushnumber(L, arg1);
-	int status = lua_pcall(L, 2, 1, 0);
-	if(status==0)
-	{
-		*ret = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
-	return status;
-}
-
-static std::string call_string_number_cache("");
-static int call_string_number(lua_State *L, const char *fname, char **ret, lua_Number arg0)
-{
-	lua_getglobal(L, fname);
-	lua_pushnumber(L, arg0);
-	int status = lua_pcall(L, 1, 1, 0);
-	if(status==0)
-	{
-		call_string_number_cache = lua_tostring(L, -1);
-		*ret = const_cast<char*>(call_string_number_cache.c_str());
-		lua_pop(L, 1);
-	}
-	else call_string_number_cache = "";
-	return status;
-}
-
-static int call_bool_bool(lua_State *L, const char *fname, bool *ret, bool arg0)
-{
-	lua_getglobal(L, fname);
-	lua_pushboolean(L, arg0);
-	int status = lua_pcall(L, 1, 1, 0);
-	if(status==0)
-	{
-		*ret = lua_toboolean(L, -1);
-		lua_pop(L, 1);
-	}
-	return status;
-}
-
-static int call_bool_number_number_bool(lua_State *L, const char *fname, bool *ret, lua_Number arg0, lua_Number arg1, bool arg2)
-{
-	lua_getglobal(L, fname);
-	lua_pushnumber(L, arg0);
-	lua_pushnumber(L, arg1);
-	lua_pushboolean(L, arg2);
-	int status = lua_pcall(L, 3, 1, 0);
-	if(status==0)
-	{
-		*ret = lua_toboolean(L, -1);
-		lua_pop(L, 1);
-	}
-	return status;
-}
-
-static int docall(lua_State *L, int narg, int clear)
-{
-	int status;
-	int base = lua_gettop(L) - narg;  /* function index */
-	lua_pushcfunction(L, traceback);  /* push traceback function */
-	lua_insert(L, base);  /* put it under chunk and args */
-	#if !LJ_TARGET_CONSOLE
-	signal(SIGINT, laction);
-	#endif
-	status = lua_pcall(L, narg, (clear ? 0 : LUA_MULTRET), base);
-	#if !LJ_TARGET_CONSOLE
-	signal(SIGINT, SIG_DFL);
-	#endif
-	lua_remove(L, base);  /* remove traceback function */
-	/* force a complete garbage collection in case of errors */
-	if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
-	return status;
-}
-
-#if 0
-static void stackDump (lua_State *L) {
-	std::ostringstream stringStream;
-	
-	char buffer [50];
-
-	int i;
-	int top = lua_gettop(L);
-	for (i = 1; i <= top; i++) {  /* repeat for each level */
-		int t = lua_type(L, i);
-		switch (t) {
-	
-		case LUA_TSTRING:  /* strings */
-			memset(buffer,0,50);
-			sprintf_s(buffer,"'%s'", lua_tostring(L, i));
-			stringStream << buffer;
-			break;
-	
-		case LUA_TBOOLEAN:  /* booleans */
-			memset(buffer,0,50);
-			sprintf_s(buffer,"%s", lua_toboolean(L, i) ? "true" : "false");
-			stringStream << buffer;
-			break;
-	
-		case LUA_TNUMBER:  /* numbers */
-			memset(buffer,0,50);
-			sprintf_s(buffer,"%g", lua_tonumber(L, i));
-			stringStream << buffer;
-			break;
-	
-		default:  /* other values */
-			memset(buffer,0,50);
-			sprintf_s(buffer,"%s", lua_typename(L, t));
-			stringStream << buffer;
-			break;
-	
-		}
-		memset(buffer,0,50);
-		sprintf_s(buffer,"  ");  /* put a separator */
-		stringStream << buffer;
-	}
-	memset(buffer,0,50);
-	sprintf_s(buffer,"\n");  /* end the listing */
-	stringStream << buffer;
-
-	std::string copyOfStr = stringStream.str();
-
-		char *message = new char[1024];
-		strcpy_s(message,1024,copyOfStr.c_str());
-		PrintConsoleMessage(message);
-}
-#endif
-
 
 void LuaMission::Setup(void)
 {
@@ -8379,105 +8047,51 @@ void LuaMission::Setup(void)
 
 }
 
-
-
-
-
-
-
-
-
-
-static int pSetup(lua_State *L)
-{
-
-	lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
-	luaL_openlibs(L);  /* open libraries */
-	lua_gc(L, LUA_GCRESTART, -1);
-
-
-	int status = luaL_loadfile(L, "lua\\_api.lua");
-	//int status = luaL_dofile(L, "lua\\_api.lua");
-
-	/*void *pData;
-	size_t bufSize = 0;
-	LoadFile("_api.lua", NULL, bufSize);
-	pData = malloc(bufSize+1);
-	((char*)pData)[bufSize] = 0; // null terminator
-	LoadFile("_api.lua", pData, bufSize);
-	int status = luaL_dostring(L,(char*)pData);
-	free(pData);*/
-
-	if (report(L, status)) return status;
-
-	status = docall(L, 0, 1);
-
-	report(L, status);
-
-	return status;
-}
-
-//lua_State *L = NULL;
-
-
-
-
-
-
-
-
-
-
-
-
-// This makes some assumptions, if any of these are false then correct this:
-// * InitialSetup will only be called once in a mission
-// * It assumes that it is a possible that this DLL is not unloaded between missions
 void LuaMission::InitialSetup(void)
 {
 	// Setup some initial stuff.
 	EnableHighTPS(m_GameTPS);
 
 	// Preload things here.
-//	PetWatchdogThread();
-//	PreloadRace('s');
-//	PetWatchdogThread();
-//	PreloadRace('a');
-//	PetWatchdogThread();
-//	PreloadRace('b');
-//	PetWatchdogThread();
+	PetWatchdogThread();
+	PreloadRace('s');
+	PetWatchdogThread();
+	PreloadRace('a');
+	PetWatchdogThread();
+	PreloadRace('b');
+	PetWatchdogThread();
 
 	FormatConsoleMessage("Battlezone LuaMission DLL created by %s", DLLAuthors);
 
 	SetAutoGroupUnits(false);
 
-//	Difficulty = IFace_GetInteger("options.play.difficulty");
-//	StopScript = GetVarItemInt("network.session.ivar119");
+	Difficulty = IFace_GetInteger("options.play.difficulty");
+	StopScript = GetVarItemInt("network.session.ivar119");
 
-	/*
-	Here's where you set the values at the start.
-	*/
+/*
+	Here's where you set the values at the start.  
+*/
 
-	//  bools
+//  bools
 
-	//  floats
+//  floats
 
-	//  handles
+//  handles
 
-//	if (StopScript)
-//	{
-//		for (int i = 0; i < MAX_TEAMS; i++)
-//			for (int x = 0; x < MAX_TEAMS; x++)
-//				if (i != x)
-//					Ally(i, x);
-//	}
+	if(StopScript)
+	{
+		for(int i = 0; i < MAX_TEAMS; i++)
+			for(int x = 0; x < MAX_TEAMS; x++)
+				if(i != x)
+					Ally(i,x);
+	}
 
 	// Load Lua Stuff here?
 
 //	// Lua file initial loading. Look for TRN value first, then map name.
-//	char script_filename[MAX_ODF_LENGTH] = { 0 };
-//
-//	if (IsNetworkOn())
+//	char script_filename[MAX_ODF_LENGTH] = {0};
+//	
+//	if(IsNetworkOn())
 //	{
 //		const char *msn_filename = GetVarItemStr("network.session.svar0");
 //		strcpy_s(script_filename, msn_filename);
@@ -8513,30 +8127,30 @@ void LuaMission::InitialSetup(void)
 	lua_atpanic(L, LuaPanic);
 
 	// If running in a debugger...
-	//	if (IsDebuggerPresent())
-	//	{
-	// Hijack the print function
-//	lua_register(L, "print", LuaPrint);
-	//	}
+//	if (IsDebuggerPresent())
+//	{
+		// Hijack the print function
+		lua_register(L, "print", LuaPrint);
+//	}
 
 	// Register our functions
 	// (into the global table)
-	lua_pushglobaltable(L);
-	luaL_setfuncs(L, sLuaScriptUtils, 0);
-
-	//lua_newtable(L);
+	//lua_pushglobaltable(L);
 	//luaL_setfuncs(L, sLuaScriptUtils, 0);
-	//lua_setglobal(L, "ScriptUtils");
+
+	lua_newtable(L);
+	luaL_setfuncs(L, sLuaScriptUtils, 0);
+	lua_setglobal(L, "ScriptUtils");
 
 	// Create a metatable for handles
 	lua_pushlightuserdata(L, NULL);
-	luaL_newmetatable(L, "Handle");
-	lua_pushstring(L, "Handle");
-	lua_setfield(L, -2, "__type");
-	lua_pushcfunction(L, Handle_ToString);
-	lua_setfield(L, -2, "__tostring");
-	lua_setmetatable(L, -2);
-
+    luaL_newmetatable(L, "Handle");
+    lua_pushstring(L, "Handle");
+    lua_setfield(L, -2, "__type");
+    lua_pushcfunction(L, Handle_ToString);
+    lua_setfield(L, -2, "__tostring");
+    lua_setmetatable(L, -2);
+	
 	/*
 	// Create a metatable for ParameterDB
 	luaL_newmetatable(L, "ParameterDB");
@@ -8619,54 +8233,31 @@ void LuaMission::InitialSetup(void)
 //	char* FileBuffer;
 //	size_t bufSize = 0;
 //	LoadFile(script_filename, NULL, bufSize);
-//	FileBuffer = static_cast<char *>(malloc(bufSize + 1));
+//	FileBuffer = static_cast<char *>(malloc(bufSize+1));
 //	LoadFile(script_filename, FileBuffer, bufSize);
 //	FileBuffer[bufSize] = '\0';
 //
 //	// load and run the script
 //	LuaCheckStatus(luaL_loadbuffer(L, FileBuffer, bufSize, script_filename), L, "Lua script load error: %s") &&
-//		LuaCheckStatus(lua_pcall(L, 0, LUA_MULTRET, 0), L, "Lua script run error: %s");
+//	LuaCheckStatus(lua_pcall(L, 0, LUA_MULTRET, 0), L, "Lua script run error: %s");
 //
 //	// release file data
 //	free(FileBuffer);
 
 
-
-
-
-	///////////////////////////////////OLD Nielk1 Logic
-	IFace_ConsoleCmd("console.log 1");
-
-//	LUAJIT_VERSION_SYM();
-//
-	int status;
-//
-//	if (L != NULL)
-//	{
-//		lua_close(L);
-//		L = NULL;
-//	}
-//
-//	L = lua_open();
-//	if (L == NULL) return;
-
-	//LuaScriptUtils::luaopen_ScriptUtils(L);
-	luaL_register(L, "MisnImport", MisnImportLib);
-
 	luaL_register(L, "Core", CoreLib);
 
-	status = lua_cpcall(L, pSetup, NULL);
-	///////////////////////////////////OLD Nielk1 Logic
-
-
-
+	// load and run the script
+	LuaCheckStatus(luaL_loadfile(L, "lua\\_api.lua"), L, "Lua script load error: %s") &&
+	LuaCheckStatus(lua_pcall(L, 0, LUA_MULTRET, 0), L, "Lua script run error: %s");
 
 
 
 	if (!L)
 		return;
 
-//	FormatLogMessage("Lua script: %s loaded", script_filename);
+	//FormatLogMessage("Lua script: %s loaded", script_filename);
+	FormatLogMessage("Lua script: %s loaded", "_api");
 
 	// if the script has an Initial Setup function
 	lua_getglobal(L, "InitialSetup");
@@ -8681,199 +8272,168 @@ void LuaMission::InitialSetup(void)
 	}
 }
 
-
-
-
-
-/*
 bool LuaMission::Load(bool missionSave)
 {
-//and this -GBD
-BZ1Helper::Load(missionSave);
+	//and this -GBD
+	BZ1Helper::Load(missionSave);
 
-if (missionSave) {
-int i;
+	if (missionSave) {
+		int i;
 
-// init bools
-for (i = 0; i < b_count; i++)
-b_array[i] = false;
+		// init bools
+		for (i = 0; i < b_count; i++)
+			b_array[i] = false;
 
-// init floats
-for (i = 0; i < f_count; i++)
-f_array[i] = 99999.0f;
+		// init floats
+		for (i = 0; i < f_count; i++)
+			f_array[i] = 99999.0f;
 
-// init handles
-for (i = 0; i < h_count; i++)
-h_array[i] = 0;
+		// init handles
+		for (i = 0; i < h_count; i++)
+			h_array[i] = 0;
 
-// init ints
-for (i = 0; i < i_count; i++)
-i_array[i] = 0;
+		// init ints
+		for (i = 0; i < i_count; i++)
+			i_array[i] = 0;
 
 //		Setup();
-return true;
-}
+		return true;
+	}
 
-bool ret = true;
+	bool ret = true;
 
-// bools
-if(b_count)
-ret = ret && Read(b_array, b_count);
+	// bools
+	if(b_count)
+		ret = ret && Read(b_array, b_count);
 
-// floats
-if(f_count)
-ret = ret && Read(f_array, f_count);
+	// floats
+	if(f_count)
+		ret = ret && Read(f_array, f_count);
 
-// Handles
-if(h_count)
-ret = ret && Read(h_array, h_count);
+	// Handles
+	if(h_count)
+		ret = ret && Read(h_array, h_count);
 
-// ints
-if(i_count)
-ret = ret && Read(i_array, i_count);
+	// ints
+	if(i_count)
+		ret = ret && Read(i_array, i_count);
 
-if (L)
-{
-// if the script has a Load function...
-lua_getglobal(L, "Load");
-if (lua_isfunction(L, -1))
-{
-// read argument values from the file
-int count = 0;
-Read(&count, 1);
-for (int i = 0; i < count; ++i)
-{
-LoadValue(L, true);
-}
+	if (L)
+	{
+		// if the script has a Load function...
+		lua_getglobal(L, "Load");
+		if (lua_isfunction(L, -1))
+		{
+			// read argument values from the file
+			int count = 0;
+			Read(&count, 1);
+			for (int i = 0; i < count; ++i)
+			{
+				LoadValue(L, true);
+			}
 
-// call the Load function
-LuaCheckStatus(lua_pcall(L, count, 0, 0), L, "Lua script Load error: %s");
-}
-else
-{
-// skip argument values from the file
-// to prevent a missing Load function
-// from derailing the entire load process
-int count = 0;
-Read(&count, 1);
-for (int i = 0; i < count; ++i)
-{
-LoadValue(L, false);
-}
+			// call the Load function
+			LuaCheckStatus(lua_pcall(L, count, 0, 0), L, "Lua script Load error: %s");
+		}
+		else
+		{
+			// skip argument values from the file
+			// to prevent a missing Load function
+			// from derailing the entire load process
+			int count = 0;
+			Read(&count, 1);
+			for (int i = 0; i < count; ++i)
+			{
+				LoadValue(L, false);
+			}
 
-lua_pop(L, 1);
-}
-}
+			lua_pop(L, 1);
+		}
+	}
 
-return ret;
-}
-*/
-
-bool LuaMission::Load(bool misnSave)
-{
-	bool ret = false;
-	report(L, call_bool_bool(L, "Load", &ret, misnSave));
 	return ret;
 }
 
-/*
 bool LuaMission::PostLoad(bool missionSave)
 {
-//and this -GBD
-BZ1Helper::PostLoad(missionSave);
+	//and this -GBD
+	BZ1Helper::PostLoad(missionSave);
 
-if (missionSave)
-return true;
+	if (missionSave)
+		return true;
 
-bool ret = true;
+	bool ret = true;
 
-ConvertHandles(h_array, h_count);
+	ConvertHandles(h_array, h_count);
 
-return ret;
-}
-*/
-
-bool LuaMission::PostLoad(bool misnSave)
-{
-	bool ret = false;
-	report(L, call_bool_bool(L, "PostLoad", &ret, misnSave));
 	return ret;
 }
 
-/*
 bool LuaMission::Save(bool missionSave)
 {
-//and this -GBD
-BZ1Helper::Save(missionSave);
+	//and this -GBD
+	BZ1Helper::Save(missionSave);
 
-if (missionSave)
-return true;
+	if (missionSave)
+		return true;
 
-bool ret = true;
+	bool ret = true;
 
-// bools
-if(b_count)
-ret = ret && Write(b_array, b_count);
+	// bools
+	if(b_count)
+		ret = ret && Write(b_array, b_count);
 
-// floats
-if(f_count)
-ret = ret && Write(f_array, f_count);
+	// floats
+	if(f_count)
+		ret = ret && Write(f_array, f_count);
 
-// Handles
-if(h_count)
-ret = ret && Write(h_array, h_count);
+	// Handles
+	if(h_count)
+		ret = ret && Write(h_array, h_count);
 
-// ints
-if(i_count)
-ret = ret && Write(i_array, i_count);
+	// ints
+	if(i_count)
+		ret = ret && Write(i_array, i_count);
 
-if (L)
-{
-// if the script has a Save function...
-lua_getglobal(L, "Save");
-if (lua_isfunction(L, -1))
-{
-// call the Save function
-int level = lua_gettop(L);
-if (LuaCheckStatus(lua_pcall(L, 0, LUA_MULTRET, 0), L, "Lua script Save error: %s"))
-{
-// write return values to the file
-int count = lua_gettop(L) - level + 1;
-Write(&count, 1);
-for (int i = level; i < level + count; ++i)
-{
-SaveValue(L, i);
-}
-}
-}
-else
-{
-// write zero return values
-int count = 0;
-Write(&count, 1);
+	if (L)
+	{
+		// if the script has a Save function...
+		lua_getglobal(L, "Save");
+		if (lua_isfunction(L, -1))
+		{
+			// call the Save function
+			int level = lua_gettop(L);
+			if (LuaCheckStatus(lua_pcall(L, 0, LUA_MULTRET, 0), L, "Lua script Save error: %s"))
+			{
+				// write return values to the file
+				int count = lua_gettop(L) - level + 1;
+				Write(&count, 1);
+				for (int i = level; i < level + count; ++i)
+				{
+					SaveValue(L, i);
+				}
+			}
+		}
+		else
+		{
+			// write zero return values
+			int count = 0;
+			Write(&count, 1);
 
-lua_pop(L, 1);
-}
-}
+			lua_pop(L, 1);
+		}
+	}
 
-return ret;
-}
-*/
-
-bool LuaMission::Save(bool misnSave)
-{
-	bool ret = false;
-	report(L, call_bool_bool(L, "Save", &ret, misnSave));
 	return ret;
 }
-/*
+
 void LuaMission::PreOrdnanceHit(Handle shooterHandle, Handle victimHandle, int ordnanceTeam, char* pOrdnanceODF)
 {
 	//and this -GBD
-	if (!StopScript)
+	if(!StopScript)
 		BZ1Helper::PreOrdnanceHit(shooterHandle, victimHandle, ordnanceTeam, pOrdnanceODF);
 
-	if (!L)
+	if(!L)
 		return;
 
 	// if the script has a PreOrdnanceHit function...
@@ -8896,11 +8456,11 @@ void LuaMission::PreOrdnanceHit(Handle shooterHandle, Handle victimHandle, int o
 PreGetInReturnCodes LuaMission::PreGetIn(const int curWorld, Handle pilotHandle, Handle emptyCraftHandle)
 {
 	//and this -GBD
-	if (!StopScript)
+	if(!StopScript)
 		BZ1Helper::PreGetIn(curWorld, pilotHandle, emptyCraftHandle);
 
 	// Always allow the entry
-	if (!L)
+	if(!L)
 		return PREGETIN_ALLOW;
 
 	PreGetInReturnCodes returnvalue = PREGETIN_ALLOW;
@@ -8926,7 +8486,7 @@ PreGetInReturnCodes LuaMission::PreGetIn(const int curWorld, Handle pilotHandle,
 }
 PreSnipeReturnCodes LuaMission::PreSnipe(const int curWorld, Handle shooterHandle, Handle victimHandle, int ordnanceTeam, char* pOrdnanceODF)
 {
-	if (!L)
+	if(!L)
 		return PRESNIPE_KILLPILOT;
 
 	PreSnipeReturnCodes returnvalue = PRESNIPE_KILLPILOT;
@@ -8979,7 +8539,7 @@ PrePickupPowerupReturnCodes LuaMission::PrePickupPowerup(const int curWorld, Han
 
 	return returnvalue;
 }
-*/
+
 // Notification to the DLL: called when a pilot/craft has changed targets
 void LuaMission::PostTargetChangedCallback(Handle craft, Handle previousTarget, Handle currentTarget)
 {
@@ -9004,32 +8564,29 @@ void LuaMission::PostTargetChangedCallback(Handle craft, Handle previousTarget, 
 	}
 }
 
-// BZ1's CreateObject is like BZ2's AddObject
-// BZ1's AddObject is a filtered version with unknown filtering
-// BZ1's scrap creation doesn't call AddObject, but it might if scrap is purposly added by mission
 void LuaMission::AddObject(Handle h)
 {
-	// Old Method
-	//report(L, call_void_number(L, "AddObject", h));
-
-
-	//BZ1Helper::AddObject(h);
+	//and this -GBD
+	if(!StopScript)
+		BZ1Helper::AddObject(h);
+	else
+		return;
 
 	if (!L)
 		return;
 
 	// Add CreateObject in ontop of AddObject, since BZ2 doesn't have CreateObject.
-	//lua_getglobal(L, "CreateObject");
-	//if (lua_isfunction(L, -1))
-	//{
-	//	// call the CreateObject function with the game object handle
-	//	PushHandle(L, h);
-	//	LuaCheckStatus(lua_pcall(L, 1, 0, 0), L, "Lua script CreateObject error: %s");
-	//}
-	//else
-	//{
-	//	lua_pop(L, 1);
-	//}
+	lua_getglobal(L, "CreateObject");
+	if (lua_isfunction(L, -1))
+	{
+		// call the CreateObject function with the game object handle
+		PushHandle(L, h);
+		LuaCheckStatus(lua_pcall(L, 1, 0, 0), L, "Lua script CreateObject error: %s");
+	}
+	else
+	{
+		lua_pop(L, 1);
+	}
 
 	// if the script has an AddObject function
 	lua_getglobal(L, "AddObject");
@@ -9047,11 +8604,11 @@ void LuaMission::AddObject(Handle h)
 
 void LuaMission::DeleteObject(Handle h)
 {
-	// Old Method
-	//report(L, call_void_number(L, "DeleteObject", h));
-
-
-	//BZ1Helper::DeleteObject(h);
+	//and this -GBD
+	if(!StopScript)
+		BZ1Helper::DeleteObject(h);
+	else
+		return;
 
 	if (!L)
 		return;
@@ -9072,13 +8629,7 @@ void LuaMission::DeleteObject(Handle h)
 
 bool LuaMission::AddPlayer(DPID id, int Team, bool IsNewPlayer)
 {
-	//Old Method
-	//bool ret = false;
-	//report(L, call_bool_number_number_bool(L, "AddPlayer", &ret, id, Team, IsNewPlayer));
-	//return ret;
-
-
-	if (!DidSetup)
+	if(!DidSetup)
 		Setup();
 
 	if (!L)
@@ -9106,284 +8657,171 @@ bool LuaMission::AddPlayer(DPID id, int Team, bool IsNewPlayer)
 	return true;
 }
 
-
-
-/*
 void LuaMission::DeletePlayer(DPID id)
 {
-if (!L)
-return;
+	if (!L)
+		return;
 
-// if the script has an Update function...
-lua_getglobal(L, "DeletePlayer");
-if (lua_isfunction(L, -1))
-{
-// call the Update function
-lua_pushinteger(L, id);
-LuaCheckStatus(lua_pcall(L, 1, 0, 0), L, "Lua script DeletePlayer error: %s");
+	// if the script has an Update function...
+	lua_getglobal(L, "DeletePlayer");
+	if (lua_isfunction(L, -1))
+	{
+		// call the Update function
+		lua_pushinteger(L, id);
+		LuaCheckStatus(lua_pcall(L, 1, 0, 0), L, "Lua script DeletePlayer error: %s");
+	}
+	else
+	{
+		lua_pop(L, 1);
+	}
 }
-else
-{
-lua_pop(L, 1);
-}
-}
-*/
-
-void LuaMission::DeletePlayer(DPID id)
-{
-	report(L, call_void_number(L, "DeletePlayer", id));
-}
-
-
-/*
-EjectKillRetCodes LuaMission::PlayerEjected(Handle DeadObjectHandle)
-{
-if (!L)
-return DoEjectPilot;
-
-EjectKillRetCodes returnvalue = DoEjectPilot;
-
-// if the script has a PlayerEjected function...
-lua_getglobal(L, "PlayerEjected");
-if (lua_isfunction(L, -1))
-{
-// call the PlayerEjected function
-PushHandle(L, DeadObjectHandle);
-LuaCheckStatus(lua_pcall(L, 1, 1, 0), L, "Lua script PlayerEjected error: %s");
-returnvalue = EjectKillRetCodes(luaL_optinteger(L, 1, returnvalue));
-lua_pop(L, 1);
-}
-else
-{
-lua_pop(L, 1);
-}
-
-return returnvalue;
-}
-*/
-
 
 EjectKillRetCodes LuaMission::PlayerEjected(Handle DeadObjectHandle)
 {
-	lua_Number ret = 256;
-	report(L, call_number_number(L, "PlayerEjected", &ret, DeadObjectHandle));
-	return convertNumberToEjectKillRetCodes(ret);
+	if (!L)
+		return DoEjectPilot;
+
+	EjectKillRetCodes returnvalue = DoEjectPilot;
+
+	// if the script has a PlayerEjected function...
+	lua_getglobal(L, "PlayerEjected");
+	if (lua_isfunction(L, -1))
+	{
+		// call the PlayerEjected function
+		PushHandle(L, DeadObjectHandle);
+		LuaCheckStatus(lua_pcall(L, 1, 1, 0), L, "Lua script PlayerEjected error: %s");
+		returnvalue = EjectKillRetCodes(luaL_optinteger(L, 1, returnvalue));
+		lua_pop(L, 1);
+	}
+	else
+	{
+		lua_pop(L, 1);
+	}
+
+	return returnvalue;
 }
-
-/*
-EjectKillRetCodes LuaMission::ObjectKilled(int DeadObjectHandle, int KillersHandle)
-{
-if (!L)
-{
-if(!IsPlayer(DeadObjectHandle)) // J.Random AI-controlled Object is toast
-return DLLHandled;
-else // Player dead
-return DoEjectPilot;
-}
-
-EjectKillRetCodes returnvalue = IsPlayer(DeadObjectHandle) ? DoEjectPilot : DLLHandled;
-
-// if the script has an ObjectKilled function...
-lua_getglobal(L, "ObjectKilled");
-if (lua_isfunction(L, -1))
-{
-// call the ObjectKilled function
-PushHandle(L, DeadObjectHandle);
-PushHandle(L, KillersHandle);
-LuaCheckStatus(lua_pcall(L, 2, 1, 0), L, "Lua script ObjectKilled error: %s");
-returnvalue = EjectKillRetCodes(luaL_optinteger(L, 1, returnvalue));
-lua_pop(L, 1);
-}
-else
-{
-lua_pop(L, 1);
-}
-
-return returnvalue;
-}
-
-*/
-
 
 EjectKillRetCodes LuaMission::ObjectKilled(int DeadObjectHandle, int KillersHandle)
 {
-	lua_Number ret = 256;
-	report(L, call_number_number_number(L, "ObjectKilled", &ret, DeadObjectHandle, KillersHandle));
-	return convertNumberToEjectKillRetCodes(ret);
-}
+	if (!L)
+	{
+		if(!IsPlayer(DeadObjectHandle)) // J.Random AI-controlled Object is toast
+			return DLLHandled;
+		else // Player dead
+			return DoEjectPilot;
+	}
 
-/*
-EjectKillRetCodes LuaMission::ObjectSniped(int DeadObjectHandle, int KillersHandle)
-{
-if (!L)
-{
-if(!IsPlayer(DeadObjectHandle)) // J.Random AI-controlled Object is toast
-return DLLHandled;
-else // Player dead
-return DoGameOver; //DoRespawnSafest;
-}
+	EjectKillRetCodes returnvalue = IsPlayer(DeadObjectHandle) ? DoEjectPilot : DLLHandled;
 
-EjectKillRetCodes returnvalue = IsPlayer(DeadObjectHandle) ? DoGameOver : DLLHandled;
-
-// if the script has an ObjectSniped function...
-lua_getglobal(L, "ObjectSniped");
-if (lua_isfunction(L, -1))
-{
-// call the ObjectSniped function
-PushHandle(L, DeadObjectHandle);
-PushHandle(L, KillersHandle);
-LuaCheckStatus(lua_pcall(L, 2, 1, 0), L, "Lua script ObjectSniped error: %s");
-returnvalue = EjectKillRetCodes(luaL_optinteger(L, 1, returnvalue));
-lua_pop(L, 1);
+	// if the script has an ObjectKilled function...
+	lua_getglobal(L, "ObjectKilled");
+	if (lua_isfunction(L, -1))
+	{
+		// call the ObjectKilled function
+		PushHandle(L, DeadObjectHandle);
+		PushHandle(L, KillersHandle);
+		LuaCheckStatus(lua_pcall(L, 2, 1, 0), L, "Lua script ObjectKilled error: %s");
+		returnvalue = EjectKillRetCodes(luaL_optinteger(L, 1, returnvalue));
+		lua_pop(L, 1);
+	}
+	else
+	{
+		lua_pop(L, 1);
+	}
+	
+	return returnvalue;
 }
-else
-{
-lua_pop(L, 1);
-}
-
-return returnvalue;
-}
-*/
 
 EjectKillRetCodes LuaMission::ObjectSniped(int DeadObjectHandle, int KillersHandle)
 {
-	lua_Number ret = 256;
-	report(L, call_number_number_number(L, "ObjectSniped", &ret, DeadObjectHandle, KillersHandle));
-	return convertNumberToEjectKillRetCodes(ret);
+	if (!L)
+	{	
+		if(!IsPlayer(DeadObjectHandle)) // J.Random AI-controlled Object is toast
+			return DLLHandled;
+		else // Player dead
+			return DoGameOver; //DoRespawnSafest;
+	}
+
+	EjectKillRetCodes returnvalue = IsPlayer(DeadObjectHandle) ? DoGameOver : DLLHandled;
+
+	// if the script has an ObjectSniped function...
+	lua_getglobal(L, "ObjectSniped");
+	if (lua_isfunction(L, -1))
+	{
+		// call the ObjectSniped function
+		PushHandle(L, DeadObjectHandle);
+		PushHandle(L, KillersHandle);
+		LuaCheckStatus(lua_pcall(L, 2, 1, 0), L, "Lua script ObjectSniped error: %s");
+		returnvalue = EjectKillRetCodes(luaL_optinteger(L, 1, returnvalue));
+		lua_pop(L, 1);
+	}
+	else
+	{
+		lua_pop(L, 1);
+	}
+
+	return returnvalue;
 }
 
-#if 0
+
 void LuaMission::Execute(void)
 {
-//and this -GBD
-if(!StopScript)
-BZ1Helper::Execute();
+	//and this -GBD
+	if(!StopScript)
+		BZ1Helper::Execute();
 
-// Do init first! -GBD
-if (!DidSetup)
-Setup();
+	// Do init first! -GBD
+	if (!DidSetup)
+		Setup();
 
-// Count the turns each tick. Multiply or Divide by m_GameTPS to translate into seconds. (divide to turn m_ElapsedGameTime into seconds,
-// Multiply # of seconds by m_GameTPS to turn it into ticks per second.
-m_ElapsedGameTime++;
+	// Count the turns each tick. Multiply or Divide by m_GameTPS to translate into seconds. (divide to turn m_ElapsedGameTime into seconds,
+	// Multiply # of seconds by m_GameTPS to turn it into ticks per second.
+	m_ElapsedGameTime++;
 
-if(!StopScript)
-{
+	if(!StopScript)
+	{
 
 /*
-Here is where you put what happens every frame.
+	Here is where you put what happens every frame.  
 */
 
-if (!L)
-return;
+		if (!L)
+			return;
 
-// if the script has an Update function...
-lua_getglobal(L, "Update");
-if (lua_isfunction(L, -1))
-{
-	// call the Update function
-	LuaCheckStatus(lua_pcall(L, 0, 0, 0), L, "Lua script Update error: %s");
-}
-else
-{
-	lua_pop(L, 1);
-}
+		// if the script has an Update function...
+		lua_getglobal(L, "Update");
+		if (lua_isfunction(L, -1))
+		{
+			// call the Update function
+			LuaCheckStatus(lua_pcall(L, 0, 0, 0), L, "Lua script Update error: %s");
+		}
+		else
+		{
+			lua_pop(L, 1);
+		}
 
 	}
 }
-#endif
-
-void LuaMission::Execute(void)
-{
-	report(L, call_void_void(L, "Update"));
-	/*int status = call_void_void(L, "Update");
-	stackDump(L);
-
-		char *message = new char[1024];
-		//strcpy_s(message,1024,copyOfStr.c_str());
-		sprintf_s(message,1024,"Update Status: %d",status);
-		PrintConsoleMessage(message);
-
-	report(L, status);*/
-}
-
 
 void LuaMission::PostRun(void)
 {
-	report(L, call_void_void(L, "PostRun"));
-	lua_close(L);
-	L = NULL;
+	if(!StopScript)
+	{
+		if (!L)
+			return;
 
-	//GBD's Code
-	//if (!L)
-	//	return;
-	//
-	//// if the script has a PostRun function...
-	//lua_getglobal(L, "PostRun");
-	//if (lua_isfunction(L, -1))
-	//{
-	//	// call the PostRun function
-	//	LuaCheckStatus(lua_pcall(L, 0, 0, 0), L, "Lua script PostRun error: %s");
-	//}
-	//else
-	//{
-	//	lua_pop(L, 1);
-	//}
+		// if the script has a PostRun function...
+		lua_getglobal(L, "PostRun");
+		if (lua_isfunction(L, -1))
+		{
+			// call the PostRun function
+			LuaCheckStatus(lua_pcall(L, 0, 0, 0), L, "Lua script PostRun error: %s");
+		}
+		else
+		{
+			lua_pop(L, 1);
+		}
+
+	}
+
 }
-
-
-
-/*
-char * DLLAPI GetNextRandomVehicleODF(int Team)
-{
-	char *ret = const_cast<char*>("");
-	report(L, call_string_number(L, "GetNextRandomVehicleODF", &ret, Team));
-	return ret;
-}
-
-void DLLAPI SetWorld(int nextWorld)
-{
-	report(L, call_void_number(L, "SetWorld", nextWorld));
-}
-
-void DLLAPI ProcessCommand(unsigned long crc)
-{
-	report(L, call_void_number(L, "ProcessCommand", crc));
-}
-
-void DLLAPI SetRandomSeed(unsigned long seed)
-{
-	report(L, call_void_number(L, "SetRandomSeed", seed));
-}
-*/
-
- /*static MisnExport misnExport;
- MisnImport misnImport;
- 
- MisnExport * __cdecl GetMisnAPI(MisnImport *import)
- {
- 	misnImport = *import;
- 	memset(&misnExport, 0, sizeof(misnExport));
- 	misnExport.version = LATEST_DLL_VERSION;
- 	misnExport.VersionModifier = LATEST_DLL_VERSION_MODIFIER;
- 	misnExport.misnImport = &misnImport;
- 	misnExport.InitialSetup= InitialSetup;
- 	misnExport.Save = Save;
- 	misnExport.Load = Load;
- 	misnExport.PostLoad = PostLoad;
- 	misnExport.AddObject = AddObject;
- 	misnExport.DeleteObject = DeleteObject;
- 	misnExport.Update = Update;
- 	misnExport.PostRun = PostRun;
- 	misnExport.AddPlayer = AddPlayer;
- 	misnExport.DeletePlayer = DeletePlayer;
- 	misnExport.PlayerEjected = PlayerEjected;
- 	misnExport.ObjectKilled = ObjectKilled;
- 	misnExport.ObjectSniped = ObjectSniped;
- 	misnExport.GetNextRandomVehicleODF = GetNextRandomVehicleODF;
- 	misnExport.SetWorld = SetWorld;
- 	misnExport.ProcessCommand = ProcessCommand;
- 	misnExport.SetRandomSeed = SetRandomSeed;
- 	//CurrentWorld = 0;
- 	return &misnExport;
- }*/

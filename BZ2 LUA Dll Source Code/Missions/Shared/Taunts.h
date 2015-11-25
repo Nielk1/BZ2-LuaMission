@@ -6,8 +6,15 @@ enum TauntTypes {
 	TAUNTS_NewHuman,
 	TAUNTS_LeftHuman,
 	TAUNTS_HumanShipDestroyed,
+	TAUNTS_HumanPilotKilled,
 	TAUNTS_HumanRecyDestroyed,
 	TAUNTS_CPURecyDestroyed,
+	TAUNTS_HumanRecyclerDeployed,
+	TAUNTS_HumanScavDestroyed,
+	TAUNTS_CPUScavDestroyed,
+	TAUNTS_CPUSniped,
+	TAUNTS_HumanShipStolen,
+	TAUNTS_CPUShipStolen,
 	TAUNTS_Random,
 	TAUNTS_MAX,
 };
@@ -21,6 +28,6 @@ enum TauntTypes {
 void InitTaunts(int* pGameTime, int* pLastMessagePrintedAt, int* pTPS, const char* pCPUTeamName = NULL);
 
 // Prints a taunt from the specified category. 
-void DoTaunt(TauntTypes Taunt);
+void DoTaunt(TauntTypes Taunt, int Team = 0);
 
 #endif // _TAUNTS_H_

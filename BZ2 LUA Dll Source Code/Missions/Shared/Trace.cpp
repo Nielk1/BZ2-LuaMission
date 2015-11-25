@@ -19,7 +19,7 @@ void __cdecl TraceA(const char *fmt, ...)
 	char Text[2048];
 	
 	va_start (v_args, fmt);     
-	_vsnprintf(Text, sizeof(Text)-1,fmt, v_args);
+	_vsnprintf_s(Text, sizeof(Text)-1,fmt, v_args);
 	va_end (v_args);            
 	
 	OutputDebugString	(Text);

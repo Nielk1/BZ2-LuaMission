@@ -83,7 +83,7 @@ EjectKillRetCodes DLLBase::ObjectSniped(int DeadObjectHandle, int KillersHandle)
 	if(!IsPlayer(DeadObjectHandle)) // J.Random AI-controlled Object is toast
 		return DLLHandled;
 	else // Player dead
-		return DoRespawnSafest;
+		return DoGameOver; //DoRespawnSafest;
 }
 
 char *DLLBase::GetNextRandomVehicleODF(int Team)

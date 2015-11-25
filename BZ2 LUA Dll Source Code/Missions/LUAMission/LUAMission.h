@@ -2,39 +2,18 @@
 #define LUAMISSION_H__
 
 #include "..\Shared\DLLBase.h"
+#include "..\Shared\BZ1Helper.h" //Add in BZ1 Stuff. -GBD
+//#include "include\lua.hpp"
 #include "lua.hpp"
 #include <vector>
 #include <hash_map>
 #include <algorithm>
 
-#include <iostream>
-#include <stdlib.h>
-#include <signal.h>
-#include <string.h>
-//
-#include <sstream>
-//
-//#include "lua.hpp"
-
 #define lua_pushglobaltable(L) lua_pushvalue(L, LUA_GLOBALSINDEX);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 struct lua_State;
 
-class LuaMission : public DLLBase
+class LuaMission : public BZ1Helper
 {
 private:
 
@@ -109,10 +88,10 @@ public:
 	EjectKillRetCodes ObjectKilled(int DeadObjectHandle, int KillersHandle);
 	EjectKillRetCodes ObjectSniped(int DeadObjectHandle, int KillersHandle);
 
-	//virtual void PreOrdnanceHit(Handle shooterHandle, Handle victimHandle, int ordnanceTeam, char* pOrdnanceODF);
-	//virtual PreSnipeReturnCodes PreSnipe(const int curWorld, Handle shooterHandle, Handle victimHandle, int ordnanceTeam, char* pOrdnanceODF);
-	//virtual PreGetInReturnCodes PreGetIn(const int curWorld, Handle pilotHandle, Handle emptyCraftHandle);
-	//virtual PrePickupPowerupReturnCodes PrePickupPowerup(const int curWorld, Handle me, Handle powerupHandle);
+	virtual void PreOrdnanceHit(Handle shooterHandle, Handle victimHandle, int ordnanceTeam, char* pOrdnanceODF);
+	virtual PreSnipeReturnCodes PreSnipe(const int curWorld, Handle shooterHandle, Handle victimHandle, int ordnanceTeam, char* pOrdnanceODF);
+	virtual PreGetInReturnCodes PreGetIn(const int curWorld, Handle pilotHandle, Handle emptyCraftHandle);
+	virtual PrePickupPowerupReturnCodes PrePickupPowerup(const int curWorld, Handle me, Handle powerupHandle);
 	virtual void PostTargetChangedCallback(Handle craft, Handle previousTarget, Handle currentTarget);
 
 private:

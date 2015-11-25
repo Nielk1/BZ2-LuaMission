@@ -1481,7 +1481,8 @@ end
 -- @param self GameObject instance.
 function GameObject.RemoveObject(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    ffi.C.RemoveObject(self:GetHandle());
+    --ffi.C.RemoveObject(self:GetHandle());
+    ScriptUtils.RemoveObject(self:GetHandle());
 end
 
 --- Set group of GameObject in interface
@@ -1489,7 +1490,8 @@ end
 -- @param group Group number.
 function GameObject.SetGroup(self, group)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    ffi.C.SetGroup(self:GetHandle(), group);
+    --ffi.C.SetGroup(self:GetHandle(), group);
+    ScriptUtils.SetGroup(self:GetHandle(), group);
 end
 
 
@@ -1504,8 +1506,9 @@ end
 function GameObject.Attack(self, target, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Attack(self:GetHandle(), target:GetHandle(), priority);
+    --if priority == nil then priority = 1; end
+    --ffi.C.Attack(self:GetHandle(), target:GetHandle(), priority);
+    ScriptUtils.Service(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Service target GameObject
@@ -1515,8 +1518,9 @@ end
 function GameObject.Service(self, target, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Service(self:GetHandle(), target:GetHandle(), priority);
+    --if priority == nil then priority = 1; end
+    --ffi.C.Service(self:GetHandle(), target:GetHandle(), priority);
+    ScriptUtils.Service(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Goto target GameObject / Path
@@ -1721,10 +1725,14 @@ end
 -- @param self GameObject instance.
 -- @return Position Vector
 function GameObject.GetPositionV(self)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    local retVal = Vector();
-    ffi.C.GetPositionV(self:GetHandle(), retVal);
-    return retVal;
+    --if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+    --local retVal = Vector();
+    --ffi.C.GetPositionV(self:GetHandle(), retVal);
+    --return retVal;
+    --for k,v in pairs(getmetatable(self:GetHandle())) do
+    --    PrintConsoleMessage(k .. ' ' .. v;
+    --end
+    return ScriptUtils.GetPosition(self:GetHandle());
 end
 
 --- Get the position vector of a GameObject using deeper search
@@ -2081,14 +2089,16 @@ end
 -- @param self GameObject instance.
 function GameObject.SetObjectiveOn(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    ffi.C.SetObjectiveOn(self:GetHandle());
+    --ffi.C.SetObjectiveOn(self:GetHandle());
+    ScriptUtils.SetObjectiveOn(self:GetHandle());
 end
 
 --- Objectify the GameObject
 -- @param self GameObject instance.
 function GameObject.SetObjectiveOff(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    ffi.C.SetObjectiveOff(self:GetHandle());
+    --ffi.C.SetObjectiveOff(self:GetHandle());
+    ScriptUtils.SetObjectiveOff(self:GetHandle());
 end
 
 --- Set the objective name of the GameObject
@@ -2537,7 +2547,9 @@ end
 -- @return boolean
 function GameObject.IsAround(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    return ffi.C.IsAround(self:GetHandle());
+    --return ffi.C.IsAround(self:GetHandle());
+    
+    return ScriptUtils.IsAround(self:GetHandle());
 end
 
 
@@ -3059,8 +3071,7 @@ function BuildObject(odf, team, pos)
 --        error("BuildObject pos paramater is invalid, received " .. type(pos) .. ", expected GameObject, Path Name (string), AiPath, Vector, or Matrix");
 --    end
     
-    --handle = ScriptUtils.BuildObject(odf, team, pos);
-    handle = BuildObject(odf, team, pos);
+    handle = ScriptUtils.BuildObject(odf, team, pos);
     
     if handle == 0 then return nil end;
     return GameObject.new(handle);
@@ -3525,8 +3536,9 @@ end
 -- @param team Team number
 -- @return GameObject of player
 function GetPlayerHandle(team)
-    if not isnumber(team) then error("Paramater team must be a number."); end
-    return GameObject.new(ffi.C.GetPlayerHandle(team));
+    --if not isnumber(team) then error("Paramater team must be a number."); end
+    --return GameObject.new(ffi.C.GetPlayerHandle(team));
+    return GameObject.new(ScriptUtils.GetPlayerHandle(team));
 end
 
 --- Get team race
@@ -3666,12 +3678,18 @@ end
 -- @param Angle Angle
 -- @return Vector location
 function SetCircularPos(CenterPos, Radius, Angle)
-    if not isvector(CenterPos) then error("Paramater CenterPos must be a Vector."); end
-    if not isnumber(Radius) then error("Paramater Radius must be a number."); end
-    if not isnumber(Angle) then error("Paramater Angle must be a number."); end
-    local NewPos = Vector();
-    ffi.C.SetCircularPos(CenterPos, Radius, Angle, NewPos);
-    return NewPos;
+    --if not isvector(CenterPos) then error("Paramater CenterPos must be a Vector."); end
+    --if not isnumber(Radius) then error("Paramater Radius must be a number."); end
+    --if not isnumber(Angle) then error("Paramater Angle must be a number."); end
+    --local NewPos = Vector();
+    --ffi.C.SetCircularPos(CenterPos, Radius, Angle, NewPos);
+    --return NewPos;
+    
+    return ScriptUtils.GetCircularPos(CenterPos, Radius, Angle);
+end
+
+function GetCircularPos(CenterPos, Radius, Angle)
+    return ScriptUtils.GetCircularPos(CenterPos, Radius, Angle);
 end
 
 --- Get safest spawnpoint vector

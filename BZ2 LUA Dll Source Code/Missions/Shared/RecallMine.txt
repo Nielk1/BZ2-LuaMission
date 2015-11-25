@@ -1,0 +1,132 @@
+[RecallMineClass]
+isRecallMine = false // must be true for DLL to watch for this
+
+teleIn = "" // Effect ODF spawned
+teleOut = ""
+teleFail = "" // Effect at enterence on fail, follows teleInAtMine
+teleInAtMine = false // place the effect at the mine instead of at the owner
+
+chanceOfExplosion = 0.0
+chanceOfEnterExplosion = 0.0
+chanceOfFullFail = 0.0
+chanceOfBadDamage = 0.0 // hull and ammo at 1
+chanceOfRuinedShip = 0.0 // max hull and max ammo at 1
+
+exitExplosionSound = "" // played in 2D if user is player
+enterExplosionSound = "" // blank works the way the DLL is written (no silence.wav)
+failSound = "" // "Teleport Failed"
+badDamageSound = ""
+ruinedShipSound = "" 
+tooCloseSound = ""
+tooFarSound = ""
+
+multiplyVelocity =  1.0, 1.0, 1.0 // x,y,z
+addVelocity = 0.0, 0.0, 0.0 // done after multiplyVelocity
+
+keepHeight = false // not stupid enough to put one underground, but does not consider ground otherwise
+randomHeading = false
+
+minRadius = 0.0 // variable landing area
+maxRadius = 0.0 // variable landing area
+
+heightVarianceLow = 0.0 // not sure how to use this with keepHeight, 0.0s = ignore
+heightVarianceHigh = 0.0 //Randomized value between these two on just how high up you will come out of the warp.
+
+minRange = 0.0
+maxRange = 0.0 // 0 forces ignore, negatives forced positive
+
+
+
+
+
+
+
+
+cfgExec = "name.cfg" // auto execs for all, componenet not visable though
+cfgActivate = "component" // show this componenet (and somehow hide it if weapon is lost)
+distanceRatio = "variable" // ratio from 0.0 (min) to 1.0 (max) of value (set) for guages
+distanceSet = "variable" // current distance #
+distanceMin = "variable" // min working distance
+distanceMax = "variable" // max working distance
+indicateBad = "component" // shows when cannnot tele (includes jammed)
+indicateJamm = "componenet" // shows when jammed
+indicateGood = "component" // shows when can tele
+indicateCapture = "component" // shows when can be captured
+
+
+
+
+
+
+
+The LoopAnimator class is useful for simple inclusion in DLLs.
+The class allows ODFs to specify a loop animation and time delay
+until said animation plays (in case of an existing deploy animation)
+and the possibility to specify 'ping pong' instead of the default loop mode.
+
+This class requires functions available in 1.3PB4
+
+The ODF properties, and their default values are:
+[GameObjectClass]
+loopAnimationName = "" // The name of the animation to loop
+loopAnimationDelay = 0.0 // The time to wait after object placement to start above animation
+loopAnimationType = 0 // 0 is for standard loop, 1 is for forward/reverse (ping-pong)
+
+To use this class in your DLL, first place the LoopAnimator.h and
+LoopAnimator.cpp files into the shared directory of you DLL project.
+Add these two files to your project in Visual Studio. In the DLL in question
+place the following in the header file (the call may be public, it's your preference:
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+#include "..\Shared\LoopAnimator.h"
+
+private:
+	LoopAnimator m_LoopAnimator;
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+Now, in the CPP file for the DLL in question, make the following additions:
+(instantMission used as an example;
+ '...' stands for existing code;
+ please note: some existing code included for better context)
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+instantMission::instantMission(void)
+{
+	...
+	m_LoopAnimator.shareTPS(m_GameTPS);
+}
+Be sure to add the above code after any "EnableHighTPS(m_GameTPS);"
+
+void instantMission::AddObject(Handle h)
+{
+	...
+	m_LoopAnimator.AddObject(h);
+}
+
+void instantMission::Execute(void)
+{
+	...
+	m_LoopAnimator.Execute();
+}
+
+bool instantMission::Load(bool missionSave)
+{
+	...
+	ret=ret && m_LoopAnimator.Load(missionSave);
+	return ret; //existing line
+}
+
+bool instantMission::Save(bool missionSave)
+{
+	...
+	ret=ret && m_LoopAnimator.Save(missionSave);
+	return ret; //existing line
+}
+
+bool instantMission::PostLoad(bool missionSave)
+{
+	...
+	m_LoopAnimator.PostLoad(missionSave);
+	return true; //existing line
+}
