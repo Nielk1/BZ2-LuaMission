@@ -6,6 +6,7 @@
 #include <iostream>
 #include <shlobj.h>
 
+#pragma region Constructor/Destructor
 LuaMission::LuaMission(void)
 {
 	EnableHighTPS(m_GameTPS);
@@ -52,36 +53,14 @@ LuaMission::~LuaMission()
 	if (L)
 		lua_close(L);
 }
-
+#pragma endregion Constructor/Destructor
 
 // Lua Specific things...
+#pragma region Lua Utility
 
-extern "C" static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
-  luaL_checkstack(L, nup, "too many upvalues");
-  for (; l->name != NULL; l++) {  /* fill the table with given functions */
-    int i;
-    for (i = 0; i < nup; i++)  /* copy upvalues to the top */
-      lua_pushvalue(L, -nup);
-    lua_pushstring(L, l->name);
-    lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
-    lua_settable(L, -(nup + 3));
-  }
-  lua_pop(L, nup);  /* remove upvalues */
-}
 
-extern "C" void *luaL_testudata (lua_State *L, int ud, const char *tname) {
-  void *p = lua_touserdata(L, ud);
-  if (p != NULL) {  /* value is a userdata? */
-    if (lua_getmetatable(L, ud)) {  /* does it have a metatable? */
-      luaL_getmetatable(L, tname);  /* get correct metatable */
-      if (!lua_rawequal(L, -1, -2))  /* not the same? */
-        p = NULL;  /* value is a userdata with wrong metatable */
-      lua_pop(L, 2);  /* remove both metatables */
-      return p;
-    }
-  }
-  return NULL;  /* value is not a userdata with a metatable */
-}
+
+
 
 extern "C" static int LuaPrint(lua_State *L)
 {
@@ -208,20 +187,56 @@ static void stackDump(lua_State *L) {
 	FormatLogMessage("--------------- Stack Dump Finished ---------------");
 }
 
-static void PushHandle(lua_State *L, Handle h)
+#pragma endregion Lua Utility
+
+
+
+
+static int LogStack(lua_State *L)
 {
-	if (h)
-	{
-		Handle *v = static_cast<Handle *>(lua_newuserdata(L, sizeof(Handle)));
-		luaL_getmetatable(L, "Handle");
-		lua_setmetatable(L, -2);
-		*v = h;
-	}
-	else
-	{
-		lua_pushnil(L);
-	}
+	stackDump(L);
+	return 0;
 }
+
+// Nielk1
+// TODO, check the stack here
+/*static int Lua_LoadFromBZ2(lua_State *L) {
+	int retVal = 0;
+
+	size_t len;
+	const char *tmpFileName = luaL_checklstring(L, 1, &len); // forces abort on fail
+	char *fileName = new char[len + 1];
+	fileName[len] = 0;
+	memcpy(fileName, tmpFileName, len);
+
+	char* FileBuffer;
+	size_t bufSize = 0;
+	bool loadedFile = LoadFile(fileName, NULL, bufSize);
+	if (loadedFile || bufSize > 0) {
+		FileBuffer = static_cast<char *>(malloc(bufSize + 1));
+		loadedFile = LoadFile(fileName, FileBuffer, bufSize);
+		FileBuffer[bufSize] = '\0';
+		if (loadedFile) {
+			//if(LuaCheckStatus(luaL_loadbuffer(L, FileBuffer, bufSize, fileName), L, "Lua script load error: %s"))
+			//	LuaCheckStatus(lua_pcall(L, 0, LUA_MULTRET, 0), L, "Lua script run error: %s");
+			retVal = load_aux(L, luaL_loadbuffer(L, FileBuffer, bufSize, fileName));
+		}
+		free(FileBuffer);
+	}
+
+	delete[] fileName;
+
+	return retVal;
+}*/
+
+
+
+
+
+
+
+
+
 
 // Handle GetHandle(Name n)
 static int GetHandle(lua_State *L)
@@ -229,22 +244,6 @@ static int GetHandle(lua_State *L)
 	Name name = Name(luaL_checkstring(L, 1));
 	PushHandle(L, GetHandle(name));
 	return 1;
-}
-
-// get a handle from the lua stack
-static Handle GetHandle(lua_State *L, int n)
-{
-	return *static_cast<Handle *>(luaL_checkudata(L, n, "Handle"));
-}
-
-
-// Require a handle, or warn the player there's not one.
-static Handle RequireHandle(lua_State *L, int n)
-{
-	if (lua_isnil(L, n))
-		return NULL;
-
-	return *static_cast<Handle *>(luaL_checkudata(L, n, "Handle"));
 }
 
 // Handle to string
@@ -257,64 +256,10 @@ static int Handle_ToString(lua_State *L)
 	return 1;
 }
 
-//// create a vector on the lua stack
-//static Vector *NewHandle(lua_State *L)
-//{
-//	Handle *h = static_cast<Handle *>(lua_newuserdata(L, sizeof(Handle)));
-//	luaL_getmetatable(L, "Handle");
-//	lua_setmetatable(L, -2);
-//	return h;
-//}
 
-// get a vector from the lua stack
-// returns NULL if the item is not a vector
-static Vector *GetVector(lua_State *L, int n)
-{
-	return static_cast<Vector *>(luaL_testudata(L, n, "Vector"));
-}
 
-// get a required vector from the lua stack
-static Vector *RequireVector(lua_State *L, int n)
-{
-	return static_cast<Vector *>(luaL_checkudata(L, n, "Vector"));
-}
 
-// create a vector on the lua stack
-static Vector *NewVector(lua_State *L)
-{
-	Vector *v = static_cast<Vector *>(lua_newuserdata(L, sizeof(Vector)));
-	luaL_getmetatable(L, "Vector");
-	lua_setmetatable(L, -2);
-	return v;
-}
 
-// get a matrix from the lua stack
-// returns NULL if the item is not a matrix
-static Matrix *GetMatrix(lua_State *L, int n)
-{
-	return static_cast<Matrix *>(luaL_testudata(L, n, "Matrix"));
-}
-
-// get a required Matrix from the lua stack
-static Matrix *RequireMatrix(lua_State *L, int n)
-{
-	return static_cast<Matrix *>(luaL_checkudata(L, n, "Matrix"));
-}
-
-// create a matrix on the lua stack
-static Matrix *NewMatrix(lua_State *L)
-{
-	Matrix *m = static_cast<Matrix *>(lua_newuserdata(L, sizeof(Matrix)));
-	luaL_getmetatable(L, "Matrix");
-	lua_setmetatable(L, -2);
-	return m;
-}
-
-// Optional Boolean.
-static bool luaL_optboolean(lua_State *L, int n, int defval) 
-{ 
-	return luaL_opt(L, lua_toboolean, n, defval); 
-} 
 
 // vector index (read)
 // receives (userdata, key)
@@ -1235,278 +1180,7 @@ static int GetFirstEmptyGroup(lua_State *L)
 	return 1;
 }
 
-//DLLEXPORT void DLLAPI SetGroup(Handle h, int group);
-static int SetGroup(lua_State *L)
-{
-	Handle h = RequireHandle(L, 1);
-	int group = luaL_optinteger(L, 2, 0);
-	SetGroup(h, group);
-	return 0;
-}
 
-//void Attack(Handle me, Handle him, int priority = 1);
-static int Attack(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	Handle him = RequireHandle(L, 2);
-	int priority = luaL_optinteger(L, 3, 1);
-	Attack(me, him, priority);
-	return 0;
-}
-
-//DLLEXPORT void DLLAPI Service(Handle me, Handle him, int priority = 1);
-static int Service(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	Handle him = RequireHandle(L, 2);
-	int priority = luaL_optinteger(L, 3, 1);
-	Service(me, him, priority);
-	return 0;
-}
-
-//void Goto(Handle me, const Vector &pos, int priority = 1);
-//void Goto(Handle me, Name path, int priority = 1);
-//void Goto(Handle me, Handle him, int priority = 1);
-//inline void Goto(Handle h, Matrix Position, int Priority) { Goto(h, Position.posit, Priority); }
-static int Goto(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	int priority = luaL_optinteger(L, 3, 1);
-	if (Matrix *mat = GetMatrix(L, 2))
-	{
-		Goto(me, *mat, priority);
-	}
-	else if (Vector *pos = GetVector(L, 2))
-	{
-		Goto(me, *pos, priority);
-	}
-	else if (lua_isstring(L, 2))
-	{
-		Name path = Name(lua_tostring(L, 2));
-
-		if (lua_isnumber(L, 4))
-		{
-			int point = luaL_optinteger(L, 3, 0);
-			priority = luaL_optinteger(L, 4, 1);
-			Goto(me, path, point, priority);
-		}
-		else
-		{
-			Goto(me, path, priority);
-		}
-	}
-	else
-	{
-		Handle him = RequireHandle(L, 2);
-		Goto(me, him, priority);
-	}
-	return 0;
-}
-
-//void Mine(Handle me, Name path, int priority = 1);
-static int Mine(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	int priority = luaL_optinteger(L, 3, 1);
-	///* //!-- BZ2 doesn't support these functions. :( // Function Created, Vector/Matrix versions theoretically untested. :-/
-	if (Matrix *mat = GetMatrix(L, 2))
-	{
-		Mine(me, mat->posit, priority);
-	}
-	else if (Vector *pos = GetVector(L, 2))
-	{
-		Mine(me, *pos, priority);
-	}
-	else if (lua_isstring(L, 2))
-	{
-//	*/
-		Name path = Name(lua_tostring(L, 2));
-
-		if (lua_isnumber(L, 4))
-		{
-			int point = luaL_optinteger(L, 3, 0);
-			priority = luaL_optinteger(L, 4, 1);
-			Mine(me, path, point, priority);
-		}
-		else
-		{
-			Mine(me, path, priority);
-		}
-	}
-	else
-	{
-		Handle him = RequireHandle(L, 2);
-		Mine(me, him, priority);
-	}
-	return 0;
-}
-
-//void Follow(Handle me, Handle him, int priority = 1);
-static int Follow(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	Handle him = RequireHandle(L, 2);
-	int priority = luaL_optinteger(L, 3, 1);
-	Follow(me, him, priority);
-	return 0;
-}
-
-//void Defend(Handle me, int priority = 1);
-static int Defend(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	int priority = luaL_optinteger(L, 2, 1);
-	Defend(me, priority);
-	return 0;
-}
-
-//void Defend2(Handle me, Handle him, int priority = 1);
-static int Defend2(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	Handle him = RequireHandle(L, 2);
-	int priority = luaL_optinteger(L, 3, 1);
-	Defend2(me, him, priority);
-	return 0;
-}
-
-//void Stop(Handle me, int priority = 1);
-static int Stop(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	int priority = luaL_optinteger(L, 2, 1);
-	Stop(me, priority);
-	return 0;
-}
-
-//void Patrol(Handle me, Name path, int priority = 1);
-static int Patrol(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	Name path = Name(luaL_checkstring(L, 2));
-	int priority = luaL_optinteger(L, 3, 1);
-	Patrol(me, path, priority);
-	return 0;
-}
-
-//void Retreat(Handle me, Name path, int priority = 1);
-//void Retreat(Handle me, Handle him, int priority = 1);
-// Vector + Matrix improvised with Goto/Independence.
-static int Retreat(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	int priority = luaL_optinteger(L, 3, 1);
-	if (Matrix *mat = GetMatrix(L, 2))
-	{
-		Retreat(me, *mat, priority);
-	}
-	else if (Vector *pos = GetVector(L, 2))
-	{
-		Retreat(me, *pos, priority);
-	}
-	else if (lua_isstring(L, 2))
-	{
-		Name path = Name(lua_tostring(L, 2));
-
-		if (lua_isnumber(L, 4))
-		{
-			int point = luaL_optinteger(L, 3, 0);
-			priority = luaL_optinteger(L, 4, 1);
-			Retreat(me, path, point, priority);
-		}
-		else
-		{
-			Retreat(me, path, priority);
-		}
-	}
-	else
-	{
-		Handle him = RequireHandle(L, 2);
-		Retreat(me, him, priority);
-	}
-	return 0;
-}
-
-//void GetIn(Handle me, Handle him, int priority = 1);
-static int GetIn(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	Handle him = RequireHandle(L, 2);
-	int priority = luaL_optinteger(L, 3, 1);
-	GetIn(me, him, priority);
-	return 0;
-}
-
-//void Pickup(Handle me, Handle him, int priority = 1);
-static int Pickup(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	Handle him = RequireHandle(L, 2);
-	int priority = luaL_optinteger(L, 3, 1);
-	Pickup(me, him, priority);
-	return 0;
-}
-
-//void Dropoff(Handle me, const Matrix &mat, int priority = 1);
-//void Dropoff(Handle me, const Vector &pos, int priority = 1);
-//void Dropoff(Handle me, Name path, int priority = 1);
-static int Dropoff(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	int priority = luaL_optinteger(L, 3, 1);
-
-	///* //!-- BZ2 doesn't have this fucntion // Vector/Matrix versions created, but theoretically untested.
-	if (Matrix *mat = GetMatrix(L, 2))
-	{
-		Dropoff(me, *mat, priority);
-	}
-	else if (Vector *pos = GetVector(L, 2))
-	{
-		Dropoff(me, *pos, priority);
-	}
-	else if (lua_isstring(L, 2))
-	{
-	//*/
-		Name path = Name(luaL_checkstring(L, 2));
-
-		if (lua_isnumber(L, 4))
-		{
-			int point = luaL_optinteger(L, 3, 0);
-			priority = luaL_optinteger(L, 4, 1);
-			Dropoff(me, path, point, priority);
-		}
-		else
-		{
-			Dropoff(me, path, priority);
-		}
-	}
-	else
-	{
-		Handle him = RequireHandle(L, 2);
-		Dropoff(me, him, priority);
-	}
-	return 0;
-}
-
-//void Build(Handle me, char *odf, int priority = 1);
-static int Build(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	char *odf = const_cast<char *>(luaL_checkstring(L, 2));
-	int priority = luaL_optinteger(L, 3, 1);
-	Build(me, odf, priority);
-	return 0;
-}
-
-//DLLEXPORT void DLLAPI LookAt(Handle me, Handle him, int priority = 1);
-static int LookAt(lua_State *L)
-{
-	Handle me = RequireHandle(L, 1);
-	Handle him = RequireHandle(L, 2);
-	int priority = luaL_optinteger(L, 3, 1);
-	LookAt(me, him, priority);
-	return 0;
-}
 
 //DLLEXPORT void DLLAPI AllLookAt(int team, Handle him, int priority = 1);
 static int AllLookAt(lua_State *L)
@@ -7187,21 +6861,6 @@ static const luaL_Reg sLuaScriptUtils [] = {
 	{ "BuildObject", BuildObject },
 	{ "RemoveObject", RemoveObject },
 	{ "GetFirstEmptyGroup", GetFirstEmptyGroup },
-	{ "SetGroup", SetGroup },
-	{ "Attack", Attack },
-	{ "Service", Service },
-	{ "Goto", Goto },
-	{ "Mine", Mine },
-	{ "Follow", Follow },
-	{ "Defend", Defend },
-	{ "Defend2", Defend2 },
-	{ "Stop", Stop },
-	{ "Patrol", Patrol },
-	{ "Retreat", Retreat },
-	{ "GetIn", GetIn },
-	{ "Pickup", Pickup },
-	{ "Dropoff", Dropoff },
-	{ "Build", Build },
 	{ "IsOdf", IsOdf },
 	{ "GetPlayerHandle", GetPlayerHandle },
 	{ "IsAlive", IsAlive },
@@ -7727,6 +7386,9 @@ static const luaL_Reg sLuaScriptUtils [] = {
 	{ "GetClassId", GetClassId },
 	{ "BuildAt", BuildAt },
 	*/
+
+	{ "requireAsset", Lua_LoadFromBZ2 },
+	{ "LogStack", LogStack },
 	{ NULL, NULL }
 };
 
@@ -7942,8 +7604,18 @@ static void LoadValue(lua_State *L, bool push)
 }
 
 // save a Lua value to the file
-static void SaveValue(lua_State *L, int i)
+static void SaveValue(lua_State *L, int i, int depth = 0)
 {
+	if (depth == 0)
+	{
+		FormatLogMessage("Saving Value");
+	}
+
+	if (i < 0)
+	{
+		i += lua_gettop(L) + 1;
+	}
+
 	unsigned char type = unsigned char(lua_type(L, i));
 	type += '0';
 	Write(&type, 1);
@@ -7951,9 +7623,15 @@ static void SaveValue(lua_State *L, int i)
 
 	switch (type)
 	{
+	case LUA_TNIL:
+		{
+			SimpleLogMessage("nil");
+		}
+		break;
 	case LUA_TBOOLEAN:
 		{
 			bool value = lua_toboolean(L, i) != 0;
+			SimpleLogMessage(value ? "true" : "false");
 			//out(fp, &value, sizeof(value), "b");
 			Write(&value, 1);
 		}
@@ -7961,6 +7639,7 @@ static void SaveValue(lua_State *L, int i)
 	//case LUA_TLIGHTUSERDATA:
 	//	{
 	//		Handle value = Handle(luaL_testudata(L, i, "Handle"));
+	//		SimpleLogMessage("%08X", value);
 	//		//out(fp, &value, sizeof(value), "h");
 	//		Write(&value, 1);
 	//	}
@@ -7968,6 +7647,7 @@ static void SaveValue(lua_State *L, int i)
 	case LUA_TNUMBER:
 		{
 			double value = lua_tonumber(L, i);
+			SimpleLogMessage("%f", value);
 			//out(fp, &value, sizeof(value), "f");
 			Write(&value, sizeof(value));
 		}
@@ -7976,6 +7656,7 @@ static void SaveValue(lua_State *L, int i)
 		{
 			size_t len;
 			const char *value = lua_tolstring(L, i, &len);
+			SimpleLogMessage("\"%s\"", value);
 			//out(fp, reinterpret_cast<int *>(&len), sizeof(len), "l");
 			//out(fp, const_cast<char *>(value), len, "s");
 			Write(&len, sizeof(len));
@@ -7995,12 +7676,18 @@ static void SaveValue(lua_State *L, int i)
 			Write(&count, 1);
 
 			lua_pushnil(L);
+			SimpleLogMessage("{");
+			++depth;
 			while (lua_next(L, i))
 			{
-				SaveValue(L, -2);	// key
-				SaveValue(L, -1);	// value
+				SimpleLogMessage("\n%.*s[", depth * 2, "                                ");
+				SaveValue(L, -2, depth);	// key
+				SimpleLogMessage("]=");
+				SaveValue(L, -1, depth);	// value
 				lua_pop(L, 1);
 			}
+			--depth;
+			SimpleLogMessage("\n%.*s}", depth * 2, "                                ");
 		}
 		break;
 	case LUA_TUSERDATA:
@@ -8016,12 +7703,25 @@ static void SaveValue(lua_State *L, int i)
 				switch (type)
 				{
 				case 0x8f89e802 /* "Vector" */:
-					//out(fp, GetVector(L, i), sizeof(Vector));
-					Write(GetVector(L, i), sizeof(Vector));
+					{
+						Vector *v = GetVector(L, i);
+						SimpleLogMessage("{x=%f, y=%f, z=%f}", v->x, v->y, v->z);
+						//out(fp, v, sizeof(Vector));
+						Write(v, sizeof(Vector));
+					}
 					break;
 				case 0x15c2f8ec /* "Matrix" */:
-					//out(fp, GetMatrix(L, i), sizeof(Matrix));
-					Write(GetMatrix(L, i), sizeof(Matrix));
+					{
+						Matrix *m = GetMatrix(L, i);
+						SimpleLogMessage("{right_x=%f, right_y=%f, right_z=%f, up_x=%f, up_y=%f, up_z=%f, front_x=%f, front_y=%f, front_z=%f, posit_x=%f, posit_y=%f, posit_z=%f}",
+							m->right.x, m->right.y, m->right.z,
+							m->up.x, m->up.y, m->up.z,
+							m->front.x, m->front.y, m->front.z,
+							m->posit.x, m->posit.y, m->posit.z
+							);
+						//out(fp, m, sizeof(Matrix));
+						Write(m, sizeof(Matrix));
+					}
 					break;
 			//	case 0x79fa9618 /* "AiPath" */:
 			//		Write(GetAiPath(L, i), sizeof(AiPath));
@@ -8030,6 +7730,7 @@ static void SaveValue(lua_State *L, int i)
 					{
 						//out(fp, GetMatrix(L, i), sizeof(Matrix));
 						Handle value = GetHandle(L, i);
+						SimpleLogMessage("%08X", value);
 						Write(&value, 1);
 					}
 					break;
@@ -8043,44 +7744,19 @@ static void SaveValue(lua_State *L, int i)
 	default:
 		break;
 	}
-}
 
-
-// Nielk1
-static int Lua_LoadFromBZ2(lua_State *L) {
-	size_t len;
-	const char *tmpFileName = luaL_checklstring(L, 1, &len); // forces abort on fail
-	char *fileName = new char[len + 1];
-	fileName[len] = 0;
-	memcpy(fileName, tmpFileName, len);
-
-	void *pData;
-	size_t bufSize = 0;
-	bool loadedFile = LoadFile(fileName, NULL, bufSize);
-	if (loadedFile || bufSize > 0) {
-		pData = malloc(bufSize + 1);
-		((char*)pData)[bufSize] = 0; // null terminator
-		loadedFile = LoadFile(fileName, pData, bufSize);
-		if (loadedFile) {
-			int status = luaL_dostring(L, (char*)pData);
-		}
-		free(pData);
+	if (depth == 0)
+	{
+		SimpleLogMessage("\n");
 	}
-
-	delete[] fileName;
-
-	lua_pushboolean(L, loadedFile);
-
-	return 1;
 }
 
-static const luaL_Reg CoreLib[] = {
-	{ "LoadFromBZ2", Lua_LoadFromBZ2 },
-	{ 0, 0 }
-};
 
-static lua_State *globalL = NULL;
-static const char *progname = "luajit_bz2";
+
+
+
+//static lua_State *globalL = NULL;
+//static const char *progname = "luajit_bz2";
 // End Nielk1
 
 
@@ -8092,7 +7768,7 @@ static const char *progname = "luajit_bz2";
 
 
 
-
+#pragma region LuaMission
 
 DLLBase * BuildMission(void)
 {
@@ -8128,13 +7804,13 @@ void LuaMission::InitialSetup(void)
 	IFace_ConsoleCmd("console.log 1");
 
 	// Preload things here.
-	PetWatchdogThread();
-	PreloadRace('s');
-	PetWatchdogThread();
-	PreloadRace('a');
-	PetWatchdogThread();
-	PreloadRace('b');
-	PetWatchdogThread();
+	//PetWatchdogThread();
+	//PreloadRace('s');
+	//PetWatchdogThread();
+	//PreloadRace('a');
+	//PetWatchdogThread();
+	//PreloadRace('b');
+	//PetWatchdogThread();
 
 	FormatConsoleMessage("Battlezone LuaMission DLL created by %s", DLLAuthors);
 
@@ -8210,12 +7886,14 @@ void LuaMission::InitialSetup(void)
 
 	// Register our functions
 	// (into the global table)
-	//lua_pushglobaltable(L);
-	//luaL_setfuncs(L, sLuaScriptUtils, 0);
-
-	lua_newtable(L);
+	lua_pushglobaltable(L);
 	luaL_setfuncs(L, sLuaScriptUtils, 0);
-	lua_setglobal(L, "ScriptUtils");
+	luaL_setfuncs(L, sLuaScriptUtils_GameObject, 0);
+	lua_pop(L, 1);
+
+	//lua_newtable(L);
+	//luaL_setfuncs(L, sLuaScriptUtils, 0);
+	//lua_setglobal(L, "ScriptUtils");
 
 	// Create a metatable for handles
 	//lua_pushlightuserdata(L, NULL);
@@ -8328,7 +8006,7 @@ void LuaMission::InitialSetup(void)
 //	free(FileBuffer);
 
 
-	luaL_register(L, "Core", CoreLib);
+	//luaL_register(L, "Core", CoreLib);
 
 	// load and run the script
 	LuaCheckStatus(luaL_loadfile(L, "lua\\_api.lua"), L, "Lua script load error: %s") &&
@@ -8347,7 +8025,7 @@ void LuaMission::InitialSetup(void)
 	if (lua_isfunction(L, -1))
 	{
 		// call the InitialSetup function.
-		LuaCheckStatus(lua_pcall(L, 1, 0, 0), L, "Lua script InitialSetup error: %s");
+		LuaCheckStatus(lua_pcall(L, 0, 0, 0), L, "Lua script InitialSetup error: %s");
 	}
 	else
 	{
@@ -8872,7 +8550,7 @@ void LuaMission::Execute(void)
 			return;
 
 		// if the script has an Update function...
-		lua_getglobal(L, "Update");
+		lua_getglobal(L, "Execute");
 		if (lua_isfunction(L, -1))
 		{
 			// call the Update function
@@ -8908,3 +8586,5 @@ void LuaMission::PostRun(void)
 	}
 
 }
+
+#pragma endregion LuaMission

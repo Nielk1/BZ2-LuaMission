@@ -1,5 +1,4 @@
 #include "BZCScriptUtils.h"
-//#include "MathUtils.h"
 #include <math.h>
 #include <memory.h>
 #include <malloc.h>
@@ -588,6 +587,9 @@ bool FormatLogMessage(const char *format, ...)
 	if(LogFile)
 	{
 		fprintf(LogFile, "%s | %f \t| %s\n", TimeStamp, GetTime(), tempstr);
+		
+		//// nielk1
+		//fflush(LogFile);
 
 		if(GetVarItemInt("network.session.ivar115")) // If logging is on, print to console.
 			PrintConsoleMessage(tempstr);
@@ -597,6 +599,37 @@ bool FormatLogMessage(const char *format, ...)
 	else
 	{
 		char Message[MAX_MESSAGE_LENGTH] = {0};
+		sprintf_s(Message, "ERROR: Unable to open Log File! Reporting: %s", tempstr);
+		PrintConsoleMessage(Message);
+		return false;
+	}
+}
+bool SimpleLogMessage(const char *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	char tempstr[MAX_MESSAGE_LENGTH] = { 0 };
+	vsnprintf_s(tempstr, sizeof(tempstr), sizeof(tempstr), format, ap);
+	va_end(ap);
+
+	if (!LogFile)
+		OpenLogFile();
+
+	if (LogFile)
+	{
+		fprintf(LogFile, "%s", tempstr);
+
+		//// nielk1
+		//fflush(LogFile);
+
+		if (GetVarItemInt("network.session.ivar115")) // If logging is on, print to console.
+			PrintConsoleMessage(tempstr);
+
+		return true;
+	}
+	else
+	{
+		char Message[MAX_MESSAGE_LENGTH] = { 0 };
 		sprintf_s(Message, "ERROR: Unable to open Log File! Reporting: %s", tempstr);
 		PrintConsoleMessage(Message);
 		return false;

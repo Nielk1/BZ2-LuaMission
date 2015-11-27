@@ -305,6 +305,7 @@
     <ClCompile Include="..\Shared\ReplaceOnDeathHelper.cpp" />
     <ClCompile Include="..\Shared\SatelliteHelper.cpp" />
     <ClCompile Include="..\Shared\ScrapHelper.cpp" />
+    <ClCompile Include="..\Shared\ScriptUtilsExtension.cpp" />
     <ClCompile Include="..\Shared\ShieldHelper.cpp" />
     <ClCompile Include="..\Shared\SwitchClassHelper.cpp" />
     <ClCompile Include="..\Shared\TransportHelper.cpp" />
@@ -348,12 +349,16 @@
     <ClInclude Include="..\Shared\ReplaceOnDeathHelper.h" />
     <ClInclude Include="..\Shared\SatelliteHelper.h" />
     <ClInclude Include="..\Shared\ScrapHelper.h" />
+    <ClInclude Include="..\Shared\ScriptUtilsExtension.h" />
     <ClInclude Include="..\Shared\ShieldHelper.h" />
     <ClInclude Include="..\Shared\SwitchClassHelper.h" />
     <ClInclude Include="..\Shared\TransportHelper.h" />
     <ClInclude Include="..\Shared\UndeployHelper.h" />
     <ClInclude Include="..\Shared\UtilityShipHelper.h" />
+    <ClInclude Include="LuaExtensions.h" />
     <ClInclude Include="LuaMission.h" />
+    <ClInclude Include="LuaScriptUtils_GameObject.h" />
+    <ClInclude Include="LuaTypeBindings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

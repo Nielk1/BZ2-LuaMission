@@ -9,7 +9,10 @@
 #include <hash_map>
 #include <algorithm>
 
-#define lua_pushglobaltable(L) lua_pushvalue(L, LUA_GLOBALSINDEX);
+#include "..\Shared\ScriptUtilsExtension.h"
+#include "LuaExtensions.h"
+#include "LuaTypeBindings.h"
+#include "LuaScriptUtils_GameObject.h"
 
 struct lua_State;
 

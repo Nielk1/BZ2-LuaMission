@@ -1,743 +1,5 @@
---BZ2LuaMission
---[
-local ffi = require("ffi")
-ffi.cdef[[
-typedef struct Vector {
-	float x;
-	float y;
-	float z;
-} Vector;
-typedef struct VECTOR_2D {
-	float x;
-	float z;
-} VECTOR_2D;
-typedef float F32;
-typedef struct Matrix {
-	Vector right;
-	F32 rightw;
-	Vector up;
-	F32 upw;
-	Vector front;
-	F32 frontw;
-	Vector posit;
-	F32 positw;
-} Matrix;
+--BZ2LuaMission Extended API
 
-//class AiPath;
-
-static const long LONG_MIN = (-2147483647L - 1); /* minimum (signed) long value */
-static const long LONG_MAX = 2147483647L;        /* maximum (signed) long value */
-
-__declspec( dllexport ) int __cdecl BuildObject(char *,int,int) asm("?BuildObject@@YAHPADHH@Z");
-__declspec( dllexport ) int __cdecl BuildObjectP(char *,int,char *) asm("?BuildObject@@YAHPADH0@Z");
-//__declspec( dllexport ) int __cdecl BuildObject(char *,int,class AiPath *) asm("?BuildObject@@YAHPADHPAVAiPath@@@Z");//no AiPath access
-__declspec( dllexport ) int __cdecl BuildObjectV(char *,int,struct Vector &) asm("?BuildObject@@YAHPADHAAUVector@@@Z");
-__declspec( dllexport ) int __cdecl BuildObjectM(char *,int,struct Matrix &) asm("?BuildObject@@YAHPADHAAUMatrix@@@Z");
-__declspec( dllexport ) void __cdecl RemoveObject(int) asm("?RemoveObject@@YAXH@Z");
-//__declspec( dllexport ) int __cdecl GetFirstEmptyGroup(void) asm("?GetFirstEmptyGroup@@YAHXZ");//legacy
-__declspec( dllexport ) void __cdecl SetGroup(int,int) asm("?SetGroup@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl Attack(int,int,int) asm("?Attack@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl Service(int,int,int) asm("?Service@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl GotoH(int,int,int) asm("?Goto@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl GotoP(int,char *,int) asm("?Goto@@YAXHPADH@Z");
-__declspec( dllexport ) void __cdecl Mine(int,char *,int) asm("?Mine@@YAXHPADH@Z");
-__declspec( dllexport ) void __cdecl Follow(int,int,int) asm("?Follow@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl Defend(int,int) asm("?Defend@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl Defend2(int,int,int) asm("?Defend2@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl Stop(int,int) asm("?Stop@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl Patrol(int,char *,int) asm("?Patrol@@YAXHPADH@Z");
-__declspec( dllexport ) void __cdecl RetreatP(int,char *,int) asm("?Retreat@@YAXHPADH@Z");
-__declspec( dllexport ) void __cdecl RetreatH(int,int,int) asm("?Retreat@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl GetIn(int,int,int) asm("?GetIn@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl Pickup(int,int,int) asm("?Pickup@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl Dropoff(int,char *,int) asm("?Dropoff@@YAXHPADH@Z");
-__declspec( dllexport ) void __cdecl Build(int,char *,int) asm("?Build@@YAXHPADH@Z");
-__declspec( dllexport ) void __cdecl LookAt(int,int,int) asm("?LookAt@@YAXHHH@Z");
-__declspec( dllexport ) void __cdecl AllLookAt(int,int,int) asm("?AllLookAt@@YAXHHH@Z");
-__declspec( dllexport ) bool __cdecl IsOdf(int,char *) asm("?IsOdf@@YA_NHPAD@Z");
-__declspec( dllexport ) char __cdecl GetRace(int) asm("?GetRace@@YADH@Z");
-//__declspec( dllexport ) int __cdecl GetPlayerHandle(void) asm("?GetPlayerHandle@@YAHXZ"); // legacy
-//__declspec( dllexport ) bool __cdecl IsAlive(int &) asm("?IsAlive@@YA_NAAH@Z"); // legacy
-__declspec( dllexport ) bool __cdecl IsFlying(int &) asm("?IsFlying@@YA_NAAH@Z");
-//__declspec( dllexport ) bool __cdecl IsAliveAndPilot(int &) asm("?IsAliveAndPilot@@YA_NAAH@Z"); // legacy
-__declspec( dllexport ) bool __cdecl IsAround(int) asm("?IsAround@@YA_NH@Z");
-__declspec( dllexport ) int __cdecl InBuilding(int) asm("?InBuilding@@YAHH@Z");
-__declspec( dllexport ) int __cdecl AtTerminal(int) asm("?AtTerminal@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetHandle(char *) asm("?GetHandle@@YAHPAD@Z");
-__declspec( dllexport ) int __cdecl GetHandleSeq(int) asm("?GetHandle@@YAHH@Z");
-__declspec( dllexport ) void __cdecl GetPositionV(int,struct Vector &) asm("?GetPosition@@YAXHAAUVector@@@Z");
-__declspec( dllexport ) void __cdecl GetPosition2(int,struct Vector &) asm("?GetPosition2@@YAXHAAUVector@@@Z");
-__declspec( dllexport ) void __cdecl GetFront(int,struct Vector &) asm("?GetFront@@YAXHAAUVector@@@Z");
-__declspec( dllexport ) void __cdecl GetPositionM(int,struct Matrix &) asm("?GetPosition@@YAXHAAUMatrix@@@Z");
-__declspec( dllexport ) void __cdecl SetPositionM(int,struct Matrix &) asm("?SetPosition@@YAXHAAUMatrix@@@Z");
-__declspec( dllexport ) void __cdecl Damage(int,long) asm("?Damage@@YAXHJ@Z");
-__declspec( dllexport ) float __cdecl GetHealth(int) asm("?GetHealth@@YAMH@Z");
-__declspec( dllexport ) long __cdecl GetCurHealth(int) asm("?GetCurHealth@@YAJH@Z");
-__declspec( dllexport ) long __cdecl GetMaxHealth(int) asm("?GetMaxHealth@@YAJH@Z");
-__declspec( dllexport ) void __cdecl SetCurHealth(int,long) asm("?SetCurHealth@@YAXHJ@Z");
-__declspec( dllexport ) void __cdecl SetMaxHealth(int,long) asm("?SetMaxHealth@@YAXHJ@Z");
-__declspec( dllexport ) void __cdecl AddHealth(int,long) asm("?AddHealth@@YAXHJ@Z");
-__declspec( dllexport ) float __cdecl GetAmmo(int) asm("?GetAmmo@@YAMH@Z");
-__declspec( dllexport ) void __cdecl AddAmmo(int,long) asm("?AddAmmo@@YAXHJ@Z");
-__declspec( dllexport ) long __cdecl GetCurAmmo(int) asm("?GetCurAmmo@@YAJH@Z");
-__declspec( dllexport ) long __cdecl GetMaxAmmo(int) asm("?GetMaxAmmo@@YAJH@Z");
-__declspec( dllexport ) void __cdecl SetCurAmmo(int,long) asm("?SetCurAmmo@@YAXHJ@Z");
-__declspec( dllexport ) void __cdecl SetMaxAmmo(int,long) asm("?SetMaxAmmo@@YAXHJ@Z");
-__declspec( dllexport ) int __cdecl GetTeamNum(int) asm("?GetTeamNum@@YAHH@Z");
-__declspec( dllexport ) void __cdecl SetTeamNum(int,int) asm("?SetTeamNum@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetPositionP(int,char *) asm("?SetPosition@@YAXHPAD@Z");
-__declspec( dllexport ) void __cdecl SetVectorPosition(int,struct Vector) asm("?SetVectorPosition@@YAXHUVector@@@Z");
-__declspec( dllexport ) void __cdecl SetVelocity(int,struct Vector const &) asm("?SetVelocity@@YAXHABUVector@@@Z");
-typedef struct VehicleControls {
-	float braccel;
-	float steer;
-	float pitch;
-	float strafe;
-	char jump;
-	char deploy;
-	char eject;
-	char abandon;
-	char fire;
-} VehicleControls;
-__declspec( dllexport ) void __cdecl SetControls(int,struct VehicleControls const &,unsigned long) asm("?SetControls@@YAXHABUVehicleControls@@K@Z");
-__declspec( dllexport ) int __cdecl GetWhoShotMe(int) asm("?GetWhoShotMe@@YAHH@Z");
-__declspec( dllexport ) float __cdecl GetLastEnemyShot(int) asm("?GetLastEnemyShot@@YAMH@Z");
-__declspec( dllexport ) float __cdecl GetLastFriendShot(int) asm("?GetLastFriendShot@@YAMH@Z");
-__declspec( dllexport ) void __cdecl DefaultAllies(void) asm("?DefaultAllies@@YAXXZ");
-__declspec( dllexport ) void __cdecl TeamplayAllies(void) asm("?TeamplayAllies@@YAXXZ");
-__declspec( dllexport ) void __cdecl Ally(int,int) asm("?Ally@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl UnAlly(int,int) asm("?UnAlly@@YAXHH@Z");
-__declspec( dllexport ) bool __cdecl IsAlly(int,int) asm("?IsAlly@@YA_NHH@Z");
-__declspec( dllexport ) int __cdecl AudioMessage(char const *,bool) asm("?AudioMessage@@YAHPBD_N@Z");
-__declspec( dllexport ) bool __cdecl IsAudioMessageDone(int) asm("?IsAudioMessageDone@@YA_NH@Z");
-__declspec( dllexport ) void __cdecl StopAudioMessage(int) asm("?StopAudioMessage@@YAXH@Z");
-__declspec( dllexport ) void __cdecl PreloadAudioMessage(char const *) asm("?PreloadAudioMessage@@YAXPBD@Z");
-__declspec( dllexport ) void __cdecl PurgeAudioMessage(char const *) asm("?PurgeAudioMessage@@YAXPBD@Z");
-__declspec( dllexport ) void __cdecl PreloadMusicMessage(char const *) asm("?PreloadMusicMessage@@YAXPBD@Z");
-__declspec( dllexport ) void __cdecl PurgeMusicMessage(char const *) asm("?PurgeMusicMessage@@YAXPBD@Z");
-__declspec( dllexport ) void __cdecl LoadJukeFile(char *) asm("?LoadJukeFile@@YAXPAD@Z");
-__declspec( dllexport ) void __cdecl SetMusicIntensity(int) asm("?SetMusicIntensity@@YAXH@Z");
-//__declspec( dllexport ) class AiPath * __cdecl FindAiPath(struct Vector const &,struct Vector const &) asm("?FindAiPath@@YAPAVAiPath@@ABUVector@@0@Z");
-//__declspec( dllexport ) void __cdecl FreeAiPath(class AiPath *) asm("?FreeAiPath@@YAXPAVAiPath@@@Z");
-//__declspec( dllexport ) void __cdecl GetAiPaths(int &,char * * &) asm("?GetAiPaths@@YAXAAHAAPAPAD@Z");
-//__declspec( dllexport ) void __cdecl SetPathType(char *,enum PathType) asm("?SetPathType@@YAXPADW4PathType@@@Z");
-__declspec( dllexport ) void __cdecl SetIndependence(int,int) asm("?SetIndependence@@YAXHH@Z");
-__declspec( dllexport ) bool __cdecl IsInfo(char *) asm("?IsInfo@@YA_NPAD@Z");
-__declspec( dllexport ) void __cdecl StartCockpitTimer(long,long,long) asm("?StartCockpitTimer@@YAXJJJ@Z");
-__declspec( dllexport ) void __cdecl StartCockpitTimerUp(long,long,long) asm("?StartCockpitTimerUp@@YAXJJJ@Z");
-__declspec( dllexport ) void __cdecl StopCockpitTimer(void) asm("?StopCockpitTimer@@YAXXZ");
-__declspec( dllexport ) void __cdecl HideCockpitTimer(void) asm("?HideCockpitTimer@@YAXXZ");
-__declspec( dllexport ) long __cdecl GetCockpitTimer(void) asm("?GetCockpitTimer@@YAJXZ");
-__declspec( dllexport ) void __cdecl StartEarthQuake(float) asm("?StartEarthQuake@@YAXM@Z");
-__declspec( dllexport ) void __cdecl UpdateEarthQuake(float) asm("?UpdateEarthQuake@@YAXM@Z");
-__declspec( dllexport ) void __cdecl StopEarthQuake(void) asm("?StopEarthQuake@@YAXXZ");
-__declspec( dllexport ) void __cdecl ConvertHandles(int *,int) asm("?ConvertHandles@@YAXPAHH@Z");
-__declspec( dllexport ) bool __cdecl ReadBytes(void *,int) asm("?Read@@YA_NPAXH@Z");
-__declspec( dllexport ) bool __cdecl ReadBool(bool *,int) asm("?Read@@YA_NPA_NH@Z");
-__declspec( dllexport ) bool __cdecl ReadFloat(float *,int) asm("?Read@@YA_NPAMH@Z");
-__declspec( dllexport ) bool __cdecl ReadInt(int *,int) asm("?Read@@YA_NPAHH@Z");
-__declspec( dllexport ) bool __cdecl WriteBytes(void *,int) asm("?Write@@YA_NPAXH@Z");
-__declspec( dllexport ) bool __cdecl WriteBool(bool *,int) asm("?Write@@YA_NPA_NH@Z");
-__declspec( dllexport ) bool __cdecl WriteFloat(float *,int) asm("?Write@@YA_NPAMH@Z");
-__declspec( dllexport ) bool __cdecl WriteInt(int *,int) asm("?Write@@YA_NPAHH@Z");
-__declspec( dllexport ) bool __cdecl IsPerson(int) asm("?IsPerson@@YA_NH@Z");
-__declspec( dllexport ) int __cdecl GetCurWorld(void) asm("?GetCurWorld@@YAHXZ");
-__declspec( dllexport ) char const * __cdecl GetVarItemStr(char *) asm("?GetVarItemStr@@YAPBDPAD@Z");
-__declspec( dllexport ) int const __cdecl GetVarItemInt(char *) asm("?GetVarItemInt@@YA?BHPAD@Z");
-__declspec( dllexport ) int const __cdecl GetCVarItemInt(int,int) asm("?GetCVarItemInt@@YA?BHHH@Z");
-__declspec( dllexport ) char const * __cdecl GetCVarItemStr(int,int) asm("?GetCVarItemStr@@YAPBDHH@Z");
-__declspec( dllexport ) void __cdecl PreloadODF(char *) asm("?PreloadODF@@YAXPAD@Z");
-__declspec( dllexport ) float __cdecl TerrainFindFloor(float,float) asm("?TerrainFindFloor@@YAMMM@Z");
-__declspec( dllexport ) void __cdecl AddPilotByHandle(int) asm("?AddPilotByHandle@@YAXH@Z");
-__declspec( dllexport ) void __cdecl PrintConsoleMessage(char*) asm("?PrintConsoleMessage@@YAXPAD@Z");
-__declspec( dllexport ) float __cdecl GetRandomFloat(float) asm("?GetRandomFloat@@YAMM@Z");
-__declspec( dllexport ) bool __cdecl IsDeployed(int) asm("?IsDeployed@@YA_NH@Z");
-__declspec( dllexport ) void __cdecl Deploy(int) asm("?Deploy@@YAXH@Z");
-__declspec( dllexport ) bool __cdecl IsSelected(int) asm("?IsSelected@@YA_NH@Z");
-__declspec( dllexport ) void __cdecl SetWeaponMask(int,long) asm("?SetWeaponMask@@YAXHJ@Z");
-__declspec( dllexport ) void __cdecl GiveWeapon(int,char *) asm("?GiveWeapon@@YAXHPAD@Z");
-__declspec( dllexport ) void __cdecl FireAt(int,int,bool) asm("?FireAt@@YAXHH_N@Z");
-__declspec( dllexport ) bool __cdecl IsFollowing(int) asm("?IsFollowing@@YA_NH@Z");
-__declspec( dllexport ) int __cdecl WhoFollowing(int) asm("?WhoFollowing@@YAHH@Z");
-//__declspec( dllexport ) void __cdecl SetUserTarget(int) asm("?SetUserTarget@@YAXH@Z");// legacy
-//__declspec( dllexport ) int __cdecl GetUserTarget(void) asm("?GetUserTarget@@YAHXZ");// legacy
-__declspec( dllexport ) void __cdecl SetPerceivedTeam(int,int) asm("?SetPerceivedTeam@@YAXHH@Z");
-enum AiCommand {
-	CMD_NONE,
-	CMD_SELECT,
-	CMD_STOP,
-	CMD_GO,
-	CMD_ATTACK,
-	CMD_FOLLOW,
-	CMD_FORMATION,
-	CMD_PICKUP,
-	CMD_DROPOFF,
-	CMD_UNDEPLOY,
-	CMD_DEPLOY,
-	CMD_NO_DEPLOY,
-	CMD_GET_REPAIR,
-	CMD_GET_RELOAD,
-	CMD_GET_WEAPON,
-	CMD_GET_CAMERA,
-	CMD_GET_BOMB,
-	CMD_DEFEND,
-	CMD_RESCUE,
-	CMD_RECYCLE,
-	CMD_SCAVENGE,
-	CMD_HUNT,
-	CMD_BUILD,
-	CMD_PATROL,
-	CMD_STAGE,
-	CMD_SEND,
-	CMD_GET_IN,
-	CMD_LAY_MINES,
-	CMD_LOOK_AT,
-	CMD_SERVICE,
-	CMD_UPGRADE,
-	CMD_DEMOLISH,
-	CMD_POWER,
-	CMD_BACK,
-	CMD_DONE,
-	CMD_CANCEL,
-	CMD_SET_GROUP,
-	CMD_SET_TEAM,
-	CMD_SEND_GROUP,
-	CMD_TARGET,
-	CMD_INSPECT,
-	CMD_SWITCHTEAM,
-	CMD_INTERFACE,
-	CMD_LOGOFF,
-	CMD_AUTOPILOT,
-	CMD_MESSAGE,
-	CMD_CLOSE,
-	CMD_MORPH_SETDEPLOYED, // For morphtanks
-	CMD_MORPH_SETUNDEPLOYED, // For morphtanks
-	CMD_MORPH_UNLOCK, // For morphtanks
-	CMD_BAILOUT,
-	CMD_BUILD_ROTATE, // Update building rotations by 90 degrees.
-	CMD_CMDPANEL_SELECT,
-	CMD_CMDPANEL_DESELECT,
-
-	NUM_CMD // Must be last!
-}; // Don't let NUM_COMMAND go past 255, as 1 byte is used for it when sending across network
-__declspec( dllexport ) enum AiCommand __cdecl GetCurrentCommand(int) asm("?GetCurrentCommand@@YA?AW4AiCommand@@H@Z");
-__declspec( dllexport ) int __cdecl GetCurrentWho(int) asm("?GetCurrentWho@@YAHH@Z");
-__declspec( dllexport ) void __cdecl EjectPilot(int) asm("?EjectPilot@@YAXH@Z");
-__declspec( dllexport ) void __cdecl HopOut(int) asm("?HopOut@@YAXH@Z");
-__declspec( dllexport ) void __cdecl KillPilot(int) asm("?KillPilot@@YAXH@Z");
-__declspec( dllexport ) void __cdecl RemovePilotAI(int) asm("?RemovePilotAI@@YAXH@Z");
-__declspec( dllexport ) int __cdecl HoppedOutOf(int) asm("?HoppedOutOf@@YAHH@Z");
-__declspec( dllexport ) void __cdecl GetCameraPosition(struct Vector &,struct Vector &) asm("?GetCameraPosition@@YAXAAUVector@@0@Z");
-__declspec( dllexport ) void __cdecl SetCameraPosition(struct Vector const &,struct Vector const &) asm("?SetCameraPosition@@YAXABUVector@@0@Z");
-__declspec( dllexport ) void __cdecl ResetCameraPosition(void) asm("?ResetCameraPosition@@YAXXZ");
-__declspec( dllexport ) unsigned long __cdecl CalcCRC(char *) asm("?CalcCRC@@YAKPAD@Z");
-__declspec( dllexport ) void __cdecl IFace_Exec(char *) asm("?IFace_Exec@@YAXPAD@Z");
-__declspec( dllexport ) void __cdecl IFace_Activate(char *) asm("?IFace_Activate@@YAXPAD@Z");
-__declspec( dllexport ) void __cdecl IFace_Deactivate(char *) asm("?IFace_Deactivate@@YAXPAD@Z");
-__declspec( dllexport ) void __cdecl IFace_CreateCommand(char *) asm("?IFace_CreateCommand@@YAXPAD@Z");
-__declspec( dllexport ) void __cdecl IFace_CreateString(char *,char *) asm("?IFace_CreateString@@YAXPAD0@Z");
-__declspec( dllexport ) void __cdecl IFace_SetString(char *,char *) asm("?IFace_SetString@@YAXPAD0@Z");
-__declspec( dllexport ) void __cdecl IFace_GetString(char *,char *,int) asm("?IFace_GetString@@YAXPAD0H@Z");
-__declspec( dllexport ) void __cdecl IFace_CreateInteger(char *,int) asm("?IFace_CreateInteger@@YAXPADH@Z");
-__declspec( dllexport ) void __cdecl IFace_SetInteger(char *,int) asm("?IFace_SetInteger@@YAXPADH@Z");
-__declspec( dllexport ) int __cdecl IFace_GetInteger(char *) asm("?IFace_GetInteger@@YAHPAD@Z");
-__declspec( dllexport ) void __cdecl IFace_SetIntegerRange(char *,int,int) asm("?IFace_SetIntegerRange@@YAXPADHH@Z");
-__declspec( dllexport ) void __cdecl IFace_CreateFloat(char *,float) asm("?IFace_CreateFloat@@YAXPADM@Z");
-__declspec( dllexport ) void __cdecl IFace_SetFloat(char *,float) asm("?IFace_SetFloat@@YAXPADM@Z");
-__declspec( dllexport ) float __cdecl IFace_GetFloat(char *) asm("?IFace_GetFloat@@YAMPAD@Z");
-__declspec( dllexport ) void __cdecl IFace_ClearListBox(char *) asm("?IFace_ClearListBox@@YAXPAD@Z");
-__declspec( dllexport ) void __cdecl IFace_AddTextItem(char *,char *) asm("?IFace_AddTextItem@@YAXPAD0@Z");
-__declspec( dllexport ) void __cdecl IFace_GetSelectedItem(char *,char *,int) asm("?IFace_GetSelectedItem@@YAXPAD0H@Z");
-__declspec( dllexport ) void __cdecl SetSkill(int,int) asm("?SetSkill@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetPlan(char *,int) asm("?SetPlan@@YAXPADH@Z");
-__declspec( dllexport ) void __cdecl LogFloat(float) asm("?LogFloat@@YAXM@Z");
-__declspec( dllexport ) int __cdecl GetInstantMyForce(void) asm("?GetInstantMyForce@@YAHXZ");
-__declspec( dllexport ) int __cdecl GetInstantCompForce(void) asm("?GetInstantCompForce@@YAHXZ");
-__declspec( dllexport ) int __cdecl GetInstantDifficulty(void) asm("?GetInstantDifficulty@@YAHXZ");
-__declspec( dllexport ) int __cdecl GetInstantGoal(void) asm("?GetInstantGoal@@YAHXZ");
-__declspec( dllexport ) int __cdecl GetInstantType(void) asm("?GetInstantType@@YAHXZ");
-__declspec( dllexport ) int __cdecl GetInstantFlag(void) asm("?GetInstantFlag@@YAHXZ");
-__declspec( dllexport ) int __cdecl GetInstantMySide(void) asm("?GetInstantMySide@@YAHXZ");
-//DLLEXPORT bool DLLAPI StoppedPlayback(void); // not found in exports
-__declspec( dllexport ) bool __cdecl CameraReady(void) asm("?CameraReady@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl CameraPath(char *,int,int,int) asm("?CameraPath@@YA_NPADHHH@Z");
-__declspec( dllexport ) bool __cdecl CameraPathDir(char *,int,int) asm("?CameraPathDir@@YA_NPADHH@Z");
-__declspec( dllexport ) bool __cdecl PanDone(void) asm("?PanDone@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl CameraObject(int,float,float,float,int) asm("?CameraObject@@YA_NHMMMH@Z");
-__declspec( dllexport ) bool __cdecl CameraFinish(void) asm("?CameraFinish@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl CameraCancelled(void) asm("?CameraCancelled@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl FreeCamera(void) asm("?FreeCamera@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl FreeFinish(void) asm("?FreeFinish@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl PlayMovie(char * const) asm("?PlayMovie@@YA_NQAD@Z");
-__declspec( dllexport ) void __cdecl StopMovie(void) asm("?StopMovie@@YAXXZ");
-__declspec( dllexport ) bool __cdecl PlayMove(void) asm("?PlayMove@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl PlayRecording(char * const) asm("?PlayRecording@@YA_NQAD@Z");
-__declspec( dllexport ) bool __cdecl PlayRecordingU(char * const,bool) asm("?PlayRecording@@YA_NQAD_N@Z");
-__declspec( dllexport ) bool __cdecl PlaybackVehicle(char * const) asm("?PlaybackVehicle@@YA_NQAD@Z");
-__declspec( dllexport ) float __cdecl SetAnimation(int,char *,int) asm("?SetAnimation@@YAMHPADH@Z");
-__declspec( dllexport ) float __cdecl GetAnimationFrame(int,char *) asm("?GetAnimationFrame@@YAMHPAD@Z");
-__declspec( dllexport ) void __cdecl StartAnimation(int) asm("?StartAnimation@@YAXH@Z");
-__declspec( dllexport ) void __cdecl MaskEmitter(int,unsigned long) asm("?MaskEmitter@@YAXHK@Z");
-__declspec( dllexport ) void __cdecl StartEmitter(int,int) asm("?StartEmitter@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl StopEmitter(int,int) asm("?StopEmitter@@YAXHH@Z");
-//__declspec( dllexport ) void __cdecl SaveObjects(char * &,unsigned long &) asm("?SaveObjects@@YAXAAPADAAK@Z");
-//__declspec( dllexport ) void __cdecl LoadObjects(char *,unsigned long) asm("?LoadObjects@@YAXPADK@Z");
-//__declspec( dllexport ) void __cdecl IgnoreSync(bool) asm("?IgnoreSync@@YAX_N@Z");
-//__declspec( dllexport ) bool __cdecl IsRecording(void) asm("?IsRecording@@YA_NXZ");
-__declspec( dllexport ) void __cdecl SetObjectiveOn(int) asm("?SetObjectiveOn@@YAXH@Z");
-__declspec( dllexport ) void __cdecl SetObjectiveOff(int) asm("?SetObjectiveOff@@YAXH@Z");
-__declspec( dllexport ) void __cdecl SetObjectiveName(int,char *) asm("?SetObjectiveName@@YAXHPAD@Z");
-__declspec( dllexport ) void __cdecl ClearObjectives(void) asm("?ClearObjectives@@YAXXZ");
-__declspec( dllexport ) void __cdecl AddObjective(char *,long,float) asm("?AddObjective@@YAXPADJM@Z");
-__declspec( dllexport ) bool __cdecl IsWithin(int &,int &,float) asm("?IsWithin@@YA_NAAH0M@Z");
-__declspec( dllexport ) int __cdecl CountUnitsNearObject(int,float,int,char *) asm("?CountUnitsNearObject@@YAHHMHPAD@Z");
-__declspec( dllexport ) void __cdecl SetAvoidType(int,int) asm("?SetAvoidType@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl Annoy(int,int) asm("?Annoy@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl ClearThrust(int) asm("?ClearThrust@@YAXH@Z");
-__declspec( dllexport ) void __cdecl SetVerbose(int,bool) asm("?SetVerbose@@YAXH_N@Z");
-__declspec( dllexport ) void __cdecl ClearIdleAnims(int) asm("?ClearIdleAnims@@YAXH@Z");
-__declspec( dllexport ) void __cdecl AddIdleAnim(int,char *) asm("?AddIdleAnim@@YAXHPAD@Z");
-__declspec( dllexport ) bool __cdecl IsIdle(int) asm("?IsIdle@@YA_NH@Z");
-__declspec( dllexport ) void __cdecl CountThreats(int,int &,int &) asm("?CountThreats@@YAXHAAH0@Z");
-__declspec( dllexport ) void __cdecl SpawnBirds(int,int,char *,int,char *) asm("?SpawnBirds@@YAXHHPADH0@Z");
-__declspec( dllexport ) void __cdecl SpawnBirds(int,int,char *,int,int,int) asm("?SpawnBirds@@YAXHHPADHHH@Z");
-__declspec( dllexport ) void __cdecl RemoveBirds(int) asm("?RemoveBirds@@YAXH@Z");
-__declspec( dllexport ) void __cdecl SetColorFade(float,float,unsigned long) asm("?SetColorFade@@YAXMMK@Z");
-__declspec( dllexport ) void __cdecl StopCheats(void) asm("?StopCheats@@YAXXZ");
-__declspec( dllexport ) void __cdecl CalcCliffs(int,int,float) asm("?CalcCliffs@@YAXHHM@Z");
-__declspec( dllexport ) void __cdecl CalcCliffsP(char *) asm("?CalcCliffs@@YAXPAD@Z");
-__declspec( dllexport ) int __cdecl StartSoundEffect(char const *,int) asm("?StartSoundEffect@@YAHPBDH@Z");
-__declspec( dllexport ) int __cdecl FindSoundEffect(char const *,int) asm("?FindSoundEffect@@YAHPBDH@Z");
-__declspec( dllexport ) void __cdecl StopSoundEffect(int) asm("?StopSoundEffect@@YAXH@Z");
-__declspec( dllexport ) int __cdecl GetObjectByTeamSlot(int,int) asm("?GetObjectByTeamSlot@@YAHHH@Z");
-//__declspec( dllexport ) void __cdecl TranslateString(char *,char *) asm("?TranslateString@@YAXPAD0@Z");//Legacy, DO NOT USE
-__declspec( dllexport ) float __cdecl portable_sin(float) asm("?portable_sin@@YAMM@Z");
-__declspec( dllexport ) float __cdecl portable_cos(float) asm("?portable_cos@@YAMM@Z");
-__declspec( dllexport ) float __cdecl portable_atan2(float,float) asm("?portable_atan2@@YAMMM@Z");
-__declspec( dllexport ) float __cdecl portable_asin(float) asm("?portable_asin@@YAMM@Z");
-__declspec( dllexport ) float __cdecl portable_acos(float) asm("?portable_acos@@YAMM@Z");
-__declspec( dllexport ) bool __cdecl IsNetworkOn(void) asm("?IsNetworkOn@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl ImServer(void) asm("?ImServer@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl ImDedicatedServer(void) asm("?ImDedicatedServer@@YA_NXZ");
-__declspec( dllexport ) bool __cdecl IsTeamplayOn(void) asm("?IsTeamplayOn@@YA_NXZ");
-__declspec( dllexport ) int __cdecl CountPlayers(void) asm("?CountPlayers@@YAHXZ");
-__declspec( dllexport ) int __cdecl GetPlayerHandle(int) asm("?GetPlayerHandle@@YAHH@Z");
-__declspec( dllexport ) char __cdecl GetRaceOfTeam(int) asm("?GetRaceOfTeam@@YADH@Z");
-__declspec( dllexport ) bool __cdecl IsPlayer(int) asm("?IsPlayer@@YA_NH@Z");
-__declspec( dllexport ) char const * __cdecl GetPlayerName(int) asm("?GetPlayerName@@YAPBDH@Z");
-__declspec( dllexport ) int __cdecl WhichTeamGroup(int) asm("?WhichTeamGroup@@YAHH@Z");
-__declspec( dllexport ) int __cdecl CountAllies(int) asm("?CountAllies@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetCommanderTeam(int) asm("?GetCommanderTeam@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetFirstAlliedTeam(int) asm("?GetFirstAlliedTeam@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetLastAlliedTeam(int) asm("?GetLastAlliedTeam@@YAHH@Z");
-__declspec( dllexport ) void __cdecl GetTeamplayRanges(int,int &,int &,int &) asm("?GetTeamplayRanges@@YAXHAAH00@Z");
-__declspec( dllexport ) void __cdecl SetRandomHeadingAngle(int) asm("?SetRandomHeadingAngle@@YAXH@Z");
-__declspec( dllexport ) void __cdecl ClearTeamColors(void) asm("?ClearTeamColors@@YAXXZ");
-__declspec( dllexport ) void __cdecl DefaultTeamColors(void) asm("?DefaultTeamColors@@YAXXZ");
-__declspec( dllexport ) void __cdecl TeamplayTeamColors(void) asm("?TeamplayTeamColors@@YAXXZ");
-__declspec( dllexport ) void __cdecl SetTeamColor(int,int,int,int) asm("?SetTeamColor@@YAXHHHH@Z");
-__declspec( dllexport ) void __cdecl ClearTeamColor(int) asm("?ClearTeamColor@@YAXH@Z");
-__declspec( dllexport ) void __cdecl MakeInert(int) asm("?MakeInert@@YAXH@Z");
-__declspec( dllexport ) struct Vector __cdecl GetPositionNear(struct Vector,float,float) asm("?GetPositionNear@@YA?AUVector@@U1@MM@Z");
-enum RandomizeType {
-	Randomize_None, // Don't modify what they selected in the shell.
-	Randomize_ByRace,
-	Randomize_Any,
-};
-__declspec( dllexport ) char * __cdecl GetPlayerODF(int,enum RandomizeType) asm("?GetPlayerODF@@YAPADHW4RandomizeType@@@Z");
-__declspec( dllexport ) int __cdecl BuildEmptyCraftNear(int,char *,int,float,float) asm("?BuildEmptyCraftNear@@YAHHPADHMM@Z");
-__declspec( dllexport ) void __cdecl SetCircularPos(struct Vector const &,float,float,struct Vector &) asm("?SetCircularPos@@YAXABUVector@@MMAAU1@@Z");
-__declspec( dllexport ) struct Vector __cdecl GetSafestSpawnpoint(void) asm("?GetSafestSpawnpoint@@YA?AUVector@@XZ");
-__declspec( dllexport ) struct Vector __cdecl GetSpawnpoint(int) asm("?GetSpawnpoint@@YA?AUVector@@H@Z");
-__declspec( dllexport ) int __cdecl GetSpawnpointHandle(int) asm("?GetSpawnpointHandle@@YAHH@Z");
-__declspec( dllexport ) struct Vector __cdecl GetRandomSpawnpoint(int) asm("?GetRandomSpawnpoint@@YA?AUVector@@H@Z");
-__declspec( dllexport ) void __cdecl SetTimerBox(char const *) asm("?SetTimerBox@@YAXPBD@Z");
-__declspec( dllexport ) void __cdecl AddToMessagesBox(char const *) asm("?AddToMessagesBox@@YAXPBD@Z");
-__declspec( dllexport ) int __cdecl GetDeaths(int) asm("?GetDeaths@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetKills(int) asm("?GetKills@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetScore(int) asm("?GetScore@@YAHH@Z");
-__declspec( dllexport ) void __cdecl SetDeaths(int,int) asm("?SetDeaths@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetKills(int,int) asm("?SetKills@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetScore(int,int) asm("?SetScore@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl AddDeaths(int,int) asm("?AddDeaths@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl AddKills(int,int) asm("?AddKills@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl AddScore(int,int) asm("?AddScore@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetAsUser(int,int) asm("?SetAsUser@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetNoScrapFlagByHandle(int) asm("?SetNoScrapFlagByHandle@@YAXH@Z");
-__declspec( dllexport ) void __cdecl ClearNoScrapFlagByHandle(int) asm("?ClearNoScrapFlagByHandle@@YAXH@Z");
-__declspec( dllexport ) int __cdecl GetLocalPlayerTeamNumber(void) asm("?GetLocalPlayerTeamNumber@@YAHXZ");
-__declspec( dllexport ) unsigned long __cdecl GetLocalPlayerDPID(void) asm("?GetLocalPlayerDPID@@YAKXZ");
-__declspec( dllexport ) void __cdecl FlagSteal(int,int) asm("?FlagSteal@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl FlagRecover(int,int) asm("?FlagRecover@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl FlagScore(int,int) asm("?FlagScore@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl MoneyScore(int,int) asm("?MoneyScore@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl NoteGameoverByTimelimit(void) asm("?NoteGameoverByTimelimit@@YAXXZ");
-__declspec( dllexport ) void __cdecl NoteGameoverByKillLimit(int) asm("?NoteGameoverByKillLimit@@YAXH@Z");
-__declspec( dllexport ) void __cdecl NoteGameoverByScore(int) asm("?NoteGameoverByScore@@YAXH@Z");
-__declspec( dllexport ) void __cdecl NoteGameoverByLastWithBase(int) asm("?NoteGameoverByLastWithBase@@YAXH@Z");
-__declspec( dllexport ) void __cdecl NoteGameoverByLastTeamWithBase(int) asm("?NoteGameoverByLastTeamWithBase@@YAXH@Z");
-__declspec( dllexport ) void __cdecl NoteGameoverByNoBases(void) asm("?NoteGameoverByNoBases@@YAXXZ");
-__declspec( dllexport ) void __cdecl DoGameover(float) asm("?DoGameover@@YAXM@Z");
-__declspec( dllexport ) void __cdecl SetMPTeamRace(int,char) asm("?SetMPTeamRace@@YAXHD@Z");
-__declspec( dllexport ) int __cdecl GetUserTarget(int) asm("?GetUserTarget@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetTarget(int) asm("?GetTarget@@YAHH@Z");
-__declspec( dllexport ) void __cdecl IFace_ConsoleCmd(char const *,bool) asm("?IFace_ConsoleCmd@@YAXPBD_N@Z");
-__declspec( dllexport ) void __cdecl AddToMessagesBox2(char const *,unsigned long) asm("?AddToMessagesBox2@@YAXPBDK@Z");
-__declspec( dllexport ) void __cdecl Network_SetString(char *,char *) asm("?Network_SetString@@YAXPAD0@Z");
-__declspec( dllexport ) void __cdecl Network_SetInteger(char *,int) asm("?Network_SetInteger@@YAXPADH@Z");
-__declspec( dllexport ) int __cdecl GetFirstEmptyGroup(int) asm("?GetFirstEmptyGroup@@YAHH@Z");
-__declspec( dllexport ) struct Vector __cdecl GetVelocity(int) asm("?GetVelocity@@YA?AUVector@@H@Z");
-enum ObjectInfoType {
-	Get_CFG, // Returns the GameObjectClass's cfg string
-	Get_ODF, // Returns the ODF of the object
-	Get_GOClass_gCfg, // Returns the GameObjectClass's gCfg string (not 100% sure how it differs from the CFG)
-	Get_EntityType, // Returns the entity type of the object, one of the follow (though
-	//   not all are possible for objects the DLL knows about). Values will be
-	//	a string from the following list:
-
-	// 	"CLASS_ID_NONE",		// undefined object (default)
-	// 	"CLASS_ID_CRAFT",		// hovering vehicle
-	// 	"CLASS_ID_VEHICLE",	// tracked vehicle
-	// 	"CLASS_ID_TORPEDO",	// miniature vehicle
-	// 	"CLASS_ID_POWERUP",	// power up pod
-	// 	"CLASS_ID_PERSON",	// pilot or soldier
-	// 	"CLASS_ID_ANIMAL",	// animal
-	// 	"CLASS_ID_STRUCT",	// generic building
-	// 	"CLASS_ID_BUILDING",	// important building
-	// 	"CLASS_ID_SIGN",		// mine object
-	// 	"CLASS_ID_SCRAP",		// scrap piece
-	// 	"CLASS_ID_DEPOSIT",	// scrap deposit
-	// 	"CLASS_ID_BEACON",	// nav beacon
-	// 	"CLASS_ID_PLANT",		// plant object
-	// 	"CLASS_ID_TERRAIN",	// terrain object
-	// 	"CLASS_ID_WEAPON",	// weapon object
-	// 	"CLASS_ID_ORDNANCE",	// ordnance object
-	// 	"CLASS_ID_EXPLOSION",	// explosion object
-	// 	"CLASS_ID_CHUNK",		// chunk object
-	// 	"CLASS_ID_CRASH",		// crash object
-	// 	"CLASS_ID_COLLAPSE",	// collapsing object
-
-	Get_GOClass, // Returns the GameObject class of the object, one of the following (though
-	// not all are possible for objects the DLL knows about). Values
-	// will be a string from the following list (trimmed to 63
-	// characters; the filename on each line is just a hint in case
-	// you're trying to figure out what it means):
-
-	//   "CLASS_AIR" // AirCraft.h
-	//   "CLASS_ANCHORROCKET" // AnchorRocketClass.h
-	//   "CLASS_APC" // APC.h
-	//   "CLASS_ARCCANNON" // ArcCannonClass.h
-	//   "CLASS_ARMORY" // Armory.h
-	//   "CLASS_ARTIFACT" // Artifact.h
-	//   "CLASS_ARTILLERY" // Artillery.h
-	//   "CLASS_ASSAULTTANK" // AssaultTank.h
-	//   "CLASS_BARRACKS" // Barracks.h
-	//   "CLASS_BEAM"
-	//   "CLASS_BLINK" // BlinkDeviceClass.h
-	//   "CLASS_BOID"
-	//   "CLASS_BOMBER" // Bomber.h
-	//   "CLASS_BOMBERBAY" // BomberBay.h
-	//   "CLASS_BOUNCEBOMB"
-	//   "CLASS_BUILDING" // BuildingClass.h
-	//   "CLASS_BULLET" // BulletClass.h
-	//   "CLASS_CANNON" // CannonClass.h
-	//   "CLASS_CANNON_MACHINEGUN" // MachineGunClass.h
-	//   "CLASS_CANNON_TARGETING" // TargetingGunClass.h
-	//   "CLASS_CHARGEGUN" // ChargeGunClass.h
-	//   "CLASS_COMMBUNKER" // CommBunker.h
-	//   "CLASS_COMMTOWER" // CommTower.h
-	//   "CLASS_COMMVEHICLE" // CommVehicle.h
-	//   "CLASS_CONSTRUCTIONRIG" // ConstructionRig.h
-	//   "CLASS_CRAFT" // CraftClass.h
-	//   "CLASS_DAMAGEFIELD" // DamageFieldClass.h
-	//   "CLASS_DAYWRECKER" // DayWrecker.h
-	//   "CLASS_DEPLOYABLE" // Deployable.h
-	//   "CLASS_DEPLOYBUILDING" // DeployBuilding.h
-	//   "CLASS_DEPOSIT" // Deposit.h
-	//   "CLASS_DISPENSER" // DispenserClass.h
-	//   "CLASS_EXPLOSION" // ExplosionClass.h
-	//   "CLASS_EXTRACTOR" // Extractor.h
-	//   "CLASS_FACTORY" // Factory.h
-	//   "CLASS_FLAG" // FlagObject.h
-	//   "CLASS_FLAREMINE" // FlareMineClass.h
-	//   "CLASS_GAMEOBJECT" // GameObjectClass.h
-	//   "CLASS_GRENADE" // GrenadeClass.h
-	//   "CLASS_GRENADE_LASERPOPPER" // LaserPopperClass.h
-	//   "CLASS_GRENADE_POPPER" // PopperClass.h
-	// 	//  "CLASS_GRENADE_RADARPOPPER" // RadarPopperClass.h [Same sig as GRENADE_POPPER, uses that]
-	//   "CLASS_HOVER" // HoverCraft.h
-	//   "CLASS_HOWITZER" // Howitzer.h
-	//   "CLASS_I76BUILDING" // Building.h
-	//   "CLASS_JAMMER" // JammerTower.h
-	//   "CLASS_JETPACK" // JetPackClass.h
-	//   "CLASS_KINGOFHILL" // KingOfHill.h
-	//   "CLASS_LAUNCHER" // LauncherClass.h
-	//   "CLASS_LAUNCHER_IMAGE" // ImageLauncherClass.h
-	//   "CLASS_LAUNCHER_MULTI" // MultiLauncherClass.h
-	//   "CLASS_LAUNCHER_RADAR" // RadarLauncherClass.h
-	//   "CLASS_LAUNCHER_THERMAL" // ThermalLauncherClass.h
-	//   "CLASS_LAUNCHER_TORPEDO" // TorpedoLauncherClass.h
-	// 	//  "CLASS_LEADER_ROUND" // LeaderRoundClass.h [Same sig as CLASS_CANNON_TARGETING, returns that]
-	//   "CLASS_LOCKSHELL" // LockShellClass.h
-	//   "CLASS_MAGNETGUN" // MagnetGunClass.h
-	//   "CLASS_MAGNETSHELL" // MagnetShellClass.h
-	//   "CLASS_MINE" // MineClass.h
-	//   "CLASS_MINELAYER" // Minelayer.h
-	//   "CLASS_MINE_MAGNET" // MagnetMineClass.h
-	//   "CLASS_MINE_PROXIMITY" // ProximityMineClass.h
-	//   "CLASS_MINE_TRIP" // TripMineClass.h
-	//   "CLASS_MINE_WEAPON" // WeaponMineClass.h
-	//   "CLASS_MISSILE" // MissileClass.h
-	//   "CLASS_MISSILE_IMAGE" // ImageMissileClass.h
-	//   "CLASS_MISSILE_LASER" // LaserMissileClass.h
-	//   "CLASS_MISSILE_RADAR" // RadarMissileClass.h
-	//   "CLASS_MISSILE_THERMAL" // ThermalMissileClass.h
-	//   "CLASS_MORPHTANK" // MorphTank.h
-	//   "CLASS_MORTAR" // MortarClass.h
-	//   "CLASS_MORTAR_REMOTE" // RemoteDetonatorClass.h
-	//   "CLASS_MOTIONSENSOR" // MotionSensor.h
-	//   "CLASS_NAVBEACON" // NavBeaconClass.h
-	//   "CLASS_OBJECTSPAWN" // ObjectSpawn.h
-	//   "CLASS_ORDNANCE" // OrdnanceClass.h
-	//   "CLASS_PERSON" // PersonClass.h
-	//   "CLASS_PLANT" // Plant.h
-	//   "CLASS_POWERED" // PoweredBuilding.h
-	//   "CLASS_POWERUP_CAMERA" // CameraPod.h
-	//   "CLASS_POWERUP_MONEY" // MoneyPowerup.h
-	//   "CLASS_POWERUP_RELOAD" // ServicePowerup.h
-	//   "CLASS_POWERUP_REPAIR" // ServicePowerup.h
-	//   "CLASS_POWERUP_SERVICE" // ServicePowerup.h
-	// 	//  "CLASS_POWERUP_WEAPON" // WeaponPowerup.h [Same sig as CLASS_WEAPON, returns that]
-	//   "CLASS_PULSESHELL" // PulseShellClass.h
-	//   "CLASS_RECYCLER" // Recycler.h
-	//   "CLASS_RECYCLERVEHICLE" // RecyclerVehicle.h
-	//   "CLASS_SALVOLAUNCHER" // SalvoLauncherClass.h
-	//   "CLASS_SATCHELCHARGE" // SatchelCharge.h
-	//   "CLASS_SATCHELPACK" // SatchelPackClass.h
-	//   "CLASS_SAV" // SAV.h
-	//   "CLASS_SCAVENGER" // Scavenger.h
-	//   "CLASS_SCAVENGERH" // ScavengerH.h
-	//   "CLASS_SCRAP" // Scrap.h
-	//   "CLASS_SEEKER" // SeekerClass.h
-	//   "CLASS_SEISMICWAVE" // SeismicWaveClass.h
-	//   "CLASS_SERVICE" // ServiceTruck.h
-	//   "CLASS_SERVICEH" // ServiceTruckH.h
-	//   "CLASS_SHIELDTOWER" // ShieldTower.h
-	//   "CLASS_SHIELDUP" // ShieldUpgradeClass.h
-	//   "CLASS_SIGN" // BuildingClass.h
-	//   "CLASS_SILO" // Silo.h
-	//   "CLASS_SNIPERSHELL" // SniperShellClass.h
-	//   "CLASS_SPAWNBUOY" // SpawnBuoy.h
-	//   "CLASS_SPECIAL" // SpecialItemClass.h
-	//   "CLASS_SPECIAL_FORCEFIELD" // ForceFieldClass.h
-	//   "CLASS_SPECIAL_IMAGEREFRACT" // ImageRefractClass.h
-	//   "CLASS_SPECIAL_RADARDAMPER" // RadarDamperClass.h
-	//   "CLASS_SPECIAL_TERRAINEXPOSE" // TerrainExposeClass.h
-	//   "CLASS_SPRAYBOMB" // SprayBombClass.h
-	//   "CLASS_SPRAYBUILDING" // SprayBuildingClass.h
-	//   "CLASS_SUPPLYDEPOT" // SupplyDepot.h
-	//   "CLASS_TELEPORTAL" // TelePortalClass.h
-	//   "CLASS_TERRAIN" // DummyClass.h
-	//   "CLASS_TORPEDO" // TorpedoClass.h
-	//   "CLASS_TRACKEDDEPLOYABLE" // TrackedDeployable.h
-	//   "CLASS_TRACKEDVEHICLE" // TrackedVehicle.h
-	//   "CLASS_TUG" // Tug.h
-	//   "CLASS_TURRET" // TurretCraft.h - ibgtow/fbspir (Guntower/gunspires)
-	//   "CLASS_TURRETTANK" // TurretTank.h - ivturr/fvturr (vehicle turrets)
-	//   "CLASS_WALKER" // Walker.h
-	//   "CLASS_WEAPON" // WeaponClass.h
-	//   "CLASS_WINGMAN" // Wingman.h
-	// 	"CLASS_UNKNOWN" // default
-
-	// Returns an empty string if the handle specified is of an object
-	// can't carry such a weapon, or has no weapon in that slot, etc.
-	Get_Weapon0Config, 
-	Get_Weapon1Config,
-	Get_Weapon2Config,
-	Get_Weapon3Config,
-	Get_Weapon4Config,
-
-	// Gets the weapon ODF for weapons 0-4. Returns an empty string if
-	// the handle specified is of an object can't carry such a weapon,
-	// or has no weapon in that slot, etc.
-	Get_Weapon0ODF, 
-	Get_Weapon1ODF,
-	Get_Weapon2ODF,
-	Get_Weapon3ODF,
-	Get_Weapon4ODF,
-
-	// Gets the GameObject class for weapons 0-4. See list above in
-	// point 4 for a list of possible return values.
-
-	Get_Weapon0GOClass, 
-	Get_Weapon1GOClass,
-	Get_Weapon2GOClass,
-	Get_Weapon3GOClass,
-	Get_Weapon4GOClass,
-};
-__declspec( dllexport ) bool __cdecl GetObjInfo(int,enum ObjectInfoType,char * const) asm("?GetObjInfo@@YA_NHW4ObjectInfoType@@QAD@Z");
-__declspec( dllexport ) bool __cdecl DoesODFExist(char *) asm("?DoesODFExist@@YA_NPAD@Z");
-__declspec( dllexport ) bool __cdecl IsAlive2(int) asm("?IsAlive2@@YA_NH@Z");
-__declspec( dllexport ) bool __cdecl IsFlying2(int) asm("?IsFlying2@@YA_NH@Z");
-__declspec( dllexport ) bool __cdecl IsAliveAndPilot2(int) asm("?IsAliveAndPilot2@@YA_NH@Z");
-__declspec( dllexport ) void __cdecl TranslateString2(char *,unsigned int,char *) asm("?TranslateString2@@YAXPADI0@Z");
-__declspec( dllexport ) int __cdecl GetScavengerCurScrap(int) asm("?GetScavengerCurScrap@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetScavengerMaxScrap(int) asm("?GetScavengerMaxScrap@@YAHH@Z");
-__declspec( dllexport ) void __cdecl SetScavengerCurScrap(int,int) asm("?SetScavengerCurScrap@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetScavengerMaxScrap(int,int) asm("?SetScavengerMaxScrap@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl DamageF(int,float) asm("?DamageF@@YAXHM@Z");
-__declspec( dllexport ) void __cdecl SelfDamage(int,float) asm("?SelfDamage@@YAXHM@Z");
-__declspec( dllexport ) void __cdecl WantBotKillMessages(void) asm("?WantBotKillMessages@@YAXXZ");
-__declspec( dllexport ) void __cdecl EnableHighTPS(int &) asm("?EnableHighTPS@@YAXAAH@Z");
-__declspec( dllexport ) int __cdecl GetLocalUserInspectHandle(void) asm("?GetLocalUserInspectHandle@@YAHXZ");
-__declspec( dllexport ) int __cdecl GetLocalUserSelectHandle(void) asm("?GetLocalUserSelectHandle@@YAHXZ");
-__declspec( dllexport ) void __cdecl ResetTeamSlot(int) asm("?ResetTeamSlot@@YAXH@Z");
-__declspec( dllexport ) int __cdecl GetCategoryTypeOverride(int) asm("?GetCategoryTypeOverride@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetCategoryType(int) asm("?GetCategoryType@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetODFHexInt(char const *,char const *,char const *,int *,int) asm("?GetODFHexInt@@YAHPBD00PAHH@Z");
-__declspec( dllexport ) int __cdecl GetODFInt(char const *,char const *,char const *,int *,int) asm("?GetODFInt@@YAHPBD00PAHH@Z");
-__declspec( dllexport ) int __cdecl GetODFLong(char const *,char const *,char const *,long *,long) asm("?GetODFLong@@YAHPBD00PAJJ@Z");
-__declspec( dllexport ) int __cdecl GetODFFloat(char const *,char const *,char const *,float *,float) asm("?GetODFFloat@@YAHPBD00PAMM@Z");
-__declspec( dllexport ) int __cdecl GetODFDouble(char const *,char const *,char const *,double *,double) asm("?GetODFDouble@@YAHPBD00PANN@Z");
-__declspec( dllexport ) int __cdecl GetODFChar(char const *,char const *,char const *,char *,char) asm("?GetODFChar@@YAHPBD00PADD@Z");
-__declspec( dllexport ) int __cdecl GetODFBool(char const *,char const *,char const *,bool *,bool) asm("?GetODFBool@@YAHPBD00PA_N_N@Z");
-__declspec( dllexport ) int __cdecl GetODFString(char const *,char const *,char const *,unsigned int,char *,char const *) asm("?GetODFString@@YAHPBD00IPAD0@Z");
-__declspec( dllexport ) int __cdecl GetODFColor(char const *,char const *,char const *,unsigned long *,unsigned long) asm("?GetODFColor@@YAHPBD00PAKK@Z");
-__declspec( dllexport ) int __cdecl GetODFVector(char const *,char const *,char const *,struct Vector *,struct Vector) asm("?GetODFVector@@YAHPBD00PAUVector@@U1@@Z");
-__declspec( dllexport ) bool __cdecl OpenODF(char *) asm("?OpenODF@@YA_NPAD@Z");
-__declspec( dllexport ) bool __cdecl CloseODF(char *) asm("?CloseODF@@YA_NPAD@Z");
-__declspec( dllexport ) void __cdecl NoteGameoverWithCustomMessage(char const *) asm("?NoteGameoverWithCustomMessage@@YAXPBD@Z");
-__declspec( dllexport ) int __cdecl SetBestGroup(int) asm("?SetBestGroup@@YAHH@Z");
-__declspec( dllexport ) void __cdecl GetGroup(int,int,enum ObjectInfoType,char * const) asm("?GetGroup@@YAXHHW4ObjectInfoType@@QAD@Z");
-__declspec( dllexport ) int __cdecl GetGroupCount(int,int) asm("?GetGroupCount@@YAHHH@Z");
-__declspec( dllexport ) void __cdecl SetLifespan(int,float) asm("?SetLifespan@@YAXHM@Z");
-__declspec( dllexport ) bool __cdecl DoesFileExist(char const *) asm("?DoesFileExist@@YA_NPBD@Z");
-__declspec( dllexport ) bool __cdecl LoadFile(char const *,void *,unsigned int &) asm("?LoadFile@@YA_NPBDPAXAAI@Z");
-enum DLLAudioCategory
-{
-	AUDIO_CAT_UNKNOWN,
-	AUDIO_CAT_UNIT_DLG,
-	AUDIO_CAT_MISSION_DLG,
-	AUDIO_CAT_INTERFACE,
-	AUDIO_CAT_WEAPON,
-	AUDIO_CAT_ORDNANCE,
-	AUDIO_CAT_EXPLOSION,
-	AUDIO_CAT_ENGINE,
-	AUDIO_CAT_AMBIENT,
-	AUDIO_CAT_MUSIC,
-};
-__declspec( dllexport ) int __cdecl StartAudio3D(char const * const,int,enum DLLAudioCategory,bool,bool) asm("?StartAudio3D@@YAHQBDHW4DLLAudioCategory@@_N2@Z");
-__declspec( dllexport ) int __cdecl StartAudio3DV(char const * const,float,float,float,enum DLLAudioCategory,bool) asm("?StartAudio3D@@YAHQBDMMMW4DLLAudioCategory@@_N@Z");
-__declspec( dllexport ) int __cdecl StartAudio2D(char const * const,float,float,float,bool,bool) asm("?StartAudio2D@@YAHQBDMMM_N1@Z");
-__declspec( dllexport ) bool __cdecl IsAudioPlaying(int &) asm("?IsAudioPlaying@@YA_NAAH@Z");
-__declspec( dllexport ) void __cdecl StopAudio(int) asm("?StopAudio@@YAXH@Z");
-__declspec( dllexport ) void __cdecl PauseAudio(int) asm("?PauseAudio@@YAXH@Z");
-__declspec( dllexport ) void __cdecl ResumeAudio(int) asm("?ResumeAudio@@YAXH@Z");
-__declspec( dllexport ) void __cdecl SetVolume(int,float,bool) asm("?SetVolume@@YAXHM_N@Z");
-__declspec( dllexport ) void __cdecl SetPan(int,float) asm("?SetPan@@YAXHM@Z");
-__declspec( dllexport ) void __cdecl SetRate(int,float) asm("?SetRate@@YAXHM@Z");
-__declspec( dllexport ) float __cdecl GetAudioFileDuration(int) asm("?GetAudioFileDuration@@YAMH@Z");
-__declspec( dllexport ) bool __cdecl IsPlayingLooped(int) asm("?IsPlayingLooped@@YA_NH@Z");
-__declspec( dllexport ) int __cdecl GetNearestEnemy(int,bool,bool,float) asm("?GetNearestEnemy@@YAHH_N0M@Z");
-__declspec( dllexport ) int __cdecl GetNearestPowerup(int,bool,float) asm("?GetNearestPowerup@@YAHH_NM@Z");
-__declspec( dllexport ) int __cdecl GetNearestPerson(int,bool,float) asm("?GetNearestPerson@@YAHH_NM@Z");
-__declspec( dllexport ) void __cdecl SetCommandV(int,int,int,int,struct Vector const &,int) asm("?SetCommand@@YAXHHHHABUVector@@H@Z");
-__declspec( dllexport ) void __cdecl SetCommandP(int,int,int,int,char * const,int) asm("?SetCommand@@YAXHHHHQADH@Z");
-__declspec( dllexport ) void __cdecl SetGravity(float) asm("?SetGravity@@YAXM@Z");
-__declspec( dllexport ) void __cdecl SetAutoGroupUnits(bool) asm("?SetAutoGroupUnits@@YAX_N@Z");
-__declspec( dllexport ) void __cdecl KickPlayer(int,char const *,bool) asm("?KickPlayer@@YAXHPBD_N@Z");
-__declspec( dllexport ) bool __cdecl TerrainIsWaterV(struct Vector const &) asm("?TerrainIsWater@@YA_NABUVector@@@Z");
-__declspec( dllexport ) bool __cdecl TerrainIsWater(float,float) asm("?TerrainIsWater@@YA_NMM@Z");
-__declspec( dllexport ) bool __cdecl TerrainGetHeightAndNormal(struct Vector const &,float &,struct Vector &,bool) asm("?TerrainGetHeightAndNormal@@YA_NABUVector@@AAMAAU1@_N@Z");
-__declspec( dllexport ) bool __cdecl GetOutputPath(unsigned int &,wchar_t *) asm("?GetOutputPath@@YA_NAAIPA_W@Z");
-__declspec( dllexport ) bool __cdecl GetPathPoints(char *,unsigned int &,float *) asm("?GetPathPoints@@YA_NPADAAIPAM@Z");
-__declspec( dllexport ) int __cdecl GetOwner(int) asm("?GetOwner@@YAHH@Z");
-__declspec( dllexport ) void __cdecl SetTarget(int,int) asm("?SetTarget@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetOwner(int,int) asm("?SetOwner@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetPilotClass(int,char *) asm("?SetPilotClass@@YAXHPAD@Z");
-__declspec( dllexport ) void __cdecl AllowRandomTracks(bool) asm("?AllowRandomTracks@@YAX_N@Z");
-// More teamcolors functions.
-enum TEAMCOLOR_TYPE
-{
-	TEAMCOLOR_TYPE_DEFAULT, // Defaults
-	TEAMCOLOR_TYPE_GAMEPREFS, // What's set in gameprefs
-	TEAMCOLOR_TYPE_SERVER, // What the server sent us.
-	TEAMCOLOR_TYPE_CURRENT, // Valid only to GetFFATeamColor().
-};
-__declspec( dllexport ) void __cdecl SetFFATeamColors(enum TEAMCOLOR_TYPE) asm("?SetFFATeamColors@@YAXW4TEAMCOLOR_TYPE@@@Z");
-__declspec( dllexport ) void __cdecl SetTeamStratColors(enum TEAMCOLOR_TYPE) asm("?SetTeamStratColors@@YAXW4TEAMCOLOR_TYPE@@@Z");
-__declspec( dllexport ) void __cdecl GetFFATeamColor(enum TEAMCOLOR_TYPE,int,int &,int &,int &) asm("?GetFFATeamColor@@YAXW4TEAMCOLOR_TYPE@@HAAH11@Z");
-__declspec( dllexport ) void __cdecl GetTeamStratColor(enum TEAMCOLOR_TYPE,int,int &,int &,int &) asm("?GetTeamStratColor@@YAXW4TEAMCOLOR_TYPE@@HAAH11@Z");
-__declspec( dllexport ) void __cdecl SwapTeamStratColors(void) asm("?SwapTeamStratColors@@YAXXZ");
-__declspec( dllexport ) bool __cdecl GetTeamColorsAreFFA(void) asm("?GetTeamColorsAreFFA@@YA_NXZ");
-__declspec( dllexport ) void __cdecl SetTeamColors(enum TEAMCOLOR_TYPE) asm("?SetTeamColors@@YAXW4TEAMCOLOR_TYPE@@@Z");
-__declspec( dllexport ) int __cdecl AddPower(int,int) asm("?AddPower@@YAHHH@Z");
-__declspec( dllexport ) int __cdecl SetPower(int,int) asm("?SetPower@@YAHHH@Z");
-__declspec( dllexport ) int __cdecl GetPower(int) asm("?GetPower@@YAHH@Z");
-__declspec( dllexport ) int __cdecl GetMaxPower(int) asm("?GetMaxPower@@YAHH@Z");
-__declspec( dllexport ) void __cdecl AddMaxScrap(int,int) asm("?AddMaxScrap@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl AddMaxPower(int,int) asm("?AddMaxPower@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetMaxScrap(int,int) asm("?SetMaxScrap@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl SetMaxPower(int,int) asm("?SetMaxPower@@YAXHH@Z");
-__declspec( dllexport ) void __cdecl GetTeamStratIndividualColor(enum TEAMCOLOR_TYPE,int,int &,int &,int &) asm("?GetTeamStratIndividualColor@@YAXW4TEAMCOLOR_TYPE@@HAAH11@Z");
-__declspec( dllexport ) char const * __cdecl GetMapTRNFilename(void) asm("?GetMapTRNFilename@@YAPBDXZ");
-__declspec( dllexport ) bool __cdecl IsTeamAllied(int,int) asm("?IsTeamAllied@@YA_NHH@Z");
-__declspec( dllexport ) bool __cdecl IsNotDeadAndPilot2(int) asm("?IsNotDeadAndPilot2@@YA_NH@Z");
-//__declspec( dllexport ) char const * __cdecl GetLabel(int) asm("?GetName@@YAPBDH@Z");
-__declspec( dllexport ) char const * __cdecl GetLabel(int) asm("?GetLabel@@YAPBDH@Z");
-//__declspec( dllexport ) void __cdecl SetLabel(int,char * const) asm("?SetName@@YAXHQAD@Z");
-__declspec( dllexport ) void __cdecl SetLabel(int,char * const) asm("?SetLabel@@YAXHQAD@Z");
-__declspec( dllexport ) int __cdecl GetTap(int,int) asm("?GetTap@@YAHHH@Z");
-__declspec( dllexport ) void __cdecl SetTap(int,int,int) asm("?SetTap@@YAXHHH@Z");
-__declspec( dllexport ) float __cdecl GetCurLocalAmmo(int,int) asm("?GetCurLocalAmmo@@YAMHH@Z");
-__declspec( dllexport ) void __cdecl AddLocalAmmo(int,float,int) asm("?AddLocalAmmo@@YAXHMH@Z");
-__declspec( dllexport ) float __cdecl GetMaxLocalAmmo(int,int) asm("?GetMaxLocalAmmo@@YAMHH@Z");
-__declspec( dllexport ) void __cdecl SetCurLocalAmmo(int,float,int) asm("?SetCurLocalAmmo@@YAXHMH@Z");
-
-// NEW ITEMS
-/*
-asm("?GetActualScrapCost@@YAHH@Z");
-asm("?GetAllSpawnpoints@@YAIAAPAUSpawnpointInfo@@H@Z");
-asm("?GetBaseScrapCost@@YAHH@Z");
-asm("?GetNetworkListCount@@YAIW4NETWORK_LIST_TYPE@@@Z");
-asm("?GetNetworkListItem@@YAPBDW4NETWORK_LIST_TYPE@@I@Z");
-asm("?GetPerceivedTeam@@YAHH@Z");
-asm("?GetPilotClass@@YAPBDH@Z");
-asm("?GetRemainingLifespan@@YAMH@Z");
-asm("?GetTeamRelationship@@YA?AW4TEAMRELATIONSHIP@@HH@Z");
-asm("?Goto@@YAXHABUVector@@H@Z");
-asm("?HasPilot@@YA_NH@Z");
-asm("?PetWatchdogThread@@YAXXZ");
-asm("?SetLastCurrentPosition@@YAXHABUMatrix@@0@Z");
-asm("?SetPostTargetChangedCallback@@YAXP6AXHHH@Z@Z");
-asm("?SetPreGetInCallback@@YAXP6A?AW4PreGetInReturnCodes@@HHH@Z@Z");
-asm("?SetPreOrdnanceHitCallback@@YAXP6AXHHHPAD@Z@Z");
-asm("?SetPrePickupPowerupCallback@@YAXP6A?AW4PrePickupPowerupReturnCodes@@HHH@Z@Z");
-asm("?SetPreSnipeCallback@@YAXP6A?AW4PreSnipeReturnCodes@@HHHHPAD@Z@Z");
-*/
-
-/*typedef struct MisnImport {
-	float time;
-	void (__cdecl *FailMission)(float t, char* fileName);
-	void (__cdecl *SucceedMission)(float t, char* fileName);
-	void (__cdecl *ChangeSide)(void);
-	int (__cdecl *AddScrap)(int t, int v);
-	int (__cdecl *SetScrap)(int t, int v);
-	int (__cdecl *GetScrap)(int t);
-	int (__cdecl *GetMaxScrap)(int t);
-	int (__cdecl *GetTug)(int h);
-	bool (__cdecl *HasCargo)(int h);
-	float (__cdecl *GetDistanceObject)(int &h1, int &h2);
-	float (__cdecl *GetDistancePath)(int &h1, char* path, int point);
-//	float (__cdecl *GetDistancePathPtr)(int &h1, AiPath *path, int point);
-	int (__cdecl *GetNearestObject)(int h);
-	int (__cdecl *GetNearestVehicleObject)(int h);
-	int (__cdecl *GetNearestVehiclePath)(char* path, int point);
-	int (__cdecl *GetNearestBuilding)(int h);
-	int (__cdecl *GetNearestEnemy)(int h);
-} MisnImport;*/
-]]
---]
 --==============================================================================================================================================================
 -- Utility Functions
 --==============================================================================================================================================================
@@ -749,8 +11,10 @@ function isfunction(object)
     return (type(object) == "function");
 end
 
+local function istable(t) return type(t) == 'table' end
 
 
+--[[
 --- Message Buffer
 -- Used to avoid extra allocation time when possible.
 -- This API will avoid using this variable twice without first converting to lua strings.
@@ -777,14 +41,15 @@ end
 -- @param low Minimum of range.
 -- @param high Maximum of range.
 function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
-
+--]]
 --- Is this oject an instance of GameObject?
 -- Checks that the object is a GameObject or similar enough to one
 -- @param object Object in question
 function isgameobject(object)
-    return (type(object) == "table" and object.GetHandle ~= nil and type(object.GetHandle) == "function");
+    --return (type(object) == "table" and getmetatable(object) == GameObject);
+    return (type(object) == "table" and object.__type == "GameObject");
 end
-
+--[[
 function isobjectdefinition(object)
     return (type(object) == "table" 
       and object.Open ~= nil and type(object.Open) == "function"
@@ -800,7 +65,7 @@ function isobjectdefinition(object)
       and object.GetColor ~= nil and type(object.GetColor) == "function"
       and object.GetVector ~= nil and type(object.GetVector) == "function");
 end
-
+--]]
 --- Is this oject a string?
 -- @param object Object in question
 function isstring(object)
@@ -867,7 +132,7 @@ end
 function israndomizetype(object)
     return (type(object) == "cdata" and ffi.istype("RandomizeType", object));
 end
-
+--[[
 
 --==============================================================================================================================================================
 -- Common Enums, Structs, Types
@@ -1092,7 +357,8 @@ function AiPathObject.GetAiPath(self)
 end
 ]]
 
-
+--]]
+--[[
 --==============================================================================================================================================================
 -- ObjectDefinition
 --==============================================================================================================================================================
@@ -1251,9 +517,9 @@ function ObjectDefinition_.GetVector(self, block, name, default)
     ffi.C.GetODFVector(tocstring(self.name), tocstring(block), tocstring(name), value, default);
     return value;
 end
+--]]
 
-
-
+--[[
 --==============================================================================================================================================================
 -- AudioHandle
 --==============================================================================================================================================================
@@ -1403,7 +669,7 @@ function IsPlayingLooped(self)
     if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
     return ffi.C.IsPlayingLooped(self:GetAudioHandle());
 end
-
+--]]
 
 --==============================================================================================================================================================
 -- GameObject
@@ -1416,8 +682,6 @@ local GameObjectAltered = {};
 
 --- GameObject
 -- An object containing all functions and data related to a game object.
--- [future] GameObject will survive postload.
--- [future] GameObject will preserve extra data added by serving existing instance for given id.
 local GameObject = {}; -- the table representing the class, which will double as the metatable for the instances
 --GameObject.__index = GameObject; -- failed table lookups on the instances should fallback to the class table, to get methods
 GameObject.__index = function(table, key)
@@ -1439,14 +703,16 @@ GameObject.__newindex = function(table, key, value)
         rawset(table, key, value);
     end
 end
+GameObject.__type = "GameObject";
 
 --- Create new GameObject Intance
 -- @param id Handle from BZ2.
 function GameObject.new(id)
-    if GameObjectWeakList[id] ~= nil then return GameObjectWeakList[id]; end
+    local stringId = tostring(id);
+    if GameObjectWeakList[stringId] ~= nil then return GameObjectWeakList[stringId]; end
     local self = setmetatable({}, GameObject);
     self.id = id;
-    GameObjectWeakList[id] = self;
+    GameObjectWeakList[stringId] = self;
     return self;
 end
 
@@ -1463,19 +729,32 @@ end
 --end
 
 function GameObject.PostLoad(self)
-    local id = ffi.new("int[1]", self.id);
-    ffi.C.ConvertHandles(id, 1);
-    GameObjectWeakList[self.id] = nil;
-    local AdjustAlteredCache = GameObjectAltered[self.id] ~= nil;
-    if AdjustedAlteredCache then GameObjectAltered[self.id] = nil; end
-    self.id = tonumber(id[0]);
-    GameObjectWeakList[self.id] = self;
-    if AdjustedAlteredCache then GameObjectAltered[self.id] = self; end
+
 end
 
 function GameObject.Save(self)
-    WriteMarker("GameObject");
-    ffi.C.WriteInt(ffi.new("int[1]", self.id), 1);
+    return self.id;
+end
+
+function GameObject.Load(id)
+    return GameObject.new(id);
+end
+
+function GameObject.BulkSave()
+    local returnData = {};
+    
+    for k,v in pairs(GameObjectAltered) do
+      returnData[v.id] = v.addonData;
+    end
+    
+    return returnData;
+end
+
+function GameObject.BulkLoad(data)
+    for k,v in pairs(data) do
+      local newGameObject = GameObject.new(k);
+      newGameObject.addonData = v;
+    end
 end
 
 --- Remove GameObject from world
@@ -1483,7 +762,7 @@ end
 function GameObject.RemoveObject(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     --ffi.C.RemoveObject(self:GetHandle());
-    ScriptUtils.RemoveObject(self:GetHandle());
+    RemoveObject(self:GetHandle());
 end
 
 --- Set group of GameObject in interface
@@ -1492,7 +771,7 @@ end
 function GameObject.SetGroup(self, group)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     --ffi.C.SetGroup(self:GetHandle(), group);
-    ScriptUtils.SetGroup(self:GetHandle(), group);
+    SetGroup(self:GetHandle(), group);
 end
 
 
@@ -1509,7 +788,7 @@ function GameObject.Attack(self, target, priority)
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
     --if priority == nil then priority = 1; end
     --ffi.C.Attack(self:GetHandle(), target:GetHandle(), priority);
-    ScriptUtils.Service(self:GetHandle(), target:GetHandle(), priority);
+    Service(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Service target GameObject
@@ -1521,7 +800,7 @@ function GameObject.Service(self, target, priority)
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
     --if priority == nil then priority = 1; end
     --ffi.C.Service(self:GetHandle(), target:GetHandle(), priority);
-    ScriptUtils.Service(self:GetHandle(), target:GetHandle(), priority);
+    Service(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Goto target GameObject / Path
@@ -1533,12 +812,12 @@ function GameObject.Goto(self, target, priority)
     --if priority == nil then priority = 1; end
     if isgameobject(target) then
         ffi.C.GotoH(self:GetHandle(), target:GetHandle(), priority);
-        --ScriptUtils.Goto(self:GetHandle(), target:GetHandle(), priority);
+        --Goto(self:GetHandle(), target:GetHandle(), priority);
     --elseif isstring(target) then
     --    ffi.C.GotoP(self:GetHandle(), tocstring(target), priority)
     else
         --error("Paramater self must be GameObject instance or string");
-        ScriptUtils.Goto(self:GetHandle(), target, priority);
+        Goto(self:GetHandle(), target, priority);
     end
 end
 
@@ -1551,7 +830,7 @@ function GameObject.Mine(self, target, priority)
     if not isstring(target) then error("Paramater target must be string."); end
     --if priority == nil then priority = 1; end
     --ffi.C.Mine(self:GetHandle(), tocstring(target), priority);
-    ScriptUtils.Mine(self:GetHandle(), target, priority);
+    Mine(self:GetHandle(), target, priority);
 end
 
 --- Order GameObject to Follow target GameObject
@@ -1563,7 +842,7 @@ function GameObject.Follow(self, target, priority)
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
     --if priority == nil then priority = 1; end
     --ffi.C.Follow(self:GetHandle(), target:GetHandle(), priority);
-    ScriptUtils.Follow(self:GetHandle(), target:GetHandle(), priority);
+    Follow(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Defend area
@@ -1573,7 +852,7 @@ function GameObject.Defend(self, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     --if priority == nil then priority = 1; end
     --ffi.C.Defend(self:GetHandle(), priority);
-    ScriptUtils.Defend(self:GetHandle(), priority);
+    Defend(self:GetHandle(), priority);
 end
 
 --- Order GameObject to Defend2 target GameObject
@@ -1585,7 +864,7 @@ function GameObject.Defend2(self, target, priority)
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
     --if priority == nil then priority = 1; end
     --ffi.C.Defend2(self:GetHandle(), target:GetHandle(), priority);
-    ScriptUtils.Defend2(self:GetHandle(), target:GetHandle(), priority);
+    Defend2(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Stop
@@ -1595,7 +874,7 @@ function GameObject.Stop(self, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     --if priority == nil then priority = 1; end
     --ffi.C.Stop(self:GetHandle(), priority);
-    ScriptUtils.Stop(self:GetHandle(), priority);
+    Stop(self:GetHandle(), priority);
 end
 
 --- Order GameObject to Patrol target path
@@ -1607,7 +886,7 @@ function GameObject.Patrol(self, target, priority)
     if not isstring(target) then error("Paramater target must be string."); end
     --if priority == nil then priority = 1; end
     --ffi.C.Patrol(self:GetHandle(), tocstring(target), priority);
-    ScriptUtils.Patrol(self:GetHandle(), target, priority);
+    Patrol(self:GetHandle(), target, priority);
 end
 
 --- Order GameObject to Retreat
@@ -1619,12 +898,12 @@ function GameObject.Retreat(self, target, priority)
     if priority == nil then priority = 1; end
     if isgameobject(target) then
         --ffi.C.RetreatH(self:GetHandle(), target:GetHandle(), priority);
-        ScriptUtils.Retreat(self:GetHandle(), target:GetHandle(), priority);
+        Retreat(self:GetHandle(), target:GetHandle(), priority);
     --elseif isstring(target) then
     --    ffi.C.RetreatP(self:GetHandle(), tocstring(target), priority)
     else
         --error("Paramater self must be GameObject instance or string");
-        ScriptUtils.Retreat(self:GetHandle(), target, priority)
+        Retreat(self:GetHandle(), target, priority)
     end
 end
 
@@ -1743,7 +1022,7 @@ function GameObject.GetPositionV(self)
     --for k,v in pairs(getmetatable(self:GetHandle())) do
     --    PrintConsoleMessage(k .. ' ' .. v;
     --end
-    return ScriptUtils.GetPosition(self:GetHandle());
+    return GetPosition(self:GetHandle());
 end
 
 --- Get the position vector of a GameObject using deeper search
@@ -2101,7 +1380,7 @@ end
 function GameObject.SetObjectiveOn(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     --ffi.C.SetObjectiveOn(self:GetHandle());
-    ScriptUtils.SetObjectiveOn(self:GetHandle());
+    SetObjectiveOn(self:GetHandle());
 end
 
 --- Objectify the GameObject
@@ -2109,7 +1388,7 @@ end
 function GameObject.SetObjectiveOff(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     --ffi.C.SetObjectiveOff(self:GetHandle());
-    ScriptUtils.SetObjectiveOff(self:GetHandle());
+    SetObjectiveOff(self:GetHandle());
 end
 
 --- Set the objective name of the GameObject
@@ -2559,7 +1838,7 @@ end
 function GameObject.IsAround(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     --return ffi.C.IsAround(self:GetHandle());
-    return ScriptUtils.IsAround(self:GetHandle());
+    return IsAround(self:GetHandle());
 end
 
 
@@ -2963,7 +2242,7 @@ function GameObject:IsPerson(self)
     return ffi.C.IsPerson(self:GetHandle());
 end
 
-
+--[[
 --==============================================================================================================================================================
 -- ObjectInfo
 --==============================================================================================================================================================
@@ -3048,7 +2327,7 @@ end
 -- End of nicely sorted stuff
 
 
-
+--]]
 
 
 
@@ -3062,7 +2341,7 @@ end
 -- @param team Team number for the object, 0 to 15
 -- @param pos Position as GameObject, Pathpoint Name, AiPath, Vector, or Matrix
 -- @return Newly built GameObject
-function BuildObject(odf, team, pos)
+function BuildGameObject(odf, team, pos)
 --    if not isstring(odf) then error("Paramater odf must be a string."); end
 --    if not isnumber(team) then error("Paramater team must be a number."); end
 --    local msg = tocstring(odf); -- convert lua string to cstring
@@ -3081,12 +2360,12 @@ function BuildObject(odf, team, pos)
 --        error("BuildObject pos paramater is invalid, received " .. type(pos) .. ", expected GameObject, Path Name (string), AiPath, Vector, or Matrix");
 --    end
     
-    handle = ScriptUtils.BuildObject(odf, team, pos);
+    handle = BuildObject(odf, team, pos);
     
     if handle == 0 then return nil end;
     return GameObject.new(handle);
 end
-
+--[[
 --- Get object by label or seq no.
 -- @param name Label on GameObject.
 -- @return GameObject with label
@@ -3288,12 +2567,6 @@ function TerrainFindFloor(x, z)
     return ffi.C.TerrainFindFloor(x, z);
 end
 
---- PrintConsoleMessage
--- @param msg Message to print.
-function PrintConsoleMessage(msg)
-    if not isstring(msg) then error("Paramater msg must be a string."); end
-    ffi.C.PrintConsoleMessage(tocstring(msg));
-end
 
 --- Get Random Float
 -- Safe for MP, portable function.
@@ -3301,7 +2574,8 @@ end
 -- @return Random float within range.
 function GetRandomFloat(range)
     if not isnumber(range) then error("Paramater range must be a number."); end
-    return ffi.C.GetRandomFloat(range);
+    --return ffi.C.GetRandomFloat(range);
+    return GetRandomFloat(range);
 end
 
 --- Calculate the CRC of a string
@@ -3541,16 +2815,16 @@ end
 function CountPlayers()
     return ffi.C.CountPlayers()
 end
-
+--]]
 --- Get player handle by team
 -- @param team Team number
 -- @return GameObject of player
-function GetPlayerHandle(team)
+function GetPlayerObject(team)
     --if not isnumber(team) then error("Paramater team must be a number."); end
     --return GameObject.new(ffi.C.GetPlayerHandle(team));
-    return GameObject.new(ScriptUtils.GetPlayerHandle(team));
+    return GameObject.new(GetPlayerHandle(team));
 end
-
+--[[
 --- Get team race
 -- @param TeamNum Team number
 -- @return Race letter of team
@@ -3695,11 +2969,11 @@ function SetCircularPos(CenterPos, Radius, Angle)
     --ffi.C.SetCircularPos(CenterPos, Radius, Angle, NewPos);
     --return NewPos;
     
-    return ScriptUtils.GetCircularPos(CenterPos, Radius, Angle);
+    return GetCircularPos(CenterPos, Radius, Angle);
 end
 
 function GetCircularPos(CenterPos, Radius, Angle)
-    return ScriptUtils.GetCircularPos(CenterPos, Radius, Angle);
+    return GetCircularPos(CenterPos, Radius, Angle);
 end
 
 --- Get safest spawnpoint vector
@@ -4200,14 +3474,9 @@ function GetTeamStratIndividualColor(type, team)
     ffi.C.GetTeamStratIndividualColor(type, team, r, g, b);
     return Color.new(tonumber(r),tonumber(g),tonumber(b));
 end
+--]]
 
---- Get the map's TRN filename
--- Useful for reading the ODF format file for custom data
--- @return TRN Filename
-function GetMapTRNFilename()
-    return ffi.string(ffi.C.GetMapTRNFilename());
-end
-
+--[[
 --- Is this team allied?
 -- @param t1 Team 1
 -- @param t2 Team 2
@@ -4733,315 +4002,94 @@ function GameObject.GetNearestEnemyH(self)
 	return MisnImport.GetNearestEnemy(self:GetHandle());
 end
 
+--]]
 
 
 
---ConvertHandles
---Read
---Write
---SaveObjects
---LoadObjects
 
---local MissionData = {};
-MissionData = {};
+local CustomSavableTypes = {};
+local TemporarySavableTypeMap = nil; -- maps name to ID number
 
-local SavableTypes = {};
-local SavableTypeNameToIndex = {};
-
-local LuaTypes = {};
-LuaTypes.Nil = 0;
-LuaTypes.Table = 1;
-LuaTypes.Number = 2;
-LuaTypes.Number_Int = 3;
-LuaTypes.Number_UByte = 4;
-LuaTypes.Boolean = 5;
-LuaTypes.String = 6;
-LuaTypes.COUNT = 7;
-
-function RegisterSavableType(name, save, load, postload)
-    local type = {};
-    type.name = name;
-    type.save = save;
-    type.load = load;
-    type.postload = postload;
-    table.insert(SavableTypes, type);
-    SavableTypeNameToIndex[name] = #SavableTypes;
+function RegisterCustomSavableType(obj)
+    if obj == nil or obj.__type == nil then error("Custom type malformed, no __type"); end
+    local typeT = {};
+    if obj.Save ~= nil then
+        typeT.Save = obj.Save;
+    else
+        typeT.Save = function() end
+    end
+    if obj.Load ~= nil then
+        typeT.Load = obj.Load;
+    else
+        typeT.Load = function() end
+    end
+    if obj.PostLoad ~= nil then
+        typeT.PostLoad = obj.PostLoad;
+    else
+        typeT.PostLoad = function() end
+    end
+    if obj.BulkSave ~= nil then
+        typeT.BulkSave = obj.BulkSave;
+    else
+        typeT.BulkSave = function() end
+    end
+    if obj.BulkLoad ~= nil then
+        typeT.BulkLoad = obj.BulkLoad;
+    else
+        typeT.BulkLoad = function() end
+    end
+    CustomSavableTypes[obj.__type] = typeT;
 end
 
---- Writes a table to save buffer
--- Writes the table marker
--- Writes the count of entries
--- writes the loop below for each
--- Writes the length of the key string
--- Writes the key string
--- Writes the type marker of the value
--- writes the value (using its writer function)
-function WriteTable(var)
-    WriteMarker("Table");
-    --Write #var
-    local size = 0;
-    for k, v in pairs(var) do
-        size = size + 1;
-    end
-    
-    PrintDebugMessage("Start Table of " .. tostring(size) .. " items");
-    ffi.C.WriteInt(ffi.new("int[1]", size), 1);
-    for k, v in pairs(var) do
-        local SavedThisVariable = false;
-
-        local length = string.len(k);
-        ffi.C.WriteBytes(ffi.new("uint8_t[1]", length), 1);
-        ffi.C.WriteBytes(tocstring(k), length);
-        PrintDebugMessage("Key: " .. k .. " (" .. tostring(length) .. ")");
-        
-        if type(v) == "number" then
-            if v == math.floor(v) then
-                if v >= 0 and v <= 255 then
-                    WriteMarker("Number_UByte");
-                    ffi.C.WriteBytes(ffi.new("uint8_t[1]", v), 1);
-                    SavedThisVariable = true;
-                else
-                    WriteMarker("Number_Int");
-                    ffi.C.WriteInt(ffi.new("int[1]", v), 1);
-                    SavedThisVariable = true;
-                end
+function SimplifyForSave(...)
+    local output = {}; -- output array
+    local count = select ("#", ...); -- get count of params
+    for k = 1,count,1 do  -- loop params via count
+        local v = select(k,...); -- get Kth paramater, store in v
+        if istable(v) then -- it's a table, start special logic
+            if CustomSavableTypes[v.__type] ~= nul then
+                local specialTypeTable = {};
+                local typeIndex = TemporarySavableTypeMap[v.__type];
+                PrintConsoleMessage("Type index for " .. v.__type .. " is " .. tostring(typeIndex));
+                specialTypeTable["*custom_type"] = typeIndex;
+                specialTypeTable["*data"] = {CustomSavableTypes[v.__type].Save(v)};
+                table.insert(output, specialTypeTable);
             else
-                -- lua numbers are doubles but BZ2 never seems to use those
-                -- I am debating inventing a new numeric type for ints, since this also inflates size and lower accuracy
-                -- Maybe I could save it as an INT if it has no decimal?
-                WriteMarker("Number");
-                ffi.C.WriteFloat(ffi.new("float[1]", v), 1);
-                SavedThisVariable = true;
-            end
-        elseif type(v) == "boolean" then
-          WriteMarker("Boolean");
-          ffi.C.WriteBool(ffi.new("bool[1]", v), 1);
-          SavedThisVariable = true;
-        elseif type(v) == "string" then
-          WriteMarker("String");
-          ffi.C.WriteInt(ffi.new("int[1]", string.len(v)), 1);
-          ffi.C.WriteBytes(tocstring(v), string.len(v));
-          SavedThisVariable = true;
-        end
-        
-        --do save attempts on all known custom types
-        if not SavedThisVariable then
-            for SaveTypeIndex = #SavableTypes,1,-1 do
-                local SaveTypeData = SavableTypes[SaveTypeIndex];
-                if SaveTypeData.save ~= nil then
-                    if SaveTypeData.save(v) then
-                        SavedThisVariable = true;
-                        break;
-                    end
+                local newTable = {};
+                for k2, v2 in pairs( v ) do 
+                    newTable[k2] = SimplifyForSave(v2);
                 end
+                table.insert(output, newTable);
             end
-        end
-        
-        if not SavedThisVariable then
-            if type(v) == "table" then
-                WriteTable(v);
-                SavedThisVariable = true;
-            end
-        end
-        
-        if not SavedThisVariable then
-            PrintConsoleMessage("Failed to save variable \"" .. k .. "\" of LUA type " .. type(v));
-            PrintConsoleMessage("The save is likely unstable");
-            WriteNil();
+        else -- it's not a table, really simple
+            table.insert(output, v);
         end
     end
-    PrintDebugMessage("End Table of " .. tostring(size) .. " items");
+    return unpack(output);
 end
 
-function ReadTable(var)
-    local size = ffi.new("int[1]");
-    ffi.C.ReadInt(size, 1);
-    size = tonumber(size[0]);
-    
-    PrintDebugMessage("Start Table of " .. tostring(size) .. " items");
-    local keyLength = ffi.new("uint8_t[1]");
-    local keyValue = ffi.new("char[256]");
-    
-    local FloatValue = ffi.new("float[1]");
-    local IntValue = ffi.new("int[1]");
-    local UByteValue = ffi.new("uint8_t[1]");
-    local BoolValue = ffi.new("bool[1]");
-    
-    for k = 1,size,1 do
-        --local LoadedThisVariable = false;
-        
-        ffi.fill(keyValue, 256);
-        ffi.C.ReadBytes(keyLength, 1);
-        ffi.C.ReadBytes(keyValue, tonumber(keyLength[0]));
-        
-        PrintDebugMessage("Key: " .. ffi.string(keyValue) .. " (" .. tostring(tonumber(keyLength[0])) .. ")");
-        
-        ffi.C.ReadBytes(keyLength, 1); -- keyLength now holds the type byte,double duty
-        local valueType = tonumber(keyLength[0]);
-        
-        local value = nil;
-        if valueType >= LuaTypes.COUNT then
-            -- type is a custom type
-            local SaveTypeData = SavableTypes[valueType + 1 - LuaTypes.COUNT];
-            PrintDebugMessage("Key is of type " .. SaveTypeData.name .. " (" .. tostring(valueType + 1 - LuaTypes.COUNT) .. ")");
-            if SaveTypeData.load ~= nil then
-                value = SaveTypeData.load();
+function DeSimplifyForLoad(...)
+    local output = {}; -- output array
+    local count = select ("#", ...); -- get count of params
+    for k = 1,count,1 do  -- loop params via count
+        local v = select(k,...); -- get Kth paramater, store in v
+        if istable(v) then -- it's a table, start special logic
+            if v["*custom_type"] ~= nil then
+                local typeName = TemporarySavableTypeMap[v["*custom_type"]];
+                local typeObj = CustomSavableTypes[typeName];
+                table.insert(output, typeObj.Load(unpack(v["*data"])));
+            else
+                local newTable = {};
+                for k2, v2 in pairs( v ) do 
+                    newTable[k2] = DeSimplifyForLoad(v2);
+                end
+                table.insert(output, newTable);
             end
-        elseif valueType == LuaTypes.Nil then
-            -- do nothing, nil has no data after the marker
-            PrintDebugMessage("Key is of type is Nil (" .. tostring(LuaTypes.Nil) .. ")");
-        elseif valueType == LuaTypes.Table then
-            PrintDebugMessage("Key is of type Table (" .. tostring(LuaTypes.Table) .. ")");
-            value = {};
-            ReadTable(value);
-        elseif valueType == LuaTypes.Number then
-            PrintDebugMessage("Key is of type Number (" .. tostring(LuaTypes.Number) .. ")");
-            ffi.C.ReadFloat(FloatValue, 1);
-            value = tonumber(FloatValue[0]);
-        elseif valueType == LuaTypes.Number_Int then
-            PrintDebugMessage("Key is of type Number_Int (" .. tostring(LuaTypes.Number_Int) .. ")");
-            ffi.C.ReadInt(IntValue, 1);
-            value = tonumber(IntValue[0]);
-        elseif valueType == LuaTypes.Number_UByte then
-            PrintDebugMessage("Key is of type Number_UByte (" .. tostring(LuaTypes.Number_UByte) .. ")");
-            ffi.C.ReadBytes(UByteValue, 1);
-            value = tonumber(UByteValue[0]);
-        elseif valueType == LuaTypes.Boolean then
-            PrintDebugMessage("Key is of type Boolean (" .. tostring(LuaTypes.Boolean) .. ")");
-            ffi.C.ReadBool(BoolValue, 1);
-            value = tonumber(BoolValue[0]) ~= 0; -- maybe ~= nil?
-        elseif valueType == LuaTypes.String then
-            ffi.C.ReadInt(IntValue, 1);
-            local stringLength = tonumber(IntValue[0]);
-            local stringVal = ffi.new("char[?]", stringLength + 1);
-            ffi.fill(stringVal, stringLength + 1);
-            PrintDebugMessage("Key is of type String (" .. tostring(LuaTypes.String) .. ")");
-            ffi.C.ReadBytes(stringVal, stringLength);
-            value = ffi.string(stringVal);
+        else -- it's not a table, really simple
+            table.insert(output, v);
         end
-        
-        var[ffi.string(keyValue)] = value;
-        PrintDebugMessage(ffi.string(keyValue) .. " = " .. value);
     end
-    PrintDebugMessage("End Table of " .. tostring(size) .. " items");
-end
-
-function WriteNil()
-    WriteMarker("Nil"); -- nill is just a marker, that's all
-end
-
-function WriteMarker(id)
-    if LuaTypes[id] ~= nil then
-        ffi.C.WriteBytes(ffi.new("uint8_t[1]", LuaTypes[id]), 1);
-        PrintDebugMessage("Write marker \"" .. id .. "\" ID: " .. LuaTypes[id]);
-    elseif SavableTypeNameToIndex[id] ~= nil then
-        ffi.C.WriteBytes(ffi.new("uint8_t[1]", LuaTypes.COUNT - 1 + SavableTypeNameToIndex[id]), 1);
-        PrintDebugMessage("Write marker \"" .. id .. "\" ID: " .. LuaTypes.COUNT - 1 + SavableTypeNameToIndex[id]);
-    end
-end
-
-
-
-
-
-function PrintDebugMessage(message)
-    PrintConsoleMessage(message);
-end
-
-
-function SaveGameObject(val)
-    if not isgameobject(val) or val.Save == nil or type(val.Save) ~= "function" then return false; end
-    val:Save();
-    return true;
-end
-
-function LoadGameObject()
-    local id = ffi.new("int[1]");
-    ffi.C.ReadInt(id, 1);
-    return GameObject.new(tonumber(id[0]));
-end
-
-function PostLoadGameObject(val)
-    val:PostLoad();
-end
-
-function SaveColor(val)
-    if not iscolor(val) then return false; end
-    WriteMarker("Color");
-    ffi.C.WriteInt(ffi.new("int[1]", val.ToColorLong()), 1);
-    return true;
-end
-
-function LoadColor()
-    local id = ffi.new("int[1]");
-    ffi.C.ReadInt(id, 1);
-    return Color.new(tonumber(id[0]));
-end
-
-function SaveAudioHandle(val)
-    if not isaudiohandle(val) or val.Save == nil or type(val.Save) ~= "function" then return false; end
-    val:Save();
-    return true;
-end
-
-function LoadAudioHandle()
-    local id = ffi.new("int[1]");
-    ffi.C.ReadInt(id, 1);
-    return AudioHandle.new(tonumber(id[0]));
-end
-
-function SaveVECTOR_2D(val)
-    if not isvector_2d(val) then return false; end
-    WriteMarker("VECTOR_2D");
-    ffi.C.WriteBytes(val, ffi.sizeof(val));
-    return true;
-end
-
-function LoadVECTOR_2D()
-    local retVal = VECTOR_2D();
-    ffi.C.ReadBytes(retVal, ffi.sizeof(retVal));
-    return retVal;
-end
-
-function SaveVector(val)
-    if not isvector(val) then return false; end
-    WriteMarker("Vector");
-    ffi.C.WriteBytes(val, ffi.sizeof(val));
-    return true;
-end
-
-function LoadVector()
-    local retVal = Vector();
-    ffi.C.ReadBytes(retVal, ffi.sizeof(retVal));
-    return retVal;
-end
-
-function SaveMatrix(val)
-    if not ismatrix(val) then return false; end
-    WriteMarker("Matrix");
-    ffi.C.WriteBytes(val, ffi.sizeof(val));
-    return true;
-end
-
-function LoadMatrix()
-    local retVal = Matrix();
-    ffi.C.ReadBytes(retVal, ffi.sizeof(retVal));
-    return retVal;
-end
-
-function SaveObjectDefinition(val)
-    if not isobjectdefinition(val) or val.Save == nil or type(val.Save) ~= "function" then return false; end
-    val:Save();
-    return true;
-end
-
-function LoadObjectDefinition()
-    local length = ffi.new("int[1]");
-    length = tonumber(length[0]);
-    local name = ffi.new("char[?]", length + 1);
-    ffi.fill(name, length + 1)
-    ffi.C.ReadBytes(name, length);
-    return ObjectDefinition(ffi.string(name));
+    return unpack(output);
 end
 
 function InitialSetup()
@@ -5053,11 +4101,14 @@ function InitialSetup()
     --MissionData.TestData = {};
     --MissionData.TestData.Spawned = false;
     --MissionData.TestData.FreshLoad = false;
-    
-    hook.Call( "InitialSetup" );
+    hook.CallAllNoReturn( "InitialSetup" );
 end
 
-function Update()
+function Update(timeStep)
+  -- be sure to pass 1/tps to simulate the timeStep bz1 would normally provide
+end
+
+function Execute()
 	--io.write("Update, from ",_VERSION,"!\n")
   --PrintConsoleMessage("Update, from " .. _VERSION .. "!\n");
   
@@ -5075,141 +4126,109 @@ function Update()
     --    MissionData.TestData.enemyTank:EjectPilot();
     --end
         
-    hook.Call( "Update", MissionData.GameTurn );
-    MissionData.GameTurn = MissionData.GameTurn + 1;
+    hook.CallAllNoReturn( "Execute" );
+    --MissionData.GameTurn = MissionData.GameTurn + 1;
 end
 
-function Save(misnSave)
+function Save()
+    TemporarySavableTypeMap = {};
 
-    if misnSave then
-        -- clean var arrays
-        return true;
-    end
+    PrintConsoleMessage("Beginning save code");
 
-    local returnValue = true;
-    
-    PrintDebugMessage(tostring(#SavableTypes) .. " types to save");
-    returnValue = returnValue and ffi.C.WriteBytes(ffi.new("uint8_t[1]", #SavableTypes), 1);
-    for k = 1,#SavableTypes,1 do
-        local length = string.len(SavableTypes[k].name);
-        returnValue = returnValue and ffi.C.WriteBytes(ffi.new("uint8_t[1]", length), 1); -- type names can't be longer than 255
-        returnValue = returnValue and ffi.C.WriteBytes(tocstring(SavableTypes[k].name), length);
-        PrintDebugMessage(length .. " " .. SavableTypes[k].name .. " = " .. LuaTypes.COUNT - 1 + k);
-    end
-    
-    -- GameObjectAltered data dump
-    -- this remakes the gameobjects before they are needed with their addon data
-    -- The way GameObject.new works will allow these to be caught
-    local countCustomGameObjects = 0;
-    for k,v in pairs(GameObjectAltered) do
-        countCustomGameObjects = countCustomGameObjects + 1;
-    end
-    returnValue = returnValue and ffi.C.WriteInt(ffi.new("int[1]", countCustomGameObjects),1);
-    PrintDebugMessage("Saving " .. countCustomGameObjects .. " Custom Game Objects Handles");
-    for k,v in pairs(GameObjectAltered) do
-        SaveGameObject(v);
-    end
-    PrintDebugMessage("Saving " .. countCustomGameObjects .. " Custom Game Objects Data Extensions");
-    for k,v in pairs(GameObjectAltered) do
-        WriteTable(v.addonData);
-    end
-    
-    WriteTable(MissionData);
+    local saveData = {};
+    PrintConsoleMessage("Save Data Container ready");
 
-    local hookResults = { hook.CallAll( "Save", misnSave ) };
+    PrintConsoleMessage("Saving custom types map");
+    local CustomSavableTypesCounter = 1;
+    local CustomSavableTypeTmpTable = {};
+    for k,v in pairs(CustomSavableTypes) do
+        CustomSavableTypeTmpTable[CustomSavableTypesCounter] = k;
+        TemporarySavableTypeMap[k] = CustomSavableTypesCounter;
+        PrintConsoleMessage("[" .. CustomSavableTypesCounter .. "] = " .. k);
+        CustomSavableTypesCounter = CustomSavableTypesCounter + 1;
+    end
+    table.insert(saveData, CustomSavableTypeTmpTable); -- Write TmpID -> Name map
+    
+    local CustomSavableTypeDataTmpTable = {};
+    for idNum,name in ipairs(CustomSavableTypeTmpTable) do
+        local entry = CustomSavableTypes[name];
+        if entry.BulkSave ~= nil and isfunction(entry.BulkSave) then
+          CustomSavableTypeDataTmpTable[idNum] = {SimplifyForSave(entry.BulkSave())};
+        else
+          CustomSavableTypeDataTmpTable[idNum] = {};
+        end
+    end
+    table.insert(saveData, CustomSavableTypeDataTmpTable); -- Write TmpID -> Data map
+    CustomSavableTypeDataTmpTable = nil;
+    CustomSavableTypeTmpTable = nil;
+    
+    PrintConsoleMessage("Calling all hooked save functions");
+    local hookResults = hook.CallSave();
     if hookResults ~= nil then
-      for k,v in pairs(hookResults) do
-        returnValue = returnValue and v;
-      end
+      table.insert(saveData, {SimplifyForSave(hookResults)});
+    else
+      table.insert(saveData, {});
     end
     
-    return returnValue
+    PrintConsoleMessage("Unpacking and returning Save Data Container");
+    
+    TemporarySavableTypeMap = nil;
+    
+    return unpack(saveData);
 end
 
-function Load(misnSave)
-	--io.write("Load("..tostring(misnSave).."), from ",_VERSION,"!\n")
-  
-    if misnSave then
-        return true;
+function Load(...)
+    local args = {...};
+
+    TemporarySavableTypeMap = {};
+    
+    PrintConsoleMessage("Beginning load code");
+
+    PrintConsoleMessage("Loading custom types map");
+    TemporarySavableTypeMap = args[1];
+    --local CustomSavableTypeTmpTable = args[1];
+    --for k,v in pairs(CustomSavableTypeTmpTable) do
+    --    TemporarySavableTypeMap[v] = k;
+    --    PrintConsoleMessage("[" .. k .. "] = " .. v);
+    --end
+    PrintConsoleMessage("Loading custom types data");
+    local CustomSavableTypeDataTmpTable = args[2];
+    for idNum,data in ipairs(CustomSavableTypeDataTmpTable) do
+        --local entry = CustomSavableTypes[CustomSavableTypeTmpTable[idNum]];
+        local entry = CustomSavableTypes[TemporarySavableTypeMap[idNum]];
+        if entry.BulkLoad ~= nil and isfunction(entry.BulkLoad) then
+          entry.BulkLoad(DeSimplifyForLoad(unpack(data)));
+        end
     end
     
-    local returnValue = true;
-    
-    -- dump the weak reference table
-    for k,v in pairs(GameObjectWeakList) do
-        GameObjectWeakList[k] = nil;
+    for k,y in pairs(GameObjectAltered) do
+      PrintConsoleMessage(tostring(k) .. " = " .. tostring(y));
     end
     
-    local countTypes = ffi.new("uint8_t[1]");
-    returnValue = returnValue and ffi.C.ReadBytes(countTypes, 1);
-    countTypes = tonumber(countTypes[0]);
-    PrintDebugMessage(tostring(countTypes) .. " types to load");
-    local length = ffi.new("uint8_t[1]");
-    local name = ffi.new("char[?]",256);
-    for k = 1,countTypes,1 do
-        returnValue = returnValue and ffi.C.ReadBytes(length, 1);
-        ffi.fill(name,256); -- memset
-        returnValue = returnValue and ffi.C.ReadBytes(name, tonumber(length[0]));
-        PrintDebugMessage(tonumber(length[0]) .. " " .. ffi.string(name) .. " = " .. LuaTypes.COUNT - 1 + k);
-    end
-    
-    -- remap types here
-    
-    -- GameObjectAltered data
-    local countCustomGameObjects = ffi.new("int[1]");
-    ffi.C.ReadInt(countCustomGameObjects, 1);
-    countCustomGameObjects = tonumber(countCustomGameObjects[0]);
-    PrintDebugMessage("Reading " .. countCustomGameObjects .. " Custom Game Objects Handles");
-    local TmpGameObjects = {};
-    for k = 1,countCustomGameObjects,1 do
-        ffi.C.ReadBytes(length, 1); -- useless byte :/
-        table.insert(TmpGameObjects, LoadGameObject());
-    end
-    PrintDebugMessage("Reading " .. countCustomGameObjects .. " Custom Game Objects Data Extensions");
-    for k = 1,countCustomGameObjects,1 do
-        ffi.C.ReadBytes(length, 1); -- useless byte :/
-        ReadTable(TmpGameObjects[k].addonData);
-    end
-    
-    -- use the length byte we don't need anymore to pull off the table marker
-    -- We know that this first item must be a table
-    ffi.C.ReadBytes(length, 1);
-    ReadTable(MissionData);
-    
-    PrintConsoleMessage(type(MissionData) .. " " .. table.getn(MissionData));
-    
-    hook.Call( "Load", misnSave );
-    
-    return returnValue;
+    PrintConsoleMessage("Calling all hooked load functions");
+    local LoadHookData = args[3];
+    hook.CallLoad(DeSimplifyForLoad(unpack(LoadHookData)));
+
+    TemporarySavableTypeMap = nil;
 end
 
-function PostLoad(misnSave)
-    if misnSave then
-      return true;
-    end
-    
-    for k,v in pairs(GameObjectWeakList) do
-        v:PostLoad();
-    end
-    
-    hook.Call( "PostLoad", misnSave );
-    
-    return true;
+function PostLoad()
+
 end
 
 function AddObject(h)
-    hook.Call( "CreateObject", GameObject.new(h) );
-    hook.Call( "AddObject", GameObject.new(h) );
+    --hook.Call( "CreateObject", GameObject.new(h) );
+    --hook.Call( "AddObject", GameObject.new(h) );
 end
 
 function DeleteObject(h)
     local object = GameObject.new(h);
-    hook.Call( "DeleteObject", object );
+    --hook.Call( "DeleteObject", object );
     if GameObjectAltered[object:GetHandle()] ~= nil then GameObjectAltered[object:GetHandle()] = nil; end
 end
 
 function PostRun()
-    hook.Call( "PostRun", GameObject.new(h) );
+    --hook.Call( "PostRun", GameObject.new(h) );
 end
 
 function AddPlayer(id, team, isNewPlayer)
@@ -5228,7 +4247,7 @@ function DeletePlayer(id)
     hook.Call( "DeletePlayer", id );
 end
 
-function PlayerEjected(deadObjectHandle)
+--[[function PlayerEjected(deadObjectHandle)
     local retVal = hook.Call( "PlayerEjected", GameObject.new(deadObjectHandle));
     if retVal ~= nil then return retVal; else return 0; end
 end
@@ -5250,29 +4269,32 @@ function GetNextRandomVehicleODF(team)
 end
 
 function SetWorld(nextWorld)
-    hook.Call( "SetWorld", nextWorld );
+    --hook.Call( "SetWorld", nextWorld );
 end
 
 function ProcessCommand(crc)
-    hook.Call( "ProcessCommand", crc );
+    --hook.Call( "ProcessCommand", crc );
 end
 
 function SetRandomSeed(seed)
-    hook.Call( "SetRandomSeed", seed );
+    --hook.Call( "SetRandomSeed", seed );
 end
-    MissionData.GameTurn = 0;
+--]]
+
+    --MissionData.GameTurn = 0;
     
-    RegisterSavableType("Color", SaveColor, LoadColor);
-    RegisterSavableType("AudioHandle", SaveAudioHandle, LoadAudioHandle);
-    RegisterSavableType("ObjectDefinition", SaveObjectDefinition, LoadObjectDefinition);
-    RegisterSavableType("GameObject", SaveGameObject, LoadGameObject, PostLoadGameObject);
-    RegisterSavableType("VECTOR_2D", SaveVECTOR_2D, LoadVECTOR_2D);
-    RegisterSavableType("Vector", SaveVector, LoadVector);
-    RegisterSavableType("Matrix", SaveMatrix, LoadMatrix);
-    PrintDebugMessage(tostring(#SavableTypes) .. " Custom DataTypes");
-    for k = #SavableTypes,1,-1 do
-        local v = SavableTypes[k];
-        PrintDebugMessage(tostring(SavableTypeNameToIndex[v.name]) .. " " .. tostring(v.name));
+    --RegisterCustomSavableType("Color", SaveColor, LoadColor);
+    --RegisterCustomSavableType("AudioHandle", SaveAudioHandle, LoadAudioHandle);
+    --RegisterCustomSavableType("ObjectDefinition", SaveObjectDefinition, LoadObjectDefinition);
+    --RegisterCustomSavableType("GameObject", SaveGameObject, LoadGameObject, PostLoadGameObject);
+    RegisterCustomSavableType(GameObject);
+    --RegisterCustomSavableType("VECTOR_2D", SaveVECTOR_2D, LoadVECTOR_2D);
+    --RegisterCustomSavableType("Vector", SaveVector, LoadVector);
+    --RegisterCustomSavableType("Matrix", SaveMatrix, LoadMatrix);
+    PrintConsoleMessage(tostring(#CustomSavableTypes) .. " Custom DataTypes");
+    for k, v in ipairs(CustomSavableTypes) do
+        local v = CustomSavableTypes[k];
+        PrintConsoleMessage(tostring(SavableTypeNameToIndex[v.name]) .. " " .. tostring(v.name));
     end
     --PrintConsoleMessage("Loading TRN Data");
     --local MapDataFile = GetMapTRNFilename();
@@ -5291,12 +4313,15 @@ end
     --end
     
     PrintConsoleMessage("Loading Modules");
+    
+    --LogStack();
     require("hook");
+    --LogStack();
     
     local MapLuaFile = string.gsub(GetMapTRNFilename(),"%.trn$",".lua");
     PrintConsoleMessage("Loading Lua: " .. MapLuaFile);
-    if Core.LoadFromBZ2(MapLuaFile) then
-      PrintConsoleMessage("Map lua loaded");
+    if requireAsset(MapLuaFile) then
+      PrintConsoleMessage("Loaded map lua");
     else
       PrintConsoleMessage("Failed to load map lua");
     end

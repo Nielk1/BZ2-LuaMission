@@ -2,6 +2,7 @@
 #define _BZCScriptUtils_
 
 #include "..\..\source\fun3d\ScriptUtils.h"
+#include "ScriptUtilsExtension.h"
 #include "MathUtils.h"
 #include <math.h>
 #include <vector>
@@ -396,6 +397,7 @@ extern bool CameraCircle(const Handle me, const Vector Offset, const Handle him,
 extern void FormatConsoleMessage(const char *format, ...);
 // Formats a string with optional parameters, writes it to a log file and prints it to the console if Logging is enabled.
 extern bool FormatLogMessage(const char *format, ...);
+extern bool SimpleLogMessage(const char *format, ...);
 // Version that takes in a wide char.
 //extern void FormatLogMessage(wchar_t *format, ...);
 // Writes a message to a file. Returns true if it succeeded, false if it failed. If Append is true, it appends to the existing file, if False then it whipes the existing file before writing. 

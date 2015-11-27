@@ -1,1 +1,2 @@
-local GameMode = require("GameMode.InstantAction");
+--local GameMode = require("GameMode.InstantAction");
+require("GameMode.InstantAction");
