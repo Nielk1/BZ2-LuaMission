@@ -12,11 +12,6 @@
 #include <float.h>
 #include <ctype.h>
 
-#define RGBA_GETALPHA(rgb)      ((rgb) >> 24)
-#define RGBA_GETRED(rgb)        (((rgb) >> 16) & 0xff)
-#define RGBA_GETGREEN(rgb)      (((rgb) >> 8) & 0xff)
-#define RGBA_GETBLUE(rgb)       ((rgb) & 0xff)
-
 #define MAX_TAPS 8 // Max number of vehicle taps.
 #define MAX_LAVA_FIELDS 64 // Max number of lava fields.
 #define MAX_CLOUD_TYPES 16 // Max Clouds to possibly look at. Double the BZ1 value, yay! -GBD
@@ -28,6 +23,7 @@
 #define MAX_SPRITES 64 // Max Sprites.
 #define PI 3.141592654f // Because Pie are Square.
 #define DEG_2_RAD 0.0174532925222222f // Degrees to Radians.
+#define RAD_2_DEG 57.2957877f // Radians to Degrees.
 #define MAX_MINES 64 // number of mines to track. SP only.
 #define MAX_DROPSHIP_CARGO 10 // Number of ships that can be carried in a dropship.
 #define MAX_MESSAGE_LENGTH 1024 // Max Length of a message string.
@@ -35,8 +31,8 @@
 #define MAX_GRAVITY_TYPES 16 // Max number of Gravity types to Cycle through.
 #define INVALID_VALUE -1234 // The code returned by the game on Invalid Values, such as GetMaxHealth() of a killed thing in DeleteObject.
 
-// String for who modified this DLL, for printing in console of misisons. If you make changes, simply add your name here.
-static const char *DLLAuthors = "Avatar, General BlackDragon, Nielk1, & Ken Miller";
+typedef int PilotValue;
+
 
 // Difficulty Types.
 enum Difficulty 
@@ -422,8 +418,7 @@ extern void LoadGame(const char* filename);
 // Attempts to delete a Saved Game of the specified name.
 extern void DeleteGame(const char* filename);
 
-// Get a Vector from a Path point. Code from Nielk1. Height is the Terrain height at the position.
-extern Vector GetVectorFromPath(const char* path, const int point = 0);
+
 
 // Gets a Matrix position based on ODF Position and Rotation Offset relative to the handle.
 extern Matrix GetODFPositionOffset(const Handle h, const int Index = 0, const Vector AddPosition = Vector(0, 0, 0), const Vector AddRotation = Vector(0, 0, 0));
@@ -440,12 +435,6 @@ extern int GetTPS(void);
 //inline float ConvertToSeconds(const float Turns) { return Turns / GetTPS(); }
 
 // Overload functions that take const parameters.
-inline Handle BuildObject(const char* odf, const int Team, const Handle him) { return BuildObject(const_cast<char *>(odf), Team, him); }
-inline Handle BuildObject(const char* odf, const int Team, const char *APath) { return BuildObject(const_cast<char *>(odf), Team, const_cast<Name>(APath)); }
-inline Handle BuildObject(const char* odf, const int Team, Name APath) { return BuildObject(const_cast<char *>(odf), Team, APath); }
-inline Handle BuildObject(const char* odf, const int Team, const AiPath *APath) { return BuildObject(const_cast<char *>(odf), Team, const_cast<AiPath *>(APath)); }
-inline Handle BuildObject(const char* odf, const int Team, const Vector pos) { return BuildObject(const_cast<char *>(odf), Team, const_cast<Vector &>(pos)); }
-inline Handle BuildObject(const char* odf, const int Team, const Matrix mat) { return BuildObject(const_cast<char *>(odf), Team, const_cast<Matrix &>(mat)); }
 inline void SetPilotClass(const Handle obj, const char *odf) { SetPilotClass(obj, const_cast<char *>(odf)); }
 inline Handle BuildEmptyCraftNear(const Handle h, const char* ODF, const int Team, const float MinRadiusAway, const float MaxRadiusAway) { return BuildEmptyCraftNear(h, const_cast<char *>(ODF), Team, MinRadiusAway, MaxRadiusAway); }
 inline void PrintConsoleMessage(const char* msg) { PrintConsoleMessage(const_cast<char *>(msg)); }
@@ -458,11 +447,6 @@ inline void SetPlan(const char* cfg, const int team = -1) { SetPlan(const_cast<c
 inline Dist GetDistance(const Handle h1, const char* path, const int point = 0) { return misnImport.GetDistancePath(const_cast<Handle &>(h1), const_cast<Name>(path), point); }
 inline Dist GetDistance(const Handle h1, const AiPath *path, const int point = 0) { return misnImport.GetDistancePathPtr(const_cast<Handle &>(h1), const_cast<AiPath *>(path), point); }
 inline Handle GetNearestVehicle(const char* path, const int point) { return GetNearestVehicle(const_cast<Name>(path), point); }
-inline void Goto(const Handle me, const char* path, const int priority = 1) { Goto(me, const_cast<Name>(path), priority); }
-inline void Mine(const Handle me, const char* path, const int priority = 1) { Mine(me, const_cast<Name>(path), priority); }
-inline void Patrol(const Handle me, const char* path, const int priority = 1) { Patrol(me, const_cast<Name>(path), priority); }
-inline void Retreat(const Handle me, const char* path, const int priority = 1) { Retreat(me, const_cast<Name>(path), priority); }
-inline void Dropoff(const Handle me, const char* path, const int priority = 1) { Dropoff(me, const_cast<Name>(path), priority); }
 inline void SetPosition(const Handle h, const char* path) { SetPosition(h, const_cast<Name>(path)); }
 inline void SetPathType(const char* path, const PathType pathType) { SetPathType(const_cast<Name>(path), pathType); }
 inline bool IsInfo(const char* odf) { return IsInfo(const_cast<Name>(odf)); }
@@ -498,9 +482,8 @@ inline void TranslateString2(char* Dst, const size_t bufsize, const char* Src) {
 inline void TranslateString(char* Dst, const char* Src) { TranslateString2(Dst, sizeof(Dst), const_cast<Name>(Src)); } // Updated to re-direct to TranslateString2.
 inline void Network_SetString(const char* name, const char* value) { Network_SetString(const_cast<Name>(name), const_cast<Name>(value)); }
 inline void Network_SetInteger(const char* name, const int value) { Network_SetInteger(const_cast<Name>(name), value); }
-inline bool GetPathPoints(const char* path, size_t& bufSize, float* pData) { return GetPathPoints(const_cast<Name>(path), bufSize, pData); }
-//inline void GetAiPaths(const int &pathCount, const char* *&pathNames) { GetAiPaths(
-inline void SetPosition(const Handle h, const Matrix &m) { SetPosition(h, m); }
+
+
 
 // Function Overloads, these are various name overloads for stock functions that take in different types of arguments by default. Does back end fiddly work for you.
 // Sets a handle to the position of another Handle.
@@ -512,23 +495,6 @@ extern void SetPositionM(const Handle h1, const Handle h2);
 // Gets the distance between a Handle and a Vector.
 inline float GetDistance(const Handle h, const Vector v) { return GetDistance2D(GetPosition(h), v); }
 inline float GetDistance(const Handle h, const Matrix m) { return GetDistance2D(GetPosition(h), m.posit); }
-// Goto that takes a Matrix.
-inline void Goto(const Handle h, const Matrix Position, const int Priority = 1) { Goto(h, Position.posit, Priority); }
-inline void Goto(const Handle h, const char* Path, const int Point, const int Priority) { Goto(h, GetVectorFromPath(Path, Point), Priority); }
-// Command for Mine that take a Handle/Vector/Matrix/Path Point.
-//inline void Mine(const Handle h, const Vector Where, const int Priority = 1) { SetCommand(h, CMD_LAY_MINES, Priority, 0, Where); }
-inline void Mine(const Handle h, const Matrix Where, const int Priority = 1) { Mine(h, Where.posit, Priority); }
-inline void Mine(const Handle me, const Handle him, int Priority = 1) { Mine(me, GetPosition(him), Priority); }
-inline void Mine(const Handle h, const char* Path, const int Point, const int Priority) { Mine(h, GetVectorFromPath(Path, Point), Priority); }
-// Command for Dropoff that take a Handle/Vector/Matrix/Path Point.
-//inline void Dropoff(const Handle h, const Vector Where, const int Priority = 1) { SetCommand(h, CMD_DROPOFF, Priority, 0, Where); }
-inline void Dropoff(const Handle h, const Matrix Where, const int Priority = 1) { Dropoff(h, Where.posit, Priority); }
-inline void Dropoff(const Handle me, const Handle him, const int Priority = 1) { Dropoff(me, GetPosition(him), Priority); }
-inline void Dropoff(const Handle h, const char* Path, const int Point, const int Priority) { Dropoff(h, GetVectorFromPath(Path, Point), Priority); }
-// Command for Retreat that take a Vector/Matrix/Path Point.
-inline void Retreat(const Handle h, const Vector Where, const int Priority = 1) { SetIndependence(h, 0); Goto(h, Where, Priority); }
-inline void Retreat(const Handle h, const Matrix Where, const int Priority = 1) { Retreat(h, Where.posit, Priority); }
-inline void Retreat(const Handle h, const char* Path, const int Point, const int Priority) { Retreat(h, GetVectorFromPath(Path, Point), Priority); }
 // GiveWeapon that takes a slot. (Uses ReplaceWeapon command)
 extern void GiveWeapon(const Handle h, const char* Weapon, const int Slot);
 // GetCircularPos.

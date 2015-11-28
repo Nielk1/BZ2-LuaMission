@@ -8,668 +8,35 @@
 -- Checks that the object is a function
 -- @param object Object in question
 function isfunction(object)
-    return (type(object) == "function");
+  return (type(object) == "function");
 end
 
-local function istable(t) return type(t) == 'table' end
-
-
---[[
---- Message Buffer
--- Used to avoid extra allocation time when possible.
--- This API will avoid using this variable twice without first converting to lua strings.
-local msgBuffer = ffi.new("char[1025]");
-
---- Convert input to CString char[]
--- This utility function is used in bindings to handle cstring reference passes.
--- This function will use the preallocated msgBuffer if possible
--- @param input The string for conversion.
--- @param doNotUseBuffer Do not use existing buffer, even if possible, defaults to false. (You may need this if an exported function has 2 cstring paramaters.)
-function tocstring(input, doNotUseBuffer)
-    if doNotUseBuffer or string.len(input) > 1024 then
-        local longString = ffi.new("char[?]",string.len(input) + 1);
-        ffi.copy(longString,input);
-        return longString;
-    end
-    ffi.fill(msgBuffer,1025);
-    ffi.copy(msgBuffer,input);
-    return msgBuffer;
+--- Is this oject a table?
+-- Checks that the object is a table
+-- @param object Object in question
+function istable(object)
+  return (type(object) == 'table');
 end
 
---- Clamps a number to within a certain range.
--- @param n Input number.
--- @param low Minimum of range.
--- @param high Maximum of range.
-function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
---]]
 --- Is this oject an instance of GameObject?
--- Checks that the object is a GameObject or similar enough to one
+-- Checks that the object is a GameObject
 -- @param object Object in question
 function isgameobject(object)
-    --return (type(object) == "table" and getmetatable(object) == GameObject);
-    return (type(object) == "table" and object.__type == "GameObject");
+  return (type(object) == "table" and object.__type == "GameObject");
 end
---[[
-function isobjectdefinition(object)
-    return (type(object) == "table" 
-      and object.Open ~= nil and type(object.Open) == "function"
-      and object.Close ~= nil and type(object.Close) == "function"
-      and object.GetHexInt ~= nil and type(object.GetHexInt) == "function"
-      and object.GetInt ~= nil and type(object.GetInt) == "function"
-      and object.GetLong ~= nil and type(object.GetLong) == "function"
-      and object.GetFloat ~= nil and type(object.GetFloat) == "function"
-      and object.GetDouble ~= nil and type(object.GetDouble) == "function"
-      and object.GetChar ~= nil and type(object.GetChar) == "function"
-      and object.GetBool ~= nil and type(object.GetBool) == "function"
-      and object.GetString ~= nil and type(object.GetString) == "function"
-      and object.GetColor ~= nil and type(object.GetColor) == "function"
-      and object.GetVector ~= nil and type(object.GetVector) == "function");
-end
---]]
+
 --- Is this oject a string?
 -- @param object Object in question
 function isstring(object)
-    return (type(object) == "string");
+  return (type(object) == "string");
 end
 
 --- Is this oject a number?
 -- @param object Object in question
 function isnumber(object)
-    return (type(object) == "number");
+  return (type(object) == "number");
 end
 
---- Is this oject a Vector?
--- @param object Object in question
-function isvector(object)
-    return (type(object) == "cdata" and ffi.istype("Vector", object));
-end
-
---- Is this oject a VECTOR_2D?
--- @param object Object in question
-function isvector_2d(object)
-    return (type(object) == "cdata" and ffi.istype("VECTOR_2D", object));
-end
-
---- Is this oject a Matrix?
--- @param object Object in question
-function ismatrix(object)
-    return (type(object) == "cdata" and ffi.istype("Matrix", object));
-end
-
---- Is this object a Color?
--- @param object Object in question
-function iscolor(object)
-    return (type(object) == "table" and object.ToColorLong ~= nil and type(object.ToColorLong) == "function" and object.ToRBGA ~= nil and type(object.ToRBGA) == "function" and object.ToRBG ~= nil and type(object.ToRBG) == "function");
-end
-
---- Is this object a TEAMCOLOR_TYPE?
--- @param object Object in question
-function isteamcolortype(object)
-    return (type(object) == "cdata" and ffi.istype("TEAMCOLOR_TYPE", object));
-end
-
---- Is this object a ObjectInfoType?
--- @param object Object in question
-function isobjectinfotype(object)
-    return (type(object) == "cdata" and ffi.istype("ObjectInfoType", object));
-end
-
---- Is this object a DLLAudioCategory?
--- @param object Object in question
-function isaudiocategory(object)
-    return (type(object) == "cdata" and ffi.istype("DLLAudioCategory", object));
-end
-
---- Is this oject an instance of AudioHandle?
--- Checks that the object is a AudioHandle or similar enough to one
--- @param object Object in question
-function isaudiohandle(object)
-    return (type(object) == "table" and object.GetAudioHandle ~= nil and type(object.GetAudioHandle) == "function");
-end
-
---- Is this oject an instance of RandomizeType?
--- @param object Object in question
-function israndomizetype(object)
-    return (type(object) == "cdata" and ffi.istype("RandomizeType", object));
-end
---[[
-
---==============================================================================================================================================================
--- Common Enums, Structs, Types
---==============================================================================================================================================================
-
---local VECTOR_2D
-VECTOR_2D = ffi.metatype("VECTOR_2D", {
-  __add = function(a, b) return VECTOR_2D(a.x+b.x, a.z+b.z) end,
-})
-
---local Vector
-Vector = ffi.metatype("Vector", {
-  __add = function(a, b) return Vector(a.x+b.x, a.y+b.y, a.z+b.z) end,
-})
-
---local Matrix
-Matrix = ffi.metatype("Matrix", {})
-
---local AnimationType = {};
-AnimationType = {};
-AnimationType.loop = 0;
-AnimationType.twoway = 1;
-
---local AvoidType = {};
-AvoidType = {};
-AvoidType.AVD_NONE = 0; -- don't avoid collisions
-AvoidType.AVD_FORCE = 1; -- use force avoidance
-AvoidType.AVD_PLAN = 2; -- plan collision avoidance
-
---local Command = {};
-Command = {};
-Command.CMD_NONE = 0;
-Command.CMD_SELECT = 1;
-Command.CMD_STOP = 2;
-Command.CMD_GO = 3;
-Command.CMD_ATTACK = 4;
-Command.CMD_FOLLOW = 5;
-Command.CMD_FORMATION = 6; -- not used anywhere in code.
-Command.CMD_PICKUP = 7;
-Command.CMD_DROPOFF = 8;
-Command.CMD_UNDEPLOY = 9;
-Command.CMD_DEPLOY = 10;
-Command.CMD_NO_DEPLOY = 11; -- Used by crigs, deploybuildings to indicate they can't do that there
-Command.CMD_GET_REPAIR = 12;
-Command.CMD_GET_RELOAD = 13;
-Command.CMD_GET_WEAPON = 14;
-Command.CMD_GET_CAMERA = 15; -- Human players only.
-Command.CMD_GET_BOMB = 16;
-Command.CMD_DEFEND = 17;
-Command.CMD_RESCUE = 18;
-Command.CMD_RECYCLE = 19;
-Command.CMD_SCAVENGE = 20;
-Command.CMD_HUNT = 21;
-Command.CMD_BUILD = 22;
-Command.CMD_PATROL = 23;
-Command.CMD_STAGE = 24;
-Command.CMD_SEND = 25;
-Command.CMD_GET_IN = 26;
-Command.CMD_LAY_MINES = 27;
-Command.CMD_LOOK_AT = 28;
-Command.CMD_SERVICE = 29;
-Command.CMD_UPGRADE = 30;
-Command.CMD_DEMOLISH = 31;
-Command.CMD_POWER = 32;
-Command.CMD_BACK = 33;
-Command.CMD_DONE = 34;
-Command.CMD_CANCEL = 35;
-Command.CMD_SET_GROUP = 36;
-Command.CMD_SET_TEAM = 37;
-Command.CMD_SEND_GROUP = 38;
-Command.CMD_TARGET = 39;
-Command.CMD_INSPECT = 40;
-Command.CMD_SWITCHTEAM = 41;
-Command.CMD_INTERFACE = 42;
-Command.CMD_LOGOFF = 43;
-Command.CMD_AUTOPILOT = 44;
-Command.CMD_MESSAGE = 45;
-Command.CMD_CLOSE = 46;
-Command.CMD_MORPH_SETDEPLOYED = 47; -- For morphtanks
-Command.CMD_MORPH_SETUNDEPLOYED = 48; -- For morphtanks
-Command.CMD_MORPH_UNLOCK = 49; -- For morphtanks
-Command.CMD_BAILOUT = 50;
-Command.CMD_BUILD_ROTATE = 51; -- Update building rotations by 90 degrees.
-Command.CMD_CMDPANEL_SELECT = 52;
-Command.CMD_CMDPANEL_DESELECT = 53;
-
---local Slots = {};
-Slots = {};
-Slots.DLL_TEAM_SLOT_RECYCLER = 1;
-Slots.DLL_TEAM_SLOT_FACTORY = 2;
-Slots.DLL_TEAM_SLOT_ARMORY = 3;
-Slots.DLL_TEAM_SLOT_TRAINING = 4;
-Slots.DLL_TEAM_SLOT_BOMBERBAY = 5;
-Slots.DLL_TEAM_SLOT_SERVICE = 6;
-Slots.DLL_TEAM_SLOT_TECHCENTER = 7;
-Slots.DLL_TEAM_SLOT_COMMTOWER = 8;
-Slots.DLL_TEAM_SLOT_BASE4 = 9; -- Whatever's in base slot #4 (only w/ mods)
-Slots.DLL_TEAM_SLOT_BASE5 = 10; -- see above
-Slots.DLL_TEAM_SLOT_BASE6 = 11; -- see above
-Slots.DLL_TEAM_SLOT_BASE7 = 12; -- see above
-Slots.DLL_TEAM_SLOT_BASE8 = 13; -- see above
-Slots.DLL_TEAM_SLOT_BASE9 = 14; -- see above
-
-
---==============================================================================================================================================================
--- Color
---==============================================================================================================================================================
-
---local Color = {};
-Color = {};
-Color.__index = Color;
-Color.__add = function(a,b)
-    return Color.new((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2, (a.a + b.a) / 2);
-end;
-Color.__newindex = function(table, key, value)
-    if key == "a" or key == "r"  or key == "g"  or key == "b" then
-        rawset(table, key, value);
-    else
-        error("Attempt to modify read-only table")
-    end
-end
-
-
---- Create new Color Intance
--- @param r Red or long describing color.
--- @param g Green or nil if r is long.
--- @param b Blue or nil if r is long.
--- @param a Alpha, defaults to 255, nil if r is long.
-function Color.new(r,g,b,a)
-  local self = setmetatable({}, Color)
-  if r ~= nil and g == nil and b == nil and a == nil then
-    self.a = bit.rshift(bit.band(0xFF000000,r),24);
-    self.r = bit.rshift(bit.band(0x00FF0000,r),16);
-    self.g = bit.rshift(bit.band(0x0000FF00,r),8);
-    self.b = bit.band(0x000000FF,r);
-  else
-    self.r = math.clamp(r,0,255);
-    self.g = math.clamp(g,0,255);
-    self.b = math.clamp(b,0,255);
-    if a == nill then
-      self.a = 255;
-    else
-      self.a = math.clamp(a,0,255);
-    end
-  end
-  return self;
-end
-
---- Return long form color for most BZ2 functions
--- @param self Color instance
--- @return long form color
-function Color.ToColorLong(self)
-  return bit.bor(bit.lshift(self.a, 24), bit.lshift(self.r, 16), bit.lshift(self.g, 8), self.b);
-end
-
---- Return RGB form color for some BZ2 functions for normal use
--- @param self Color instance
--- @return Red
--- @return Green
--- @return Blue
-function Color.ToRGB(self)
-    return self.r,self.g,self.b;
-end
-
---- Return RGBA form color for normal use
--- @param self Color instance
--- @return Red
--- @return Green
--- @return Blue
--- @return Alpha
-function Color.ToRGBA(self)
-    return self.r,self.g,self.b,self.a;
-end
-
---- Color long for White
-Color.WHITE     = 0xFFFFFFFF;
---- Color long for Red
-Color.RED       = 0xFFFF0000;
---- Color long for Green
-Color.GREEN     = 0xFF00FF00;
---- Color long for Blue
-Color.BLUE      = 0xFF0000FF;
---- Color long for Turquoise
-Color.TURQUOISE = 0xFF00FFFF;
---- Color long for Violet
-Color.VIOLET    = 0xFFFF00FF;
---- Color long for Yellow
-Color.YELLOW    = 0xFFFFFF00;
-
---==============================================================================================================================================================
--- AiPathObject
---==============================================================================================================================================================
-
---FindAiPath
---FreeAiPath
---GetAiPaths
---SetPathType
---[[
-__declspec( dllexport ) class AiPath * __cdecl FindAiPath(struct Vector const &,struct Vector const &) asm("?FindAiPath@@YAPAVAiPath@@ABUVector@@0@Z");
-__declspec( dllexport ) void __cdecl FreeAiPath(class AiPath *) asm("?FreeAiPath@@YAXPAVAiPath@@@Z");
-__declspec( dllexport ) void __cdecl GetAiPaths(int &,char * * &) asm("?GetAiPaths@@YAXAAHAAPAPAD@Z"); ??
-__declspec( dllexport ) void __cdecl SetPathType(char *,enum PathType) asm("?SetPathType@@YAXPADW4PathType@@@Z"); ??
-
---- AiPathObject
--- An object containing all functions and data related to an AiPath
-local AiPathObject = {}; -- the table representing the class, which will double as the metatable for the instances
-AiPathObject.__index = AiPathObject; -- failed table lookups on the instances should fallback to the class table, to get methods
-AiPathObject.__gc = function(self) ffi.C.FreeAiPath(self.GetAiPath()); end;
-
---- Create new GameObject Intance
--- @param id Handle from BZ2.
-function AiPathObject.new(object)
-  local self = setmetatable({}, AiPathObject);
-  self.object = object;
-  return self;
-end
-
---- Get AiPath used by BZ2.
--- @param self AiPathObject instance.
-function AiPathObject.GetAiPath(self)
-  return self.object;
-end
-]]
-
---]]
---[[
---==============================================================================================================================================================
--- ObjectDefinition
---==============================================================================================================================================================
-
-local ObjectDefinition_ = {};
-ObjectDefinition_.__index = ObjectDefinition_;
-ObjectDefinition_.__newindex = function(table, key, value)
-    if key == "open" or key == "name" then
-        rawset(table, key, value);
-    else
-        error("Attempt to modify read-only table")
-    end
-end
-
-function ObjectDefinition(name)
-    if not isstring(name) then error("Paramater name must be string."); end
-    local self = setmetatable({}, ObjectDefinition_)
-    self.name = name;
-    return self;
-end
-
-function ObjectDefinition_.Save(self)
-    WriteMarker("ObjectDefinition");
-    local length = string.len(self.name);
-    ffi.C.WriteInt(ffi.new("int[1]", length));
-    ffi.C.WriteBytes(tocstring(self.name), length);
-end
-
-function ObjectDefinition_.Open(self)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not self.open then
-       ffi.C.OpenODF(tocstring(self.name)); 
-       self.open = true;
-    end
-end
-
-function ObjectDefinition_.Close(self)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if self.open then
-       ffi.C.CloseODF(tocstring(self.name)); 
-       self.open = false;
-    end
-end
-
-function ObjectDefinition_.GetHexInt(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = 0; end
-    local value = ffi.new("int[1]");
-    ffi.C.GetODFHexInt(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return tonumber(value);
-end
-
-function ObjectDefinition_.GetInt(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = 0; end
-    local value = ffi.new("int[1]");
-    ffi.C.GetODFInt(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return tonumber(value);
-end
-
-function ObjectDefinition_.GetLong(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = 0; end
-    local value = ffi.new("long[1]");
-    ffi.C.GetODFLong(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return tonumber(value);
-end
-
-function ObjectDefinition_.GetFloat(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = 0.0; end
-    local value = ffi.new("float[1]");
-    ffi.C.GetODFFloat(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return tonumber(value);
-end
-
-function ObjectDefinition_.GetDouble(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = 0.0; end
-    local value = ffi.new("double[1]");
-    ffi.C.GetODFDouble(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return tonumber(value);
-end
-
-function ObjectDefinition_.GetChar(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = '\0'; end
-    local value = ffi.new("char[1]");
-    ffi.C.GetODFChar(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return tostring(value);
-end
-
-function ObjectDefinition_.GetBool(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = false; end
-    local value = ffi.new("bool[1]");
-    ffi.C.GetODFBool(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return tobool(value);
-end
-
-function ObjectDefinition_.GetString(self, block, name, size, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = nil; end
-    local passIn;
-    if size == nil then size = 1024; end
-    if size < 1025 then
-        passIn = msgBuffer;
-    else
-        passIn = ffi.new("char[?]",size + 1);
-    end
-    ffi.fill(passIn,size + 1);
-    if default ~= nil then
-        ffi.C.GetODFString(tocstring(self.name), tocstring(block), tocstring(name), size, passIn, tocstring(default));
-    else
-        ffi.C.GetODFString(tocstring(self.name), tocstring(block), tocstring(name), size, passIn, nil);
-    end
-    return ffi.string(passIn);
-end
-
-function ObjectDefinition_.GetColor(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then
-        default = 0;
-    elseif iscolor(default) then
-        default = default:ToColorLong();
-    end
-    local value = ffi.new("unsigned long[1]");
-    ffi.C.GetODFColor(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return Color.new(value);
-end
-
-function ObjectDefinition_.GetVector(self, block, name, default)
-    if not isobjectdefinition(self) then error("Paramater self must be ObjectDefinition instance."); end
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isstring(name) then error("Paramater name must be string."); end
-    if default == nil then default = Vector(); end
-    local value = ffi.new("Vector[1]");
-    ffi.C.GetODFVector(tocstring(self.name), tocstring(block), tocstring(name), value, default);
-    return value;
-end
---]]
-
---[[
---==============================================================================================================================================================
--- AudioHandle
---==============================================================================================================================================================
-
-local AudioHandle = {};
-AudioHandle.__index = AudioHandle;
-AudioHandle.__newindex = function(table, key, value)
-    error("Attempt to modify read-only table")
-end
-
-function AudioHandle.new(id)
-    local self = setmetatable({}, AudioHandle)
-    self.handle = id;
-    return self;
-end
-
-function AudioHandle.GetAudioHandle(self)
-    return self.handle;
-end
-
-function AudioHandle.Save(self)
-    WriteMarker("AudioHandle");
-    ffi.C.WriteInt(ffi.new("int[1]", self.handle), 1);
-end
-
---- Start audio in 3D on object
--- @param name Soundfile name
--- @param gameobject GameObject to play sound around
--- @param category DLLAudioCategory
--- @param loop Loop audio, defaults to false
--- @param stopLast Stop a prior sound on this object with the same name
--- @return AudioHandle object
-function StartAudio3D(name, gameobject, category, loop, stopLast)
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isgameobject(gameobject) then error("Paramater gameobject must be GameObject instance."); end
-    if category == nil then category = DLLAudioCategory.AUDIO_CAT_UNKNOWN; end
-    if not isaudiocategory(category) then error("Paramater block must be string."); end
-    --if loop == nil then loop = false; end
-    --if stopLast == nil then stopLast = false; end
-    return AudioHandle.new(ffi.C.StartAudio3D(tocstring(name), gameobject:GetHandle(), category, loop, stopLast));
-end
-
---- Start audio in 3D at a location
--- @param name Soundfile name
--- @param pos Vector location for sound
--- @param category DLLAudioCategory
--- @param loop Loop audio, defaults to false
--- @return AudioHandle object
-function StartAudio3DV(name, pos, category, loop)
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isvector(pos) then error("Paramater pos must be a Vector."); end
-    if category == nil then category = DLLAudioCategory.AUDIO_CAT_UNKNOWN; end
-    if not isaudiocategory(category) then error("Paramater block must be string."); end
-    --if loop == nil then loop = false; end
-    return ffi.C.StartAudio3DV(tocstring(name), pos.x, post.y, pos.z, category, loop);
-end
-
---- Start audio in 2D
--- @param name Soundfile name
--- @param volume Volume, -1 uses ShellSFX volume
--- @param pan Pan
--- @param rate Rate
--- @param loop Loop audio, defaults to false, default false
--- @param isMusic Is this muic? Defaults false
--- @return AudioHandle object
-function StartAudio2D(name, volume, pan, rate, loop, isMusic)
-    if not isstring(block) then error("Paramater block must be string."); end
-    if not isnumber(volume) then error("Paramater volume must be number."); end
-    if not isnumber(pan) then error("Paramater pan must be number."); end
-    if not isnumber(rate) then error("Paramater rate must be number."); end
-    --if loop == nil then loop = false; end
-    --if isMusic == nil then isMusic = false; end
-    return AudioHandle.new(ffi.C.StartAudio2D(tocstring(name), volume, pan, rate, loop, isMusic));
-end
-
---- Is audio playing?
--- Looped audio will be true unless a reload has occured
--- @param self AudioHandle instance.
--- @return Boolean
-function AudioHandle.IsAudioPlaying(self)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    return ffi.C.IsAudioPlaying(self:GetAudioHandle());
-end
-
---- Stop
--- @param self AudioHandle instance.
--- @return Boolean
-function AudioHandle.StopAudio(self)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    ffi.C.StopAudio(self:GetAudioHandle());
-end
-
---- Pause
--- @param self AudioHandle instance.
-function AudioHandle.PauseAudio(self)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    ffi.C.PauseAudio(self:GetAudioHandle());
-end
-
---- Resume
--- @param self AudioHandle instance.
-function AudioHandle.ResumeAudio(self)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    ffi.C.ResumeAudio(self:GetAudioHandle());
-end
-
---- Set Volume
--- @param self AudioHandle instance.
--- @param vol Volume ratio
--- @param ignoreUserVolume Do not use the user's preference as 100%
-function SetVolume(self, vol, ignoreUserVolume)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    if not isnumber(vol) then error("Paramater vol must be number."); end
-    ffi.C.SetVolume(self:GetAudioHandle(), vol, not ignoreUserVolume);
-end
-
---- Set Pan
--- @param self AudioHandle instance.
--- @param pan Pan Only valid for 2D sounds, -1.0 to +1.0
-function SetPan(self, pan)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    if not isnumber(vol) then error("Paramater vol must be number."); end
-    ffi.C.SetPan(self:GetAudioHandle(), pan);
-end
-
---- Set the rate
--- @param self AudioHandle instance.
--- @param rate Valid values are 0.0f .. 44100.0f. 
-function SetRate(self, rate)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    if not isnumber(vol) then error("Paramater vol must be number."); end
-    ffi.C.SetRate(self:GetAudioHandle(), rate);
-end
-
---- Get duration
--- @param self AudioHandle instance.
--- @return Length in seconds
-function GetAudioFileDuration(self)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    return ffi.C.GetAudioFileDuration(self:GetAudioHandle());
-end
-
---- Is the playing looped
--- @param self AudioHandle instance.
--- @return Boolean
-function IsPlayingLooped(self)
-    if not isaudiohandle(self) then error("Paramater self must be an instance of AudioHandle."); end
-    return ffi.C.IsPlayingLooped(self:GetAudioHandle());
-end
---]]
 
 --==============================================================================================================================================================
 -- GameObject
@@ -685,95 +52,109 @@ local GameObjectAltered = {};
 local GameObject = {}; -- the table representing the class, which will double as the metatable for the instances
 --GameObject.__index = GameObject; -- failed table lookups on the instances should fallback to the class table, to get methods
 GameObject.__index = function(table, key)
-    local retVal = rawget(table, key);
-    if retVal ~= nil then return retVal; end
-    if rawget(table, "addonData") ~= nil and rawget(rawget(table, "addonData"), key) ~= nil then return rawget(rawget(table, "addonData"), key); end
-    return rawget(GameObject, key); -- if you fail to get it from the subdata, move on to base (looking for functions)
+  local retVal = rawget(table, key);
+  if retVal ~= nil then return retVal; end
+  if rawget(table, "addonData") ~= nil and rawget(rawget(table, "addonData"), key) ~= nil then return rawget(rawget(table, "addonData"), key); end
+  return rawget(GameObject, key); -- if you fail to get it from the subdata, move on to base (looking for functions)
 end
 GameObject.__newindex = function(table, key, value)
-    if key ~= "id" and key ~= "addonData" then
-        local addonData = rawget(table, "addonData");
-        if addonData == nil then
-            rawset(table, "addonData", {});
-            addonData = rawget(table, "addonData");
-        end
-        rawset(addonData, key, value);
-        GameObjectAltered[table:GetHandle()] = table;
-    else
-        rawset(table, key, value);
+  if key ~= "id" and key ~= "addonData" then
+    local addonData = rawget(table, "addonData");
+    if addonData == nil then
+      rawset(table, "addonData", {});
+      addonData = rawget(table, "addonData");
     end
+    rawset(addonData, key, value);
+    GameObjectAltered[table:GetHandle()] = table;
+  else
+    rawset(table, key, value);
+  end
 end
 GameObject.__type = "GameObject";
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Core
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 --- Create new GameObject Intance
 -- @param id Handle from BZ2.
-function GameObject.new(id)
-    local stringId = tostring(id);
-    if GameObjectWeakList[stringId] ~= nil then return GameObjectWeakList[stringId]; end
-    local self = setmetatable({}, GameObject);
-    self.id = id;
-    GameObjectWeakList[stringId] = self;
-    return self;
+function GameObject.FromHandle(handle)
+  local stringId = tostring(handle);
+  if GameObjectWeakList[stringId] ~= nil then return GameObjectWeakList[stringId]; end
+  local self = setmetatable({}, GameObject);
+  self.id = handle;
+  GameObjectWeakList[stringId] = self;
+  return self;
 end
 
 --- Get Handle used by BZ2.
 -- @param self GameObject instance.
 function GameObject.GetHandle(self)
-    return self.id;
+  return self.id;
 end
-
--- Save data
--- If this function is present in a table, it will save the return data instead of table elements
---function GameObject.Save(self)
---    return self.id;
---end
 
 function GameObject.PostLoad(self)
 
 end
 
 function GameObject.Save(self)
-    return self.id;
+  return self.id;
 end
 
 function GameObject.Load(id)
-    return GameObject.new(id);
+  return GameObject.FromHandle(id);
 end
 
 function GameObject.BulkSave()
-    local returnData = {};
-    
-    for k,v in pairs(GameObjectAltered) do
-      returnData[v.id] = v.addonData;
-    end
-    
-    return returnData;
+  local returnData = {};
+  for k,v in pairs(GameObjectAltered) do
+    returnData[v.id] = v.addonData;
+  end
+  return returnData;
 end
 
 function GameObject.BulkLoad(data)
-    for k,v in pairs(data) do
-      local newGameObject = GameObject.new(k);
-      newGameObject.addonData = v;
-    end
+  for k,v in pairs(data) do
+    local newGameObject = GameObject.FromHandle(k);
+    newGameObject.addonData = v;
+  end
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Object Creation / Destruction
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Build Object
+-- @param odf Object Definition File (without ".odf")
+-- @param team Team number for the object, 0 to 15
+-- @param pos Position as GameObject, Pathpoint Name, AiPath, Vector, or Matrix
+-- @return Newly built GameObject
+function BuildGameObject(odf, team, pos)
+  local handle = 0;
+  handle = BuildObject(odf, team, pos);
+  if handle == 0 then return nil end;
+  return GameObject.FromHandle(handle);
 end
 
 --- Remove GameObject from world
 -- @param self GameObject instance.
 function GameObject.RemoveObject(self)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    --ffi.C.RemoveObject(self:GetHandle());
-    RemoveObject(self:GetHandle());
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  RemoveObject(self:GetHandle());
 end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- GameObject - Groups
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 --- Set group of GameObject in interface
 -- @param self GameObject instance.
 -- @param group Group number.
 function GameObject.SetGroup(self, group)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    --ffi.C.SetGroup(self:GetHandle(), group);
-    SetGroup(self:GetHandle(), group);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  --ffi.C.SetGroup(self:GetHandle(), group);
+  SetGroup(self:GetHandle(), group);
 end
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GameObject - Orders
@@ -784,11 +165,9 @@ end
 -- @param target Target GameObject.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Attack(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    --if priority == nil then priority = 1; end
-    --ffi.C.Attack(self:GetHandle(), target:GetHandle(), priority);
-    Service(self:GetHandle(), target:GetHandle(), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
+  Service(self:GetHandle(), target:GetHandle(), priority);
 end
 
 --- Order GameObject to Service target GameObject
@@ -796,11 +175,12 @@ end
 -- @param target Target GameObject.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Service(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    --if priority == nil then priority = 1; end
-    --ffi.C.Service(self:GetHandle(), target:GetHandle(), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
     Service(self:GetHandle(), target:GetHandle(), priority);
+  else
+    Service(self:GetHandle(), target, priority);
+  end
 end
 
 --- Order GameObject to Goto target GameObject / Path
@@ -808,17 +188,12 @@ end
 -- @param target Target GameObject or Path name.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Goto(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    --if priority == nil then priority = 1; end
-    if isgameobject(target) then
-        ffi.C.GotoH(self:GetHandle(), target:GetHandle(), priority);
-        --Goto(self:GetHandle(), target:GetHandle(), priority);
-    --elseif isstring(target) then
-    --    ffi.C.GotoP(self:GetHandle(), tocstring(target), priority)
-    else
-        --error("Paramater self must be GameObject instance or string");
-        Goto(self:GetHandle(), target, priority);
-    end
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
+    Goto(self:GetHandle(), target:GetHandle(), priority);
+  else
+    Goto(self:GetHandle(), target, priority);
+  end
 end
 
 --- Order GameObject to Mine target Path
@@ -826,11 +201,12 @@ end
 -- @param target Target Path name.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Mine(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isstring(target) then error("Paramater target must be string."); end
-    --if priority == nil then priority = 1; end
-    --ffi.C.Mine(self:GetHandle(), tocstring(target), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
+    Mine(self:GetHandle(), target:GetHandle(), priority);
+  else
     Mine(self:GetHandle(), target, priority);
+  end
 end
 
 --- Order GameObject to Follow target GameObject
@@ -838,11 +214,12 @@ end
 -- @param target Target GameObject instance.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Follow(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    --if priority == nil then priority = 1; end
-    --ffi.C.Follow(self:GetHandle(), target:GetHandle(), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
     Follow(self:GetHandle(), target:GetHandle(), priority);
+  else
+    Follow(self:GetHandle(), target, priority);
+  end
 end
 
 --- Order GameObject to Defend area
@@ -850,8 +227,6 @@ end
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Defend(self, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    --if priority == nil then priority = 1; end
-    --ffi.C.Defend(self:GetHandle(), priority);
     Defend(self:GetHandle(), priority);
 end
 
@@ -860,11 +235,12 @@ end
 -- @param target Target GameObject instance.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Defend2(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    --if priority == nil then priority = 1; end
-    --ffi.C.Defend2(self:GetHandle(), target:GetHandle(), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
     Defend2(self:GetHandle(), target:GetHandle(), priority);
+  else
+    Defend2(self:GetHandle(), target, priority);
+  end
 end
 
 --- Order GameObject to Stop
@@ -872,8 +248,6 @@ end
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Stop(self, priority)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    --if priority == nil then priority = 1; end
-    --ffi.C.Stop(self:GetHandle(), priority);
     Stop(self:GetHandle(), priority);
 end
 
@@ -882,11 +256,12 @@ end
 -- @param target Target Path name.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Patrol(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isstring(target) then error("Paramater target must be string."); end
-    --if priority == nil then priority = 1; end
-    --ffi.C.Patrol(self:GetHandle(), tocstring(target), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
+    Patrol(self:GetHandle(), target:GetHandle(), priority);
+  else
     Patrol(self:GetHandle(), target, priority);
+  end
 end
 
 --- Order GameObject to Retreat
@@ -894,17 +269,12 @@ end
 -- @param target Target GameObject or Path name.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Retreat(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    if isgameobject(target) then
-        --ffi.C.RetreatH(self:GetHandle(), target:GetHandle(), priority);
-        Retreat(self:GetHandle(), target:GetHandle(), priority);
-    --elseif isstring(target) then
-    --    ffi.C.RetreatP(self:GetHandle(), tocstring(target), priority)
-    else
-        --error("Paramater self must be GameObject instance or string");
-        Retreat(self:GetHandle(), target, priority)
-    end
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
+    Retreat(self:GetHandle(), target:GetHandle(), priority);
+  else
+    Retreat(self:GetHandle(), target, priority)
+  end
 end
 
 --- Order GameObject to GetIn target GameObject
@@ -912,10 +282,12 @@ end
 -- @param target Target GameObject.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.GetIn(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.GetIn(self:GetHandle(), target:GetHandle(), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
+    GetIn(self:GetHandle(), target:GetHandle(), priority);
+  else
+    GetIn(self:GetHandle(), target, priority)
+  end
 end
 
 --- Order GameObject to Pickup target GameObject
@@ -923,10 +295,12 @@ end
 -- @param target Target GameObject.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Pickup(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Pickup(self:GetHandle(), target:GetHandle(), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
+    Pickup(self:GetHandle(), target:GetHandle(), priority);
+  else
+    Pickup(self:GetHandle(), target, priority)
+  end
 end
 
 --- Order GameObject to Pickup target path name
@@ -934,22 +308,22 @@ end
 -- @param target Target path name.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.Dropoff(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isstring(target) then error("Paramater target must be string."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Dropoff(self:GetHandle(), tocstring(target), priority)
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
+    Dropoff(self:GetHandle(), target:GetHandle(), priority);
+  else
+    Dropoff(self:GetHandle(), target, priority)
+  end
 end
 
 --- Order GameObject to Build target config
 -- Oddly this function does not include a location for the action, might want to use the far more powerful orders system.
 -- @param self GameObject instance.
--- @param target Target path name.
+-- @param odf Object Definition.
 -- @param priority Order priority, >0 removes user control.
-function GameObject.Build(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isstring(target) then error("Paramater target must be string."); end
-    if priority == nil then priority = 1; end
-    ffi.C.Build(self:GetHandle(), tocstring(target), priority);
+function GameObject.Build(self, odf, priority)
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  Build(self:GetHandle(), target, priority)
 end
 
 --- Order GameObject to LookAt target GameObject
@@ -957,10 +331,12 @@ end
 -- @param target Target GameObject instance.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.LookAt(self, target, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    if priority == nil then priority = 1; end
-    ffi.C.LookAt(self:GetHandle(), target:GetHandle(), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if isgameobject(target) then
+    LookAt(self:GetHandle(), target:GetHandle(), priority);
+  else
+    LookAt(self:GetHandle(), target, priority)
+  end
 end
 
 --- Order entire team to look at GameObject
@@ -968,12 +344,11 @@ end
 -- @param target Target team number.
 -- @param priority Order priority, >0 removes user control.
 function GameObject.AllLookAtMe(self, team, priority)
-    if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    if not isnumber(team) then error("Paramater target must be number."); end
-    if priority == nil then priority = 1; end
-    ffi.C.AllLookAt(team, self:GetHandle(), priority);
+  if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
+  if not isnumber(team) then error("Paramater target must be number."); end
+  AllLookAt(team, self:GetHandle(), priority);
 end
-
+--[[
 --- Order GameObject to FireAt target GameObject
 -- @param self GameObject instance.
 -- @param target Gameobject instance.
@@ -1596,7 +971,7 @@ function GameObject.GetScavengerCurScrap(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     local retVal = ffi.C.GetScavengerCurScrap(self:GetHandle());
     if retVal == -1 then return nil; end
-    return GameObject.new(retVal);
+    return GameObject.FromHandle(retVal);
 end
 
 --- Get max scrap in hold of GameObject
@@ -1605,7 +980,7 @@ function GameObject.GetScavengerMaxScrap(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     local retVal = ffi.C.GetScavengerMaxScrap(self:GetHandle());
     if retVal == -1 then return nil; end
-    return GameObject.new(retVal);
+    return GameObject.FromHandle(retVal);
 end
 
 --- Set current scrap in hold of GameObject
@@ -1639,7 +1014,7 @@ function GameObject.GetNearestEnemy(self, ignorePilots, ignoreScavs, maxDist)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     -- can't check for bools since nil = false and !nil = true
     if maxDist == nil then maxDist = 450.0; end
-    return GameObject.new(ffi.C.GetNearestEnemy(self.handle, ignorePilots, ignoreScavs, maxDist));
+    return GameObject.FromHandle(ffi.C.GetNearestEnemy(self.handle, ignorePilots, ignoreScavs, maxDist));
 end
 
 --- Get nearest powerup to this GameObject
@@ -1651,7 +1026,7 @@ function GameObject.GetNearestPowerup(self, ignoreSpawnpoints, maxDist)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     -- can't check for bools since nil = false and !nil = true
     if maxDist == nil then maxDist = 450.0; end
-    return GameObject.new(ffi.C.GetNearestPowerup(self.handle, ignoreSpawnpoints, maxDist));
+    return GameObject.FromHandle(ffi.C.GetNearestPowerup(self.handle, ignoreSpawnpoints, maxDist));
 end
 
 --- Get nearest person to this GameObject
@@ -1663,7 +1038,7 @@ function GameObject.GetNearestPerson(self, skipFriendlies, maxDist)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     -- can't check for bools since nil = false and !nil = true
     if maxDist == nil then maxDist = 450.0; end
-    return GameObject.new(ffi.C.GetNearestPerson(self.handle, skipFriendlies, maxDist));
+    return GameObject.FromHandle(ffi.C.GetNearestPerson(self.handle, skipFriendlies, maxDist));
 end
 
 
@@ -1703,7 +1078,7 @@ end
 -- @return GameObject we are following.
 function GameObject.WhoFollowing(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    return GameObject.new(ffi.C.WhoFollowing(self:GetHandle()));
+    return GameObject.FromHandle(ffi.C.WhoFollowing(self:GetHandle()));
 end
 
 --- Get current command
@@ -1719,7 +1094,7 @@ end
 -- @return GameObject subject of our orders.
 function GameObject.GetCurrentWho(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    return GameObject.new(ffi.C.GetCurrentWho(self:GetHandle()));
+    return GameObject.FromHandle(ffi.C.GetCurrentWho(self:GetHandle()));
 end
 
 --- Is this GameObject deployed?
@@ -1776,7 +1151,7 @@ end
 -- @return GameObject that this hopped out of.
 function GameObject.HoppedOutOf(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    return GameObject.new(ffi.C.HoppedOutOf(self:GetHandle()));
+    return GameObject.FromHandle(ffi.C.HoppedOutOf(self:GetHandle()));
 end
 
 --- Adds a pilot if needed to the GameObject
@@ -1880,7 +1255,7 @@ end
 -- @return owner GameObject.
 function GameObject.GetOwner(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    return GameObject.new(ffi.C.GetOwner(self:GetHandle()));
+    return GameObject.FromHandle(ffi.C.GetOwner(self:GetHandle()));
 end
 
 --- Set the target of this GameObject
@@ -1889,7 +1264,7 @@ end
 function GameObject.SetTarget(self, target)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isgameobject(target) then error("Paramater target must be GameObject instance."); end
-    GameObject.new(ffi.C.SetTarget(self:GetHandle(), target));
+    GameObject.FromHandle(ffi.C.SetTarget(self:GetHandle(), target));
 end
 
 --- Set the owner of this GameObject
@@ -1898,7 +1273,7 @@ end
 function GameObject.SetOwner(self, owner)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isgameobject(owner) then error("Paramater owner must be GameObject instance."); end
-    GameObject.new(ffi.C.SetOwner(self:GetHandle(), owner));
+    GameObject.FromHandle(ffi.C.SetOwner(self:GetHandle(), owner));
 end
 
 --- Is this GameObject an instance of given odf?
@@ -2120,7 +1495,7 @@ end
 function GameObject.GetTap(self, index)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     if not isnumber(index) then error("Paramater index must be a number."); end
-    return GameObject.new(ffi.C.GetTap(self:GetHandle(), index));
+    return GameObject.FromHandle(ffi.C.GetTap(self:GetHandle(), index));
 end
 
 --- Get the GameObject's Tap by index
@@ -2146,7 +1521,7 @@ function GameObject.BuildEmptyCraftNear(self, ODF, Team, MinRadiusAway, MaxRadiu
     if not isnumber(Team) then error("Paramater Team must be a number."); end
     if not isnumber(MinRadiusAway) then error("Paramater MinRadiusAway must be a number."); end
     if not isnumber(MaxRadiusAway) then error("Paramater MaxRadiusAway must be a number."); end
-    return GameObject.new(ffi.C.BuildEmptyCraftNear(self, tocstring(ODF), Team, MinRadiusAway, MaxRadiusAway));
+    return GameObject.FromHandle(ffi.C.BuildEmptyCraftNear(self, tocstring(ODF), Team, MinRadiusAway, MaxRadiusAway));
 end
 
 --- Set this GameObject as User for given team
@@ -2177,7 +1552,7 @@ end
 -- @return Targeted GameObject.
 function GameObject.GetTarget(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
-    return GameObject.new(GetTarget(self:GetHandle()));
+    return GameObject.FromHandle(GetTarget(self:GetHandle()));
 end
 
 --- Reset the GameObject's team slot.
@@ -2241,130 +1616,8 @@ end
 function GameObject:IsPerson(self)
     return ffi.C.IsPerson(self:GetHandle());
 end
-
---[[
---==============================================================================================================================================================
--- ObjectInfo
---==============================================================================================================================================================
-
---- Get Object Info
--- @param h GameObject
--- @param type ObjectInfoType
--- @return String value
-function GetObjInfo(h, type)
-    if not isgameobject(h) then error("Paramater h must be GameObject instance."); end
-    if not isobjectinfotype(type) then error("Paramater type must be an ObjectInfoType."); end
-    local pBuffer = ffi.new("char[65]");
-    ffi.fill(pBuffer, 65);
-    ffi.C.GetObjInfo(h:GetHandle(),type, pBuffer);
-    return tostring(pBuffer);
-end
-
---- Get Group Info
--- @param team Team number
--- @param group Group number
--- @param type ObjectInfoType, only accepts Get_CFG, Get_ODF, or Get_GOClass_gCfg
--- @return String value
-function GetGroup(team, group, type)
-    if not isnumber(team) then error("Paramater team must be a number."); end
-    if not isnumber(group) then error("Paramater group must be a number."); end
-    if not isobjectinfotype(type) then error("Paramater type must be an ObjectInfoType."); end
-    local pBuffer = ffi.new("char[65]");
-    ffi.fill(pBuffer, 65);
-    ffi.C.GetGroup(team, group, type, pBuffer);
-    return tostring(pBuffer);
-end
-
-
---==============================================================================================================================================================
--- Cockpit Timer
---==============================================================================================================================================================
-
---- Start the Cockpit Timer countdown
--- @param time Target time.
--- @param warn Time for warning color.
--- @param alert Time for alert color.
-function StartCockpitTimer(time, warn, alert)
-    if not isnumber(time) then error("Paramater time must be a number."); end
-    if not isnumber(warn) then error("Paramater warn must be a number."); end
-    if not isnumber(alert) then error("Paramater alert must be a number."); end
-    if warn == nil then warn = LONG_MIN; end
-    if alert == nil then alert = LONG_MIN; end
-    ffi.C.StartCockpitTimer(time, warn, alert);
-end
-
---- Start the Cockpit Timer countup
--- @param time Starting time.
--- @param warn Time for warning color.
--- @param alert Time for alert color.
-function StartCockpitTimerUp(time, warn, alert)
-    if not isnumber(time) then error("Paramater time must be a number."); end
-    if not isnumber(warn) then error("Paramater warn must be a number."); end
-    if not isnumber(alert) then error("Paramater alert must be a number."); end
-    if warn == nil then warn = LONG_MAX; end
-    if alert == nil then alert = LONG_MAX; end
-    ffi.C.StartCockpitTimerUp(time, warn, alert);
-end
-
---- Stop the Cockpit Timer
-function StopCockpitTimer()
-  ffi.C.StopCockpitTimer();
-end
-
---- Hide the Cockpit Timer
-function HideCockpitTimer()
-  ffi.C.HideCockpitTimer();
-end
-
---- Get the Cockpit Timer time
--- @return time of timer
-function GetCockpitTimer()
-  return ffi.C.GetCockpitTimer();
-end
-
-
---==============================================================================================================================================================
--- End of nicely sorted stuff
-
-
 --]]
 
-
-
-
-
-
-
-
---- Build Object
--- @param odf Object Definition File (without ".odf")
--- @param team Team number for the object, 0 to 15
--- @param pos Position as GameObject, Pathpoint Name, AiPath, Vector, or Matrix
--- @return Newly built GameObject
-function BuildGameObject(odf, team, pos)
---    if not isstring(odf) then error("Paramater odf must be a string."); end
---    if not isnumber(team) then error("Paramater team must be a number."); end
---    local msg = tocstring(odf); -- convert lua string to cstring
-    local handle = 0;
---    if isgameobject(pos) then
---        handle = ffi.C.BuildObject(msg, team, pos:GetHandle());
---    elseif isstring(pos) then
---        handle = ffi.C.BuildObjectP(msg, team, tocstring(pos));
---    --elseif type(pos) == "AiPath" then
---    --  handle = ffi.C.BuildObject(msg, team, pos)
---    elseif isvector(pos) then
---        handle = ffi.C.BuildObjectV(msg, team, pos);
---    elseif ismatrix(pos) then
---        handle = ffi.C.BuildObjectM(msg, team, pos);
---    else
---        error("BuildObject pos paramater is invalid, received " .. type(pos) .. ", expected GameObject, Path Name (string), AiPath, Vector, or Matrix");
---    end
-    
-    handle = BuildObject(odf, team, pos);
-    
-    if handle == 0 then return nil end;
-    return GameObject.new(handle);
-end
 --[[
 --- Get object by label or seq no.
 -- @param name Label on GameObject.
@@ -2741,7 +1994,7 @@ end
 function GetObjectByTeamSlot(TeamNum, Slot)
     if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
     if not isnumber(Slot) then error("Paramater Slot must be a number."); end
-    return GameObject.new(ffi.C.GetObjectByTeamSlot(TeamNum, Slot));
+    return GameObject.FromHandle(ffi.C.GetObjectByTeamSlot(TeamNum, Slot));
 end
 
 --- sin (Network Safe)
@@ -2821,8 +2074,8 @@ end
 -- @return GameObject of player
 function GetPlayerObject(team)
     --if not isnumber(team) then error("Paramater team must be a number."); end
-    --return GameObject.new(ffi.C.GetPlayerHandle(team));
-    return GameObject.new(GetPlayerHandle(team));
+    --return GameObject.FromHandle(ffi.C.GetPlayerHandle(team));
+    return GameObject.FromHandle(GetPlayerHandle(team));
 end
 --[[
 --- Get team race
@@ -2995,7 +2248,7 @@ end
 -- @return Handle spawn point
 function GetSpawnpointHandle(TeamNum)
     if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
-    return GameObject.new(ffi.C.GetSpawnpointHandle(TeamNum));
+    return GameObject.FromHandle(ffi.C.GetSpawnpointHandle(TeamNum));
 end
 
 --- Returns a random spawnpoint that 'looks' safe. [Nobody within 100 meters]
@@ -3102,7 +2355,7 @@ end
 -- @return User on team's target GameObject
 function GetUserTarget(TeamNum)
     if not isnumber(TeamNum) then error("Paramater TeamNum must be a number."); end
-    return GameObject.new(ffi.C.GameUserTarget(TeamNum));
+    return GameObject.FromHandle(ffi.C.GameUserTarget(TeamNum));
 end
 
 --- Execute console command
@@ -3199,14 +2452,14 @@ end
 -- This is not MP safe unless you are very carful with what you are doing
 -- @return GameObject being inspected
 function GetLocalUserInspectHandle()
-    return GameObject.new(ffi.C.GetLocalUserInspectHandle());
+    return GameObject.FromHandle(ffi.C.GetLocalUserInspectHandle());
 end
 
 --- Get object being selected by local user
 -- This is not MP safe unless you are very carful with what you are doing
 -- @return GameObject being selected
 function GetLocalUserSelectHandle()
-    return GameObject.new(ffi.C.GetLocalUserSelectHandle());
+    return GameObject.FromHandle(ffi.C.GetLocalUserSelectHandle());
 end
 
 --- Note gameover with custom message
@@ -3921,7 +3174,7 @@ function GameObject.GetTug(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
 	local retVal = MisnImport.GetTug(self:GetHandle());
 	if retVal == 0 then return nil; end
-	return GameObject.new(retVal);
+	return GameObject.FromHandle(retVal);
 end
 
 --- GetTug
@@ -3963,7 +3216,7 @@ function GameObject.GetNearestObject(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     local retVal = MisnImport.GetNearestObject(self:GetHandle());
     if retVal == 0 then return nil; end
-    return GameObject.new(retVal);
+    return GameObject.FromHandle(retVal);
 end
 
 --- GetNearestVehicleObject
@@ -3973,7 +3226,7 @@ function GameObject.GetNearestVehicleObject(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     local retVal = MisnImport.GetNearestVehicleObject(self:GetHandle());
     if retVal == 0 then return nil; end
-    return GameObject.new(retVal);
+    return GameObject.FromHandle(retVal);
 end
 
 --- GetNearestVehiclePath
@@ -3985,7 +3238,7 @@ function GameObject.GetNearestVehiclePath(path, point)
     if not isnumber(point) then error("Paramater point must be a number"); end
     local retVal = MisnImport.GetNearestVehiclePath(path, point);
     if retVal == 0 then return nil; end
-    return GameObject.new(retVal);
+    return GameObject.FromHandle(retVal);
 end
 
 --- GetNearestBuilding
@@ -3995,7 +3248,7 @@ function GameObject.GetNearestBuilding(self)
     if not isgameobject(self) then error("Paramater self must be GameObject instance."); end
     local retVal = MisnImport.GetNearestBuilding(self:GetHandle());
     if retVal == 0 then return nil; end
-    return GameObject.new(retVal);
+    return GameObject.FromHandle(retVal);
 end
 	
 function GameObject.GetNearestEnemyH(self)
@@ -4093,14 +3346,6 @@ function DeSimplifyForLoad(...)
 end
 
 function InitialSetup()
-    --local here;
-    --local coming;
-    --here,coming = friendTank:CountThreats();
-    --PrintConsoleMessage("Here: " .. here .. " Coming: " .. coming);
-    
-    --MissionData.TestData = {};
-    --MissionData.TestData.Spawned = false;
-    --MissionData.TestData.FreshLoad = false;
     hook.CallAllNoReturn( "InitialSetup" );
 end
 
@@ -4217,18 +3462,18 @@ function PostLoad()
 end
 
 function AddObject(h)
-    --hook.Call( "CreateObject", GameObject.new(h) );
-    --hook.Call( "AddObject", GameObject.new(h) );
+    --hook.Call( "CreateObject", GameObject.FromHandle(h) );
+    --hook.Call( "AddObject", GameObject.FromHandle(h) );
 end
 
 function DeleteObject(h)
-    local object = GameObject.new(h);
+    local object = GameObject.FromHandle(h);
     --hook.Call( "DeleteObject", object );
     if GameObjectAltered[object:GetHandle()] ~= nil then GameObjectAltered[object:GetHandle()] = nil; end
 end
 
 function PostRun()
-    --hook.Call( "PostRun", GameObject.new(h) );
+    --hook.Call( "PostRun", GameObject.FromHandle(h) );
 end
 
 function AddPlayer(id, team, isNewPlayer)
@@ -4248,17 +3493,17 @@ function DeletePlayer(id)
 end
 
 --[[function PlayerEjected(deadObjectHandle)
-    local retVal = hook.Call( "PlayerEjected", GameObject.new(deadObjectHandle));
+    local retVal = hook.Call( "PlayerEjected", GameObject.FromHandle(deadObjectHandle));
     if retVal ~= nil then return retVal; else return 0; end
 end
 
 function ObjectKilled(deadObjectHandle, killersHandle)
-    local retVal = hook.Call( "ObjectKilled", GameObject.new(deadObjectHandle), GameObject.new(killersHandle));
+    local retVal = hook.Call( "ObjectKilled", GameObject.FromHandle(deadObjectHandle), GameObject.FromHandle(killersHandle));
     if retVal ~= nil then return retVal; else return 1; end
 end
 
 function ObjectSniped(deadObjectHandle, killersHandle)
-    local retVal = hook.Call( "ObjectSniped", GameObject.new(deadObjectHandle), GameObject.new(killersHandle));
+    local retVal = hook.Call( "ObjectSniped", GameObject.FromHandle(deadObjectHandle), GameObject.FromHandle(killersHandle));
     if retVal ~= nil then return retVal; else return 2; end
 end
 
@@ -4325,3 +3570,8 @@ end
     else
       PrintConsoleMessage("Failed to load map lua");
     end
+    
+    
+    --for k,v in pairs(_G) do
+    --  print(type(v) .. " = " .. tostring(k));
+    --end

@@ -68,9 +68,6 @@
     <ClCompile Include="..\Shared\LPadHelper.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\Shared\MathUtils.cpp">
-      <Filter>Shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\Shared\MorphObjectHelper.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
@@ -119,7 +116,12 @@
     <ClCompile Include="..\Shared\UtilityShipHelper.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\Shared\ScriptUtilsExtension.cpp" />
+    <ClCompile Include="..\Shared\ScriptUtilsExtension.cpp">
+      <Filter>ScriptUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Shared\MathUtils.cpp">
+      <Filter>ScriptUtils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LuaMission.h" />
@@ -189,9 +191,6 @@
     <ClInclude Include="..\Shared\LPadHelper.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\Shared\MathUtils.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\Shared\MorphObjectHelper.h">
       <Filter>Shared</Filter>
     </ClInclude>
@@ -240,15 +239,34 @@
     <ClInclude Include="..\Shared\UtilityShipHelper.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="LuaExtensions.h" />
-    <ClInclude Include="LuaTypeBindings.h" />
-    <ClInclude Include="..\..\Source\fun3d\ScriptUtils.h" />
-    <ClInclude Include="LuaScriptUtils_GameObject.h" />
-    <ClInclude Include="..\Shared\ScriptUtilsExtension.h" />
+    <ClInclude Include="..\Shared\ScriptUtilsExtension.h">
+      <Filter>ScriptUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\fun3d\ScriptUtils.h">
+      <Filter>ScriptUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="LuaTypeBindings.h">
+      <Filter>LuaBindings</Filter>
+    </ClInclude>
+    <ClInclude Include="LuaScriptUtils_GameObject.h">
+      <Filter>LuaBindings</Filter>
+    </ClInclude>
+    <ClInclude Include="LuaExtensions.h">
+      <Filter>LuaBindings</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\MathUtils.h">
+      <Filter>ScriptUtils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shared">
       <UniqueIdentifier>{233883f2-ca84-4031-a733-14f8dab65a9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ScriptUtils">
+      <UniqueIdentifier>{0c38ac9d-ee0c-4ddf-9cee-358056eca473}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LuaBindings">
+      <UniqueIdentifier>{c0df2e45-ef1b-4c9e-a6ea-7278aa4c473f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

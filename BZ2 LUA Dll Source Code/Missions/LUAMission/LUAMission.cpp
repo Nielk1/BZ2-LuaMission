@@ -782,7 +782,7 @@ static int Make_RGB(lua_State *L)
 	int r = luaL_optinteger(L, 1, 0);
 	int g = luaL_optinteger(L, 2, 0);
 	int b = luaL_optinteger(L, 3, 0);
-	lua_pushinteger(L, RGBCreate(r,g,b));
+	lua_pushinteger(L, RGB_MAKE(r,g,b));
 	return 1;
 }
 static int Make_RGBA(lua_State *L)
@@ -1113,53 +1113,9 @@ static int GetNearestEnemy(lua_State *L)
 	return 1;
 }
 
-//Handle BuildObject(char *odf, int team, Handle h);
-//Handle BuildObject(char *odf, int team, Name path, int point = 0)
-//Handle BuildObject(char *odf, int team, Vector v);
-//Handle BuildObject(char *odf, int team, Matrix m);
-static int BuildObject(lua_State *L)
-{
-	char *odf = const_cast<char *>(luaL_checkstring(L, 1));
-	int team = luaL_checkinteger(L, 2);
-	Handle o;
-	if (Matrix *mat = GetMatrix(L, 3))
-	{
-		o = BuildObject(odf, team, *mat);
-	}
-	else if (Vector *pos = GetVector(L, 3))
-	{
-		o = BuildObject(odf, team, *pos);
-	}
-	else if (lua_isstring(L, 3))
-	{
-		Name path = Name(lua_tostring(L, 3));
-		int point = luaL_optinteger(L, 4, 0);
-		if(point)
-		{
-			Vector pos = GetVectorFromPath(path, point);
-			o = BuildObject(odf, team, pos);
-		}
-		else
-		{
-			o = BuildObject(odf, team, path);
-		}
-	}
-	else
-	{
-		Handle h = RequireHandle(L, 3);
-		o = BuildObject(odf, team, h);
-	}
-	PushHandle(L, o);
-	return 1;
-}
 
-// void RemoveObject(Handle h)
-static int RemoveObject(lua_State *L)
-{
-	Handle h = RequireHandle(L, 1);
-	RemoveObject(h);
-	return 0;
-}
+
+
 
 //DLLEXPORT int DLLAPI GetFirstEmptyGroup(void);
 //DLLEXPORT int DLLAPI GetFirstEmptyGroup(int t);
@@ -1182,15 +1138,7 @@ static int GetFirstEmptyGroup(lua_State *L)
 
 
 
-//DLLEXPORT void DLLAPI AllLookAt(int team, Handle him, int priority = 1);
-static int AllLookAt(lua_State *L)
-{
-	int team = luaL_optinteger(L, 1, 1);
-	Handle him = RequireHandle(L, 2);
-	int priority = luaL_optinteger(L, 3, 1);
-	AllLookAt(team, him, priority);
-	return 0;
-}
+
 
 //bool IsOdf(Handle h, char *odf)
 static int IsOdf(lua_State *L)
@@ -6858,8 +6806,6 @@ static const luaL_Reg sLuaScriptUtils [] = {
 	{ "GetNearestBuilding", GetNearestBuilding },
 	{ "GetNearestEnemy", GetNearestEnemy },
 // BZ2 Script Utils Functions.
-	{ "BuildObject", BuildObject },
-	{ "RemoveObject", RemoveObject },
 	{ "GetFirstEmptyGroup", GetFirstEmptyGroup },
 	{ "IsOdf", IsOdf },
 	{ "GetPlayerHandle", GetPlayerHandle },

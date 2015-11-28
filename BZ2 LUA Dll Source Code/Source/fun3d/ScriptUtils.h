@@ -77,12 +77,16 @@ enum PrePickupPowerupReturnCodes
 	PREPICKUPPOWERUP_ALLOW, // Allow the powerup to be picked up
 };
 
+#if MISN_INTERNAL
 enum PathType {
 	ONE_WAY_PATH, // == 0
 	ROUND_TRIP_PATH, // == 1
 	LOOP_PATH, // == 2 
 	BAD_PATH // == 3 -- when it couldn't find a route. Used by HuntTask, Recycle[H]Task
 };
+#else
+enum PathType;
+#endif
 
 #if MISN_INTERNAL
 #include <stdio.h>
@@ -108,6 +112,8 @@ enum PathType {
 #pragma warning (error : 4431) // 'missing type specifier - int assumed. Note: C no longer supports default-int
 #pragma warning (error : 4806) // unsafe operation: no value of type 'bool' promoted to type 'int' can equal the given constant
 #pragma warning (error : 4150) // deletion of pointer to incomplete type 
+#pragma warning (error : 4029) // Formal parameter types in the function declaration do not agree with those in the function definition. 
+#pragma warning (error : 4113) // A function pointer is assigned to another function pointer, but the formal parameter lists of the functions do not agree.  
 
 class GameObject;
 class AiPath;
@@ -121,27 +127,51 @@ class AiPath;
 #define TRUE 1
 #endif
 
-#define RGBCreate(r,g,b) (0xFF000000|(r)<<16|(g)<<8|(b))
+#define RGB_MAKE(r,g,b) (0xFF000000|(r)<<16|(g)<<8|(b))
 #define RGBA_MAKE(r, g, b, a) \
 ((unsigned long) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))) 
 
-#define WHITE RGBCreate(255,255,255)
-#define GREY RGBCreate(127,127,127)
-#define BLACK RGBCreate(0,0,0)
-#define GREEN RGBCreate(0,255,0)
-#define RED RGBCreate(255,0,0)
-#define BLUE RGBCreate(0,0,255)
-#define YELLOW RGBCreate(255,255,0)
-#define PURPLE RGBCreate(255,0,255)
-#define CYAN RGBCreate(0,255,255)
-#define ALLYBLUE RGBCreate(0,127,255)
-#define LAVACOLOR RGBCreate(255,64,0)
+#define RGBA_GETALPHA(rgb) ((rgb) >> 24)
+#define RGBA_GETRED(rgb)   (((rgb) >> 16) & 0xff)
+#define RGBA_GETGREEN(rgb) (((rgb) >> 8) & 0xff)
+#define RGBA_GETBLUE(rgb)  ((rgb) & 0xff)
 
-#define DKGREY RGBCreate(100,100,100)
-#define DKGREEN RGBCreate(0,127,0)
-#define DKRED RGBCreate(127,0,0)
-#define DKBLUE RGBCreate(0,0,127)
-#define DKYELLOW RGBCreate(127,127,0)
+#define WHITE     RGB_MAKE(255,255,255) // Original
+#define GREY      RGB_MAKE(127,127,127) // GBD
+#define BLACK     RGB_MAKE(  0,  0,  0) // GBD
+#define BLUE      RGB_MAKE(  0,  0,255) // GBD / Scripter
+#define GREEN     RGB_MAKE(  0,255,  0) // Original
+#define RED       RGB_MAKE(255,  0,  0) // Original
+#define YELLOW    RGB_MAKE(255,255,  0) // GBD / Scripter
+#define PURPLE    RGB_MAKE(255,  0,255) // GBD
+#define VIOLET    RGB_MAKE(255,  0,255) // Scripter
+#define CYAN      RGB_MAKE(  0,255,255) // GBD
+#define TURQUOISE RGB_MAKE(  0,255,255) // Scripter
+#define AZURE     RGB_MAKE(  0,127,255) // GBD
+
+#define ALLYBLUE  RGB_MAKE(  0,127,255) // GBD
+#define LAVACOLOR RGB_MAKE(255, 64,  0) // GBD
+
+#define DKGREY   RGB_MAKE(100,100,100) // GBD
+#define DKGREEN  RGB_MAKE(  0,127,  0) // GBD
+#define DKRED    RGB_MAKE(127,  0,  0) // GBD
+#define DKBLUE   RGB_MAKE(  0,  0,127) // GBD
+#define DKYELLOW RGB_MAKE(127,127,  0) // GBD
+
+#define TEAM_RED         RGB_MAKE(255, 31, 31) // Team Colors
+#define TEAM_YELLOW      RGB_MAKE(255,255, 31) // Team Colors
+#define TEAM_GREEN       RGB_MAKE( 31,255, 31) // Team Colors
+#define TEAM_BLUE        RGB_MAKE( 31, 31,255) // Team Colors
+#define TEAM_CYAN        RGB_MAKE( 31,255,255) // Team Colors
+#define TEAM_VIOLET      RGB_MAKE(255, 31,255) // Team Colors
+#define TEAM_WHITE       RGB_MAKE(255,255,255) // Team Colors
+#define TEAM_BLACK       RGB_MAKE( 31, 31, 31) // Team Colors
+#define TEAM_PINK        RGB_MAKE(255, 31,127) // Team Colors
+#define TEAM_ORANGE      RGB_MAKE(255,127, 31) // Team Colors
+#define TEAM_GUPPIEGREEN RGB_MAKE( 31,255,127) // Team Colors
+#define TEAM_AQYAMARINE  RGB_MAKE(127,255, 31) // Team Colors
+#define TEAM_AZURE       RGB_MAKE( 31,127,255) // Team Colors
+#define TEAM_VIOLETISH   RGB_MAKE(127, 31,255) // Team Colors
 
 #define SIZEOF(a) (sizeof(a)/sizeof(a[0]))
 
@@ -171,7 +201,7 @@ struct VECTOR_2D {
 };
 
 typedef float F32;
-struct Matrix //__declspec(align(16))
+struct Matrix
 {
 	Vector right;
 	F32 rightw;
@@ -190,19 +220,6 @@ struct Matrix //__declspec(align(16))
 	}
 };
 
-struct Quaternion 
-{
-	F32 s;
-	Vector v;
-
-	Quaternion () {}
-
-	Quaternion(const float vs, const Vector vv)
-		:s(vs), v(vv)
-	{
-	}
-};
-
 #define AVD_NONE 0 // don't avoid collisions
 #define AVD_FORCE 1 // use force avoidance
 #define AVD_PLAN 2 // plan collision avoidance
@@ -215,7 +232,7 @@ struct Quaternion
 Vector Normalize_Vector (const Vector &A);
 
 // Return values for the GetTeamRelationship() call
-// !! This must be kept in sync with the parallel enum in GameObject.h
+// !! This must be kept in sync with the parallel enum in Entities.h
 enum TEAMRELATIONSHIP 
 {
 	TEAMRELATIONSHIP_INVALIDHANDLE, // One or both handles is invalid
@@ -232,7 +249,6 @@ typedef int TeamNum;
 typedef float Time;
 typedef float Dist;
 typedef int ScrapValue;
-typedef int PilotValue;
 typedef unsigned long DWORD;
 typedef DWORD DPID;
 #define DPID_UNKNOWN 0xFFFFFFFF
@@ -267,6 +283,7 @@ struct VehicleControls {
 	char fire;
 };
 
+
 // Structure for GetAllSpawnpoints
 struct SpawnpointInfo
 {
@@ -286,6 +303,7 @@ struct SpawnpointInfo
 	float	m_DistanceToClosestAlly;
 	float	m_DistanceToClosestEnemy;
 };
+
 
 // Typedef for the PreSnipe callback. Is passed the current world
 // (0=lockstep, 1 or 2 = visual world), two handles (shooter and
@@ -531,9 +549,9 @@ inline Handle GetNearestEnemy(Handle h)
 
 // IN GAME DEFINITIONS
 
-void LoadScriptUtils(void);
-void PostLoadScriptUtils(void);
-void SaveScriptUtils(void);
+void LoadScriptUtils(ILoadSaveVisitor& visitor);
+void PostLoadScriptUtils(ILoadSaveVisitor& visitor);
+void SaveScriptUtils(ILoadSaveVisitor& visitor);
 
 void DLLAPI FailMission(Time t, char* fileName = NULL);
 void DLLAPI SucceedMission(Time t, char* fileName = NULL);
@@ -824,6 +842,8 @@ DLLEXPORT void DLLAPI SetPathType(Name path, PathType pathType);
 // int low = 0;
 // int high = 1;
 // SetIndependence(friend1, low);
+// Note that this is only successful for items with a UnitProcess
+// (or derived) AIProcess.
 DLLEXPORT void DLLAPI SetIndependence(Handle me, int independence);
 
 // Returns true if the user is inspecting the specified ODF.
@@ -1004,6 +1024,8 @@ DLLEXPORT void DLLAPI IFace_AddTextItem(Name name, Name value);
 //  IFace_GetSelectedItem("MoveManager.MoveList.List", moveName, sizeof(moveName));
 DLLEXPORT void DLLAPI IFace_GetSelectedItem(Name name, Name value, int maxSize);
 
+// Valid values for skill are [0 .. 3]. Invalid values are clamped to
+// this range when setting.
 DLLEXPORT void DLLAPI SetSkill(Handle h,int s);
 
 DLLEXPORT void DLLAPI SetPlan(char* cfg, int team = -1);
@@ -2403,8 +2425,8 @@ DLLEXPORT float DLLAPI GetRemainingLifespan(Handle h);
 //
 // Performance note: this function has to do an O(n^2) search of
 // spawnpoints and all GameObjects. This could get expensive if called
-// often. Calling it at the start of the game or when new teams join
-// should be relatively unnoticeable.
+// often. Calling it at the start of the game or when new
+// players/teams join should be relatively unnoticeable.
 //
 // Sample usage to get all spawn points, printf their handles:
 // SpawnpointInfo* pSpawnPointInfo;

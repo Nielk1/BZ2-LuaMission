@@ -5,12 +5,61 @@
 #include "..\..\source\fun3d\ScriptUtils.h"
 #include "LuaTypeBindings.h"
 
+
+//Handle BuildObject(char *odf, int team, Handle h);
+//Handle BuildObject(char *odf, int team, Name path, int point = 0)
+//Handle BuildObject(char *odf, int team, Vector v);
+//Handle BuildObject(char *odf, int team, Matrix m);
+static int BuildObject(lua_State *L)
+{
+	char *odf = const_cast<char *>(luaL_checkstring(L, 1));
+	int team = luaL_checkinteger(L, 2);
+	Handle o;
+	if (Matrix *mat = GetMatrix(L, 3))
+	{
+		o = BuildObject(odf, team, *mat); // ScriptUtils
+	}
+	else if (Vector *pos = GetVector(L, 3))
+	{
+		o = BuildObject(odf, team, *pos); // ScriptUtils
+	}
+	else if (lua_isstring(L, 3))
+	{
+		Name path = Name(lua_tostring(L, 3));
+		int point = luaL_optinteger(L, 4, 0);
+		if (point)
+		{
+			Vector pos = GetVectorFromPath(path, point); // ScriptUtilsExtension
+			o = BuildObject(odf, team, pos); // ScriptUtils
+		}
+		else
+		{
+			o = BuildObject(odf, team, path); // ScriptUtils
+		}
+	}
+	else
+	{
+		Handle h = RequireHandle(L, 3);
+		o = BuildObject(odf, team, h);
+	}
+	PushHandle(L, o);
+	return 1;
+}
+
+// void RemoveObject(Handle h)
+static int RemoveObject(lua_State *L)
+{
+	Handle h = RequireHandle(L, 1);
+	RemoveObject(h); // ScriptUtils
+	return 0;
+}
+
 //DLLEXPORT void DLLAPI SetGroup(Handle h, int group);
 static int SetGroup(lua_State *L)
 {
 	Handle h = RequireHandle(L, 1);
 	int group = luaL_optinteger(L, 2, 0);
-	SetGroup(h, group);
+	SetGroup(h, group); // ScriptUtils
 	return 0;
 }
 
@@ -20,7 +69,7 @@ static int Attack(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	Handle him = RequireHandle(L, 2);
 	int priority = luaL_optinteger(L, 3, 1);
-	Attack(me, him, priority);
+	Attack(me, him, priority); // ScriptUtils
 	return 0;
 }
 
@@ -30,7 +79,7 @@ static int Service(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	Handle him = RequireHandle(L, 2);
 	int priority = luaL_optinteger(L, 3, 1);
-	Service(me, him, priority);
+	Service(me, him, priority); // ScriptUtils
 	return 0;
 }
 
@@ -44,11 +93,11 @@ static int Goto(lua_State *L)
 	int priority = luaL_optinteger(L, 3, 1);
 	if (Matrix *mat = GetMatrix(L, 2))
 	{
-		Goto(me, *mat, priority);
+		Goto(me, *mat, priority); // ScriptUtilsExtensions
 	}
 	else if (Vector *pos = GetVector(L, 2))
 	{
-		Goto(me, *pos, priority);
+		Goto(me, *pos, priority); // ScriptUtils
 	}
 	else if (lua_isstring(L, 2))
 	{
@@ -58,17 +107,17 @@ static int Goto(lua_State *L)
 		{
 			int point = luaL_optinteger(L, 3, 0);
 			priority = luaL_optinteger(L, 4, 1);
-			Goto(me, path, point, priority);
+			Goto(me, path, point, priority); // ScriptUtilsExtensions
 		}
 		else
 		{
-			Goto(me, path, priority);
+			Goto(me, path, priority); // ScriptUtils
 		}
 	}
 	else
 	{
 		Handle him = RequireHandle(L, 2);
-		Goto(me, him, priority);
+		Goto(me, him, priority); // ScriptUtils
 	}
 	return 0;
 }
@@ -81,11 +130,11 @@ static int Mine(lua_State *L)
 	///* //!-- BZ2 doesn't support these functions. :( // Function Created, Vector/Matrix versions theoretically untested. :-/
 	if (Matrix *mat = GetMatrix(L, 2))
 	{
-		Mine(me, mat->posit, priority);
+		Mine(me, mat->posit, priority); // ScriptUtils
 	}
 	else if (Vector *pos = GetVector(L, 2))
 	{
-		Mine(me, *pos, priority);
+		Mine(me, *pos, priority); // ScriptUtils
 	}
 	else if (lua_isstring(L, 2))
 	{
@@ -96,17 +145,17 @@ static int Mine(lua_State *L)
 		{
 			int point = luaL_optinteger(L, 3, 0);
 			priority = luaL_optinteger(L, 4, 1);
-			Mine(me, path, point, priority);
+			Mine(me, path, point, priority); // ScriptUtilsExtensions
 		}
 		else
 		{
-			Mine(me, path, priority);
+			Mine(me, path, priority); // ScriptUtils
 		}
 	}
 	else
 	{
 		Handle him = RequireHandle(L, 2);
-		Mine(me, him, priority);
+		Mine(me, him, priority); // ScriptUtilsExtensions
 	}
 	return 0;
 }
@@ -117,7 +166,7 @@ static int Follow(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	Handle him = RequireHandle(L, 2);
 	int priority = luaL_optinteger(L, 3, 1);
-	Follow(me, him, priority);
+	Follow(me, him, priority); // ScriptUtils
 	return 0;
 }
 
@@ -126,7 +175,7 @@ static int Defend(lua_State *L)
 {
 	Handle me = RequireHandle(L, 1);
 	int priority = luaL_optinteger(L, 2, 1);
-	Defend(me, priority);
+	Defend(me, priority); // ScriptUtils
 	return 0;
 }
 
@@ -136,7 +185,7 @@ static int Defend2(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	Handle him = RequireHandle(L, 2);
 	int priority = luaL_optinteger(L, 3, 1);
-	Defend2(me, him, priority);
+	Defend2(me, him, priority); // ScriptUtils
 	return 0;
 }
 
@@ -145,7 +194,7 @@ static int Stop(lua_State *L)
 {
 	Handle me = RequireHandle(L, 1);
 	int priority = luaL_optinteger(L, 2, 1);
-	Stop(me, priority);
+	Stop(me, priority); // ScriptUtils
 	return 0;
 }
 
@@ -155,7 +204,7 @@ static int Patrol(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	Name path = Name(luaL_checkstring(L, 2));
 	int priority = luaL_optinteger(L, 3, 1);
-	Patrol(me, path, priority);
+	Patrol(me, path, priority); // ScriptUtils
 	return 0;
 }
 
@@ -168,11 +217,11 @@ static int Retreat(lua_State *L)
 	int priority = luaL_optinteger(L, 3, 1);
 	if (Matrix *mat = GetMatrix(L, 2))
 	{
-		Retreat(me, *mat, priority);
+		Retreat(me, *mat, priority); // ScriptUtilsExtensions
 	}
 	else if (Vector *pos = GetVector(L, 2))
 	{
-		Retreat(me, *pos, priority);
+		Retreat(me, *pos, priority); // ScriptUtilsExtensions
 	}
 	else if (lua_isstring(L, 2))
 	{
@@ -182,17 +231,17 @@ static int Retreat(lua_State *L)
 		{
 			int point = luaL_optinteger(L, 3, 0);
 			priority = luaL_optinteger(L, 4, 1);
-			Retreat(me, path, point, priority);
+			Retreat(me, path, point, priority); // ScriptUtilsExtensions
 		}
 		else
 		{
-			Retreat(me, path, priority);
+			Retreat(me, path, priority); // ScriptUtils
 		}
 	}
 	else
 	{
 		Handle him = RequireHandle(L, 2);
-		Retreat(me, him, priority);
+		Retreat(me, him, priority); // ScriptUtils
 	}
 	return 0;
 }
@@ -203,7 +252,7 @@ static int GetIn(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	Handle him = RequireHandle(L, 2);
 	int priority = luaL_optinteger(L, 3, 1);
-	GetIn(me, him, priority);
+	GetIn(me, him, priority); // ScriptUtils
 	return 0;
 }
 
@@ -213,7 +262,7 @@ static int Pickup(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	Handle him = RequireHandle(L, 2);
 	int priority = luaL_optinteger(L, 3, 1);
-	Pickup(me, him, priority);
+	Pickup(me, him, priority); // ScriptUtils
 	return 0;
 }
 
@@ -228,11 +277,11 @@ static int Dropoff(lua_State *L)
 	///* //!-- BZ2 doesn't have this fucntion // Vector/Matrix versions created, but theoretically untested.
 	if (Matrix *mat = GetMatrix(L, 2))
 	{
-		Dropoff(me, *mat, priority);
+		Dropoff(me, *mat, priority); // ScriptUtilsExtension
 	}
 	else if (Vector *pos = GetVector(L, 2))
 	{
-		Dropoff(me, *pos, priority);
+		Dropoff(me, *pos, priority); // ScriptUtils
 	}
 	else if (lua_isstring(L, 2))
 	{
@@ -243,17 +292,17 @@ static int Dropoff(lua_State *L)
 		{
 			int point = luaL_optinteger(L, 3, 0);
 			priority = luaL_optinteger(L, 4, 1);
-			Dropoff(me, path, point, priority);
+			Dropoff(me, path, point, priority); // ScriptUtilsExtension
 		}
 		else
 		{
-			Dropoff(me, path, priority);
+			Dropoff(me, path, priority); // ScriptUtils
 		}
 	}
 	else
 	{
 		Handle him = RequireHandle(L, 2);
-		Dropoff(me, him, priority);
+		Dropoff(me, him, priority); // ScriptUtilsExtension
 	}
 	return 0;
 }
@@ -264,7 +313,7 @@ static int Build(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	char *odf = const_cast<char *>(luaL_checkstring(L, 2));
 	int priority = luaL_optinteger(L, 3, 1);
-	Build(me, odf, priority);
+	Build(me, odf, priority); // ScriptUtils
 	return 0;
 }
 
@@ -274,12 +323,25 @@ static int LookAt(lua_State *L)
 	Handle me = RequireHandle(L, 1);
 	Handle him = RequireHandle(L, 2);
 	int priority = luaL_optinteger(L, 3, 1);
-	LookAt(me, him, priority);
+	LookAt(me, him, priority); // ScriptUtils
+	return 0;
+}
+
+//DLLEXPORT void DLLAPI AllLookAt(int team, Handle him, int priority = 1);
+static int AllLookAt(lua_State *L)
+{
+	int team = luaL_optinteger(L, 1, 1);
+	Handle him = RequireHandle(L, 2);
+	int priority = luaL_optinteger(L, 3, 1);
+	AllLookAt(team, him, priority); // ScriptUtils
 	return 0;
 }
 
 // Lua script utils functions
 static const luaL_Reg sLuaScriptUtils_GameObject[] = {
+	// BZ2 Script Utils Functions.
+	{ "BuildObject", BuildObject },
+	{ "RemoveObject", RemoveObject },
 	{ "SetGroup", SetGroup },
 	{ "Attack", Attack },
 	{ "Service", Service },
@@ -296,6 +358,7 @@ static const luaL_Reg sLuaScriptUtils_GameObject[] = {
 	{ "Dropoff", Dropoff },
 	{ "Build", Build },
 	{ "LookAt", LookAt },
+	{ "AllLookAt", LookAt },
 	{ NULL, NULL }
 };
 

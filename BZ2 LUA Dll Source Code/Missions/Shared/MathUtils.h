@@ -2,9 +2,23 @@
 #define _Math_
 
 #include "..\..\source\fun3d\ScriptUtils.h"
+//#include "ScriptUtilsExtension.h"
 #include <math.h>
 #include <float.h>
 //#include <algorithm>
+
+struct Quaternion
+{
+	F32 s;
+	Vector v;
+
+	Quaternion() {}
+
+	Quaternion(const float vs, const Vector vv)
+		:s(vs), v(vv)
+	{
+	}
+};
 
 extern Vector Normalize_Vector(const Vector &A);
 extern Vector Cross_Product(const Vector &A, const Vector &B);
